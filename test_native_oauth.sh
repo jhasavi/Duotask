@@ -1,0 +1,51 @@
+#!/bin/bash
+
+echo "📱 NATIVE OAUTH TEST"
+echo "===================="
+echo ""
+
+echo "🔧 What's Changed:"
+echo "• Web: Still uses Supabase OAuth (browser-based)"
+echo "• Mobile: Now uses native Google Sign-In"
+echo "• iOS: Should return to app icon after sign-in"
+echo "• Android: Should return to app icon after sign-in"
+echo ""
+
+echo "🧪 Testing Instructions:"
+echo ""
+
+echo "📱 iOS Test:"
+echo "1. Run: flutter run -d 'iPhone 16 Plus'"
+echo "2. Tap 'Sign in with Google'"
+echo "3. Should show native Google Sign-In UI"
+echo "4. After sign-in, should return to app icon"
+echo "5. Should NOT stay in browser"
+echo ""
+
+echo "🤖 Android Test:"
+echo "1. Run: flutter run -d android"
+echo "2. Tap 'Sign in with Google'"
+echo "3. Should show native Google Sign-In UI"
+echo "4. After sign-in, should return to app icon"
+echo "5. Should NOT stay in browser"
+echo ""
+
+echo "🌐 Web Test:"
+echo "1. Run: ./run_web.sh"
+echo "2. Tap 'Sign in with Google'"
+echo "3. Should open browser (expected for web)"
+echo "4. After sign-in, should redirect back to app"
+echo ""
+
+echo "🚀 Ready to test? Choose your platform:"
+echo "1. iOS: flutter run -d 'iPhone 16 Plus'"
+echo "2. Android: flutter run -d android"
+echo "3. Web: ./run_web.sh"
+echo ""
+
+echo "📋 Expected Behavior:"
+echo "✅ Mobile: Native Google Sign-In UI"
+echo "✅ Mobile: Returns to app icon after sign-in"
+echo "✅ Web: Browser-based OAuth (unchanged)"
+echo "✅ All platforms: User gets signed in successfully"
+echo "" 
