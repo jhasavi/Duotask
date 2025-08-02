@@ -10,11 +10,17 @@ echo "🚀 Starting authentication configuration backup to GitHub..."
 # Check if GitHub repo URL is provided
 if [ -z "$1" ]; then
     echo "❌ Error: Please provide GitHub repository URL"
-    echo "Usage: ./push_auth_to_github.sh https://github.com/username/repo-name.git"
+    echo "Usage: ./push_auth_to_github.sh git@github.com:username/repo-name.git"
     exit 1
 fi
 
 GITHUB_REPO_URL="$1"
+
+# Convert HTTPS URL to SSH if provided
+if [[ "$GITHUB_REPO_URL" == https://github.com/* ]]; then
+    GITHUB_REPO_URL=$(echo "$GITHUB_REPO_URL" | sed 's|https://github.com/|git@github.com:|')
+    echo "🔄 Converted HTTPS URL to SSH: $GITHUB_REPO_URL"
+fi
 
 # Add all current changes
 echo "📁 Adding all current changes..."
