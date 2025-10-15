@@ -57,8 +57,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/duotask.git
-   cd duotask
+   git clone https://github.com/jhasavi/taskbubble.git
+   cd taskbubble
    ```
 
 2. **Install dependencies**
@@ -68,7 +68,7 @@
 
 3. **Configure environment**
    ```bash
-   cp env.example .env
+   cp .env.example .env
    # Edit .env with your Supabase and Firebase credentials
    ```
 
@@ -76,16 +76,16 @@
    ```bash
    # Install Supabase CLI
    npm install -g supabase
-   
+
    # Login to Supabase
    supabase login
-   
+
    # Link your project
    supabase link --project-ref your-project-ref
-   
+
    # Push database schema
    supabase db push
-   
+
    # Deploy functions
    supabase functions deploy
    ```
@@ -141,29 +141,6 @@ For push notifications:
 3. Place them in the appropriate directories
 4. Update your `.env` file with Firebase credentials
 
-## 🎮 Usage
-
-### Pairing with Someone
-
-1. **Generate Pair Code**: Tap the pairing button to get a unique 8-character code
-2. **Share Code**: Send the code to your partner via any method
-3. **Enter Code**: Partner enters the code to establish the pairing
-4. **Start Sharing**: Both users can now create and manage shared tasks
-
-### Managing Tasks
-
-- **Create Task**: Tap the + button to add a new task
-- **View Details**: Single tap any task bubble to see details
-- **Change Status**: Double tap to cycle through status (Unclaimed → Claimed → Done)
-- **Reclaim Task**: Use the reclaim button in task details if needed
-- **Delete Task**: Long press for 2 seconds to delete
-
-### Task Types
-
-- **Personal Tasks**: Only visible to you
-- **Shared Tasks**: Visible to both paired users
-- **Urgent Tasks**: Marked with red border for priority
-
 ## 🔧 Development
 
 ### Project Structure
@@ -174,15 +151,43 @@ lib/
 ├── models/                   # Data models
 ├── screens/                  # UI screens
 ├── services/                 # Business logic
+│   ├── auth_service.dart     # Authentication with rate limiting
+│   ├── task_service.dart     # Task management with caching
+│   ├── rate_limit_service.dart # Security rate limiting
+│   └── task_cache_service.dart # Performance caching
 ├── utils/                    # Utilities
 └── widgets/                  # Reusable components
+
+test/                         # Unit, widget, and integration tests
+docs/                         # Documentation and architecture
+.github/workflows/           # CI/CD configuration
 ```
 
 ### Key Services
 
-- `CleanPairingService`: Handles pairing logic
-- `TaskService`: Manages task operations
-- `AuthService`: Authentication and user management
+- `CleanPairingService`: Handles pairing logic with dyad-based architecture
+- `TaskService`: Manages task operations with pagination and caching
+- `AuthService`: Authentication with rate limiting and security
+- `RateLimitService`: Prevents brute force attacks
+- `TaskCacheService`: Improves performance with local caching
+
+### Development Workflow
+
+```bash
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Make your changes and test
+flutter test
+flutter analyze
+
+# Commit with conventional commits
+git add .
+git commit -m "feat: add your feature description"
+
+# Push and create pull request
+git push -u origin feature/your-feature-name
+```
 
 ### Testing
 
@@ -190,9 +195,31 @@ lib/
 # Run all tests
 flutter test
 
+# Run with coverage
+flutter test --coverage
+
 # Run specific test file
-flutter test test/widget_test.dart
+flutter test test/unit/services/auth_service_test.dart
+
+# Run integration tests
+flutter test integration_test/
 ```
+
+### Performance
+
+The app includes several performance optimizations:
+- **Task Caching**: Local caching reduces API calls
+- **Pagination**: Loads tasks in pages for better performance
+- **Rate Limiting**: Prevents abuse while maintaining responsiveness
+- **Optimized Queries**: Efficient database queries with proper indexing
+
+## 🔒 Security Features
+
+- **Rate Limiting**: Prevents brute force attacks on authentication
+- **Input Validation**: Comprehensive validation of all user inputs
+- **Secure Authentication**: Uses Supabase Auth with Google OAuth
+- **Row Level Security**: Database-level access control
+- **Environment Variables**: Sensitive data stored securely
 
 ## 📚 Documentation
 
@@ -200,14 +227,55 @@ flutter test test/widget_test.dart
 - [Pairing System](PAIRING.md) - Pairing architecture and implementation
 - [Setup Guide](SETUP_GUIDE.md) - Complete setup instructions
 - [API Documentation](API_DOCUMENTATION.md) - Backend API reference
+- [Architecture](docs/ARCHITECTURE.md) - System architecture overview
+
+## 🚀 Deployment
+
+### Web (PWA)
+
+```bash
+# Build for production
+flutter build web --release
+
+# Deploy to your hosting service
+# The app is configured as a PWA with service worker support
+```
+
+### Mobile
+
+```bash
+# Build Android APK
+flutter build apk --release
+
+# Build iOS (requires macOS)
+flutter build ios --release
+
+# Build iOS with code signing
+flutter build ios --release --codesign
+```
+
+### CI/CD
+
+The project includes GitHub Actions for automated testing and building:
+- **Automated Tests**: Runs on every push and pull request
+- **Code Coverage**: Tracks test coverage with Codecov
+- **Multi-platform Builds**: Tests Android, iOS, Web, and macOS builds
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Make your changes and ensure tests pass
+4. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+### Code Style
+
+- Follow [Effective Dart](https://dart.dev/guides/language/effective-dart) guidelines
+- Use `flutter format` to format code
+- Add tests for new functionality
+- Update documentation for API changes
 
 ## 📄 License
 
@@ -217,10 +285,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: Check the docs folder for detailed guides
 - **Issues**: Report bugs and feature requests on GitHub
-- **Email**: support@duotask.app
+- **Discussions**: Use GitHub Discussions for questions and ideas
 
 ## 🗺️ Roadmap
 
+- [x] **Security Enhancements**: Rate limiting, input validation, secure authentication
+- [x] **Performance Optimizations**: Caching, pagination, optimized queries
+- [x] **Testing Infrastructure**: Unit, widget, and integration tests
+- [x] **CI/CD Pipeline**: Automated testing and deployment
 - [ ] Apple Sign-In support
 - [ ] Task categories and filtering
 - [ ] Task history and analytics
