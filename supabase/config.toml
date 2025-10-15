@@ -1,0 +1,34 @@
+
+[functions.send-fcm]
+enabled = true
+verify_jwt = true
+import_map = "./functions/send-fcm/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/send-fcm/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/send-fcm/*.html" ]
+
+[functions.fcm_v1]
+enabled = true
+verify_jwt = true
+import_map = "./functions/fcm_v1/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/fcm_v1/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/fcm_v1/*.html" ]
+
+[functions.pairing-email]
+enabled = true
+# For CLI testing and request from client, we accept JWT attached by the SDKs.
+# For CLI invoke without JWT during debugging, set verify_jwt = false.
+verify_jwt = true
+entrypoint = "./functions/pairing-email/index.ts"
+
+[functions.auth-email-branding]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/auth-email-branding/index.ts"

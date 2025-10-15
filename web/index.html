@@ -18,19 +18,58 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="DuoTask - Simple shared task management for two people">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="duotask">
+  <meta name="apple-mobile-web-app-title" content="DuoTask">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>duotask</title>
+  <title>DuoTask - Shared Task Management</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- OAuth callback handling -->
+  <script>
+    // Handle OAuth callback
+    function handleOAuthCallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      
+      console.log('Current URL:', window.location.href);
+      console.log('URL parameters:', Object.fromEntries(urlParams));
+      console.log('URL hash:', hash);
+      
+      // Check if this is an OAuth callback
+      if (urlParams.has('code') || 
+          urlParams.has('access_token') || 
+          urlParams.has('refresh_token') ||
+          hash.includes('access_token') || 
+          hash.includes('error')) {
+        console.log('OAuth callback detected');
+        
+        // Clean up URL parameters to prevent issues
+        if (window.history && window.history.replaceState) {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          console.log('URL cleaned up');
+        }
+      }
+    }
+
+    // Run callback handler when page loads
+    document.addEventListener('DOMContentLoaded', handleOAuthCallback);
+    
+    // Also handle if the page is loaded with OAuth parameters
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', handleOAuthCallback);
+    } else {
+      handleOAuthCallback();
+    }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

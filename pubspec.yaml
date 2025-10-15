@@ -6,20 +6,31 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  app_links: ^6.4.1
   flutter:
     sdk: flutter
-  supabase_flutter: ^2.3.4
-  flutter_dotenv: ^5.1.0
-  cupertino_icons: ^1.0.2
-  google_sign_in: ^6.2.1
+  firebase_core: ^3.15.2
+  supabase_flutter: ^2.9.1
+  flutter_dotenv: ^6.0.0
+  http: ^1.5.0
+  image_picker: ^1.2.0
+  confetti: ^0.8.0
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.2.2
+  uuid: ^4.5.1
+  path_provider: ^2.1.4
+  path: ^1.8.3
+  url_launcher: ^6.2.5
+  share_plus: ^11.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.4
 
 flutter:
   uses-material-design: true
+  
   assets:
     - .env
-    - icon.png 

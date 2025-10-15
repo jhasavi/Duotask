@@ -52,25 +52,17 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.931322985925-oor0nc6g69l447l2ng9fpmkd4fbeksjh</string>
 				<string>duotask</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.931322985925-oor0nc6g69l447l2ng9fpmkd4fbeksjh</string>
+			</array>
+		</dict>
 	</array>
-	<key>GIDClientID</key>
-	<string>931322985925-oor0nc6g69l447l2ng9fpmkd4fbeksjh.apps.googleusercontent.com</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>This app needs access to local network for development and debugging purposes.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_dartobservatory._tcp</string>
-	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 </dict>
 </plist>

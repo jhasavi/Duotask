@@ -1,63 +1,49 @@
-class AppUser {
+class DuoUser {
   final String id;
-  final String email;
   final String name;
+  final String email;
   final String pairCode;
   final String? pairedWith;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? lastActive;
+  final String? fcmToken;
+  final String subscriptionTier;
 
-  AppUser({
+  DuoUser({
     required this.id,
-    required this.email,
     required this.name,
+    required this.email,
     required this.pairCode,
     this.pairedWith,
-    required this.createdAt,
-    required this.updatedAt,
+    this.lastActive,
+    this.fcmToken,
+    this.subscriptionTier = 'free',
   });
 
-  factory AppUser.fromJson(Map<String, dynamic> json) {
-    return AppUser(
-      id: json['id'],
-      email: json['email'],
-      name: json['name'],
-      pairCode: json['pair_code'],
-      pairedWith: json['paired_with'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+  factory DuoUser.fromMap(Map<String, dynamic> map) {
+    return DuoUser(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      email: map['email'] as String,
+      pairCode: map['pair_code'] as String,
+      pairedWith: map['paired_with'] as String?,
+      lastActive: map['last_active'] != null
+          ? DateTime.parse(map['last_active'])
+          : null,
+      fcmToken: map['fcm_token'] as String?,
+      subscriptionTier: map['subscription_tier'] ?? 'free',
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'email': email,
       'name': name,
+      'email': email,
       'pair_code': pairCode,
       'paired_with': pairedWith,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'last_active': lastActive?.toIso8601String(),
+      'fcm_token': fcmToken,
+      'subscription_tier': subscriptionTier,
     };
   }
-
-  AppUser copyWith({
-    String? id,
-    String? email,
-    String? name,
-    String? pairCode,
-    String? pairedWith,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return AppUser(
-      id: id ?? this.id,
-      email: email ?? this.email,
-      name: name ?? this.name,
-      pairCode: pairCode ?? this.pairCode,
-      pairedWith: pairedWith ?? this.pairedWith,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-} 
+}

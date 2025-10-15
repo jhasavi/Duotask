@@ -43,40 +43,38 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    appId: '1:931322985925:web:XXXXXXXXXXXXXXXXXXXXXXXX',
-    messagingSenderId: '931322985925',
-    projectId: 'duotask-app',
-    authDomain: 'duotask-app.firebaseapp.com',
-    storageBucket: 'duotask-app.appspot.com',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    appId: '1:931322985925:android:XXXXXXXXXXXXXXXXXXXXXXXX',
-    messagingSenderId: '931322985925',
-    projectId: 'duotask-app',
-    storageBucket: 'duotask-app.appspot.com',
+    apiKey: 'AIzaSyAU_iNcp2KLrF0tg0u3CLQSDm0LVtHCeOw',
+    appId: '1:687931195851:android:af7a29e27fd6b44069f64e',
+    messagingSenderId: '687931195851',
+    projectId: 'duotask-c0885',
+    storageBucket: 'duotask-c0885.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    appId: '1:931322985925:ios:XXXXXXXXXXXXXXXXXXXXXXXX',
-    messagingSenderId: '931322985925',
-    projectId: 'duotask-app',
-    storageBucket: 'duotask-app.appspot.com',
-    iosClientId: '931322985925-oor0nc6g69l447l2ng9fpmkd4fbeksjh.apps.googleusercontent.com',
-    iosBundleId: 'com.duotask.app',
+    apiKey: 'AIzaSyA7OSaHC8MeQocZixKkTJPCweVf41zOgBM',
+    appId: '1:687931195851:ios:ea039ee83a0d8b0669f64e',
+    messagingSenderId: '687931195851',
+    projectId: 'duotask-c0885',
+    storageBucket: 'duotask-c0885.firebasestorage.app',
+    iosBundleId: 'com.namaste.duotask.duotask',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    appId: '1:931322985925:ios:XXXXXXXXXXXXXXXXXXXXXXXX',
-    messagingSenderId: '931322985925',
-    projectId: 'duotask-app',
-    storageBucket: 'duotask-app.appspot.com',
-    iosClientId: '931322985925-oor0nc6g69l447l2ng9fpmkd4fbeksjh.apps.googleusercontent.com',
-    iosBundleId: 'com.duotask.app',
+    apiKey: 'AIzaSyA7OSaHC8MeQocZixKkTJPCweVf41zOgBM',
+    appId: '1:687931195851:ios:ea039ee83a0d8b0669f64e',
+    messagingSenderId: '687931195851',
+    projectId: 'duotask-c0885',
+    storageBucket: 'duotask-c0885.firebasestorage.app',
+    iosBundleId: 'com.namaste.duotask.duotask',
   );
-} 
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyA7OSaHC8MeQocZixKkTJPCweVf41zOgBM',
+    appId: '1:687931195851:web:af7a29e27fd6b44069f64e',
+    messagingSenderId: '687931195851',
+    projectId: 'duotask-c0885',
+    storageBucket: 'duotask-c0885.firebasestorage.app',
+    authDomain: 'duotask-c0885.firebaseapp.com',
+  );
+}

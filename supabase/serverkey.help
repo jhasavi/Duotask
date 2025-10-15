@@ -1,0 +1,1 @@
+supabase secrets set FIREBASE_CLIENT_EMAIL="firebase-adminsdk-fbsvc@duotask-c0885.iam.gserviceaccount.com" FIREBASE_PRIVATE_KEY="$(cat FireBase_duotask-c0885-568921573c72.json | jq -r .private_key)"

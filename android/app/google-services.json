@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "687931195851",
+    "project_id": "duotask-c0885",
+    "storage_bucket": "duotask-c0885.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687931195851:android:b6f9d00bbb49d6a769f64e",
+        "android_client_info": {
+          "package_name": "com.duotask.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAU_iNcp2KLrF0tg0u3CLQSDm0LVtHCeOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687931195851:android:af7a29e27fd6b44069f64e",
+        "android_client_info": {
+          "package_name": "com.namaste.duotask.duotask"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAU_iNcp2KLrF0tg0u3CLQSDm0LVtHCeOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

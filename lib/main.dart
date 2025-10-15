@@ -1,44 +1,122 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/auth_screen.dart';
-import 'screens/task_screen.dart';
-import 'services/auth_service.dart';
+import 'screens/modern_task_screen.dart';
+import 'screens/welcome_onboarding_screen.dart';
+import 'utils/logger.dart';
+import 'services/app_dependencies.dart';
+import 'utils/enhanced_theme.dart';
+import 'utils/constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables
+  // Set up a global error widget for uncaught errors
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text(
+            'Unexpected error:\n\n${details.exceptionAsString()}',
+            style: const TextStyle(color: Colors.red, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  };
+  // Firebase initialization removed for MVP cleanup
   try {
     await dotenv.load(fileName: '.env');
+    Log.info('Dotenv loaded');
   } catch (e) {
-    print('Warning: Could not load .env file: $e');
-    print('Please create a .env file with your Supabase configuration');
+    Log.warn('Dotenv not found, using default values for web');
   }
   
-  // Note: Firebase is only for future push notifications
-  // Authentication is handled entirely by Supabase
-  print('ℹ️  Firebase initialization skipped - using Supabase for authentication');
-  
-  // Get Supabase configuration
-  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 
-                     const String.fromEnvironment('SUPABASE_URL');
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 
-                         const String.fromEnvironment('SUPABASE_ANON_KEY');
-  
-  if (supabaseUrl == null || supabaseAnonKey == null) {
-    print('Error: Missing Supabase configuration');
-    print('Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file or as environment variables');
-    print('You can get these values from your Supabase project dashboard');
+  try {
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+    
+    if (supabaseUrl == null || supabaseAnonKey == null) {
+      Log.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env');
+      Log.error('Please create a .env file with your Supabase credentials');
+      Log.error('See env.example for the required format');
+      
+      runApp(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Configuration Error',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Missing Supabase configuration.\n\nPlease create a .env file with your Supabase credentials.\n\nSee env.example for the required format.',
+                    style: TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Show instructions
+                    },
+                    child: const Text('View Setup Instructions'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ));
+      return;
+    }
+    
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+    Log.info('Supabase initialized successfully');
+  } catch (e) {
+    Log.error('Failed to initialize Supabase: $e');
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, color: Colors.red, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Connection Error',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to connect to Supabase.\n\n$e',
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ));
     return;
   }
-  
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
-  
+  // Launch main app
   runApp(const DuoTaskApp());
 }
 
@@ -47,211 +125,165 @@ class DuoTaskApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DuoTask',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF667EEA),
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'SF Pro Display',
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF1E293B),
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E293B),
-          ),
-          titleLarge: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF64748B),
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF64748B),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return AppDependencies(
+      child: MaterialApp(
+        title: 'DuoTask',
+        theme: EnhancedTheme.lightTheme,
+        darkTheme: EnhancedTheme.darkTheme,
+        themeMode: ThemeMode.system, // Automatically switch between light and dark
+        home: const LaunchScreen(),
+        // Add a fallback route for unknown navigation
+        onUnknownRoute: (settings) => MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(
+              child: Text('Page not found: ${settings.name}'),
             ),
           ),
         ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF667EEA), width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFEF4444)),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
       ),
-      home: const AuthWrapper(),
     );
   }
 }
 
-class AuthWrapper extends StatefulWidget {
-  const AuthWrapper({super.key});
+
+
+class LaunchScreen extends StatefulWidget {
+  const LaunchScreen({super.key});
 
   @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
+  State<LaunchScreen> createState() => _LaunchScreenState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> {
+class _LaunchScreenState extends State<LaunchScreen> {
   bool _isLoading = true;
-  String? _oauthError;
-  final _authService = AuthService();
+  bool _isPaired = false;
+  String? _partnerName;
+  bool _hasCompletedOnboarding = false;
 
   @override
   void initState() {
     super.initState();
-    _setupAuthListener();
+    // Defer the auth check to after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkOnboardingAndAuthStatus();
+    });
   }
 
-  void _setupAuthListener() {
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
-      final event = data.event;
-      print('***** Auth state change: $event');
+  Future<void> _checkOnboardingAndAuthStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _hasCompletedOnboarding = prefs.getBool(AppConstants.onboardingKey) ?? false;
       
-      if (event == AuthChangeEvent.signedOut) {
-        print('User signed out, navigating to auth screen');
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const AuthScreen()),
-            (route) => false,
-          );
-        }
-      } else if (event == AuthChangeEvent.signedIn) {
-        print('User signed in: ${data.session?.user.email}');
-        
-        // Set loading to false immediately to prevent hanging
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        
-        // Navigate to task screen immediately
-        if (mounted) {
-          print('Navigating to task screen...');
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const TaskScreen()),
-            (route) => false,
-          );
-        }
-        
-        // Handle OAuth user profile creation in background (non-blocking)
-        if (data.session?.user != null) {
-          print('Starting OAuth profile creation in background...');
-          _authService.handleOAuthUserProfile(data.session!.user).catchError((e) {
-            print('Error handling OAuth profile (non-blocking): $e');
-          });
-        }
-      } else if (event == AuthChangeEvent.tokenRefreshed) {
-        print('Token refreshed for user: ${data.session?.user.email}');
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+      if (!_hasCompletedOnboarding) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const WelcomeOnboardingScreen()),
+        );
+        return;
       }
-    });
-    
-    // Check initial auth state
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      print('User already signed in: ${user.email}');
-      setState(() {
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+      
+      await _checkAuthStatus();
+    } catch (e) {
+      Log.error('Error checking onboarding status: $e');
+      await _checkAuthStatus();
+    }
+  }
+
+  Future<void> _checkAuthStatus() async {
+    try {
+      print('🔍 LaunchScreen: Checking auth status...');
+      final user = Supabase.instance.client.auth.currentUser;
+      print('🔍 LaunchScreen: Current user: ${user?.email} (${user?.id})');
+      
+      if (user == null) {
+        print('🔍 LaunchScreen: No user found, navigating to AuthScreen');
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const AuthScreen()),
+        );
+        return;
+      }
+
+      print('🔍 LaunchScreen: User authenticated, checking pairing status...');
+
+      // Check pairing status using new clean pairing service
+      try {
+        if (mounted) {
+          final deps = AppDependencies.of(context);
+          print('🔍 LaunchScreen: Getting current pair info for user: ${user.id}');
+          final pairInfo = await deps.pairing.getCurrentPair();
+          print('🔍 LaunchScreen: Current pair info result: $pairInfo');
+          
+          if (pairInfo != null && mounted) {
+            setState(() {
+              _isPaired = true;
+              _partnerName = pairInfo['partner_name'];
+            });
+            print('🔍 LaunchScreen: Set paired status: $_isPaired, partner: $_partnerName');
+          } else {
+            print('🔍 LaunchScreen: No current pair found');
+          }
+        }
+      } catch (e) {
+        print('❌ LaunchScreen: Failed to get current pair info: $e');
+        Log.warn('Failed to get current pair info: $e');
+        // Continue without pairing info
+      }
+
+      print('🔍 LaunchScreen: Setting loading to false');
+      setState(() => _isLoading = false);
+      print('🔍 LaunchScreen: Auth check complete. Loading: $_isLoading, Paired: $_isPaired');
+    } catch (e) {
+      print('❌ LaunchScreen: Error checking auth status: $e');
+      Log.error('Error checking auth status: $e');
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    if (_oauthError != null) {
       return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error, color: Colors.red, size: 64),
-              const SizedBox(height: 16),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.task_alt,
+                  size: 40,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 24),
               Text(
-                'OAuth Error',
-                style: Theme.of(context).textTheme.headlineSmall,
+                'DuoTask',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(_oauthError!),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _oauthError = null;
-                  });
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const AuthScreen()),
-                  );
-                },
-                child: const Text('Try Again'),
-              ),
+              const CircularProgressIndicator(),
             ],
           ),
         ),
       );
     }
 
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      return const TaskScreen();
-    } else {
-      return const AuthScreen();
-    }
+    return ModernTaskScreen(
+      isPaired: _isPaired,
+      partnerNameFromParent: _partnerName,
+    );
   }
-} 
+}
+

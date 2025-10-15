@@ -1,250 +1,194 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import '../models/user.dart';
+import 'dart:math';
+import 'dart:io';
+import '../utils/logger.dart';
+import 'rate_limit_service.dart';
 
 class AuthService {
-  final SupabaseClient _client = Supabase.instance.client;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(); // Let iOS use Info.plist, Android use web client ID
-
-  // Get current user
-  User? get currentUser => _client.auth.currentUser;
-
-  // Platform-specific Google OAuth Authentication
-  Future<AuthResponse?> signInWithGoogle() async {
-    try {
-      print('Starting Google OAuth...');
-      
-      if (kIsWeb) {
-        // Web: Use Supabase OAuth
-        print('Using Supabase OAuth for web');
-        const redirectUrl = 'http://localhost:5000';
-        
-        final response = await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: redirectUrl,
-          queryParams: {
-            'app_name': 'DuoTask',
-            'app_logo': 'https://duotask.app/logo.png',
-          },
-        );
-        
-        print('Web OAuth response: $response');
-        return null; // Let auth state listener handle it
-      } else {
-        // Mobile: Use native Google Sign-In
-        print('Using native Google Sign-In for mobile');
-        
-        // Start the sign-in process
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-        
-        if (googleUser == null) {
-          print('Google Sign-In was cancelled');
-          return null;
-        }
-        
-        print('Google Sign-In successful: ${googleUser.email}');
-        
-        // Get the auth details from the request
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        
-        // Exchange Google token for Supabase session
-        final response = await _client.auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: googleAuth.idToken!,
-          accessToken: googleAuth.accessToken,
-        );
-        
-        print('Mobile OAuth response: $response');
-        return response;
-      }
-    } catch (e) {
-      print('Google OAuth error: $e');
-      
-      // Provide more specific error messages
-      String errorMessage = 'Google sign-in failed';
-      if (e.toString().contains('redirect_uri_mismatch')) {
-        errorMessage = 'OAuth redirect URL mismatch. Please check your Supabase OAuth settings.';
-      } else if (e.toString().contains('invalid_client')) {
-        errorMessage = 'OAuth client configuration error. Please check your Google OAuth settings.';
-      } else if (e.toString().contains('access_denied')) {
-        errorMessage = 'Access denied. Please try signing in again.';
-      } else if (e.toString().contains('SIGN_IN_CANCELLED')) {
-        errorMessage = 'Sign-in was cancelled.';
-      } else {
-        errorMessage = 'Google sign-in failed: ${e.toString()}';
-      }
-      
-      throw Exception(errorMessage);
-    }
-  }
-
-  // Email/Password Authentication
-  Future<AuthResponse?> signInWithEmail(String email, String password) async {
-    try {
-      final response = await _client.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      return response;
-    } catch (e) {
-      print('Email sign-in error: $e');
-      throw Exception(_parseAuthError(e.toString()));
-    }
-  }
-
-  // Email/Password Registration
-  Future<AuthResponse?> signUpWithEmail(String email, String password, String name) async {
-    try {
-      final response = await _client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'name': name},
-      );
-      
-      if (response.user != null) {
-        await _createUserProfile(response.user!, name, email);
-      }
-      
-      return response;
-    } catch (e) {
-      print('Email sign-up error: $e');
-      throw Exception(_parseAuthError(e.toString()));
-    }
-  }
-
-  // Handle OAuth user profile creation
-  Future<void> handleOAuthUserProfile(User authUser) async {
-    try {
-      print('Handling OAuth user profile for: ${authUser.email}');
-      
-      // Check if user profile already exists
-      final existingProfile = await _client
-          .from('usr')
-          .select()
-          .eq('id', authUser.id)
-          .maybeSingle();
-      
-      if (existingProfile == null) {
-        print('Creating new OAuth user profile...');
-        
-        // Extract user information from OAuth data
-        String name = 'User';
-        if (authUser.userMetadata != null) {
-          // Try to get name from user metadata
-          name = authUser.userMetadata!['full_name'] ?? 
-                 authUser.userMetadata!['name'] ?? 
-                 authUser.userMetadata!['display_name'] ?? 
-                 authUser.email?.split('@')[0] ?? 'User';
-        }
-        
-        // Create new profile for OAuth user
-        await _createUserProfile(
-          authUser,
-          name,
-          authUser.email ?? '',
-        );
-        print('✅ OAuth user profile created successfully');
-      } else {
-        print('✅ OAuth user profile already exists');
-      }
-    } catch (e) {
-      print('❌ Error handling OAuth user profile: $e');
-      // Don't throw - auth user is still signed in
-      // Just log the error and continue
-    }
-  }
-
-  // User Profile Management
-  Future<void> _createUserProfile(User authUser, String name, String email) async {
-    try {
-      print('Creating user profile for: $email');
-      
-      final userData = {
-        'id': authUser.id,
-        'name': name,
-        'email': email,
-        'pair_code': _generatePairCode(),
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      print('User data to insert: $userData');
-
-      final result = await _client.from('usr').insert(userData).select();
-      print('✅ User profile created successfully: $result');
-    } catch (e) {
-      print('❌ Failed to create user profile: $e');
-      // Try to get more specific error information
-      if (e.toString().contains('duplicate key')) {
-        print('User profile already exists, this is expected for OAuth');
-      } else {
-        print('Database error details: $e');
-      }
-      // Don't throw - auth user is still created
-    }
-  }
-
+  // Generate a crypto-secure random 8-character pair code
   String _generatePairCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    String code = '';
-    for (int i = 0; i < 8; i++) {
-      code += chars[(random + i) % chars.length];
-    }
-    return code;
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rng = Random.secure();
+    return List.generate(8, (_) => chars[rng.nextInt(chars.length)]).join();
   }
 
-  // Sign out
+  // Ensure the generated pair code is unique in the 'usr' table
+  Future<String> _generateUniquePairCode(SupabaseClient client) async {
+    for (var attempt = 0; attempt < 10; attempt++) {
+      final code = _generatePairCode();
+      final existing = await client
+          .from('usr')
+          .select('id')
+          .eq('pair_code', code)
+          .limit(1)
+          .maybeSingle();
+      if (existing == null) return code;
+    }
+    // Fallback (extremely unlikely): append two random digits to reduce collision further
+    final base = _generatePairCode();
+    final rng = Random.secure();
+    return base.substring(0, 6) +
+        rng.nextInt(90 + 10).toString().padLeft(2, '0');
+  }
+
+  final SupabaseClient _client = Supabase.instance.client;
+  final RateLimitService _rateLimit = RateLimitService();
+
+  // Get client IP for rate limiting
+  String _getClientIp() {
+    try {
+      // This is a simplified example - in production, you'd get the actual client IP
+      // from the request headers or connection info
+      return '${DateTime.now().millisecondsSinceEpoch}';
+    } catch (e) {
+      logger.warning('Could not get client IP: $e');
+      return 'unknown';
+    }
+  }
+
+  // Check if the client is rate limited
+  bool _isRateLimited(String endpoint) {
+    final ip = _getClientIp();
+    return _rateLimit.isRateLimited(endpoint, ip);
+  }
+
+  // Reset rate limiting for successful authentication
+  void _resetRateLimit(String endpoint) {
+    final ip = _getClientIp();
+    _rateLimit.resetAttempts(endpoint, ip);
+  }
+
+  // Email/Password Sign Up
+  Future<void> signUp(String email, String password, {String? name}) async {
+    const endpoint = 'auth/signup';
+    if (_isRateLimited(endpoint)) {
+      throw const AuthException('Too many signup attempts. Please try again later.');
+    }
+
+    try {
+      final res = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: name != null && name.isNotEmpty
+            ? {
+                'name': name,
+                'full_name': name,
+              }
+            : null,
+      );
+      
+      final user = res.user;
+      if (user == null) {
+        throw const AuthException('Sign up failed: No user returned');
+      }
+      
+      _resetRateLimit(endpoint);
+      // Ensure user is added to usr table immediately after registration
+      await ensureUsrExists(user);
+    } on AuthException catch (e) {
+      Log.warn('Sign up failed: ${e.message}');
+      throw Exception('Sign up failed: ${e.message}');
+    } catch (e) {
+      Log.error('Sign up failed', e);
+      throw Exception('Sign up failed: $e');
+    }
+  }
+
+  // Email/Password Sign In
+  Future<void> signIn(String email, String password) async {
+    const endpoint = 'auth/signin';
+    if (_isRateLimited(endpoint)) {
+      throw const AuthException('Too many sign in attempts. Please try again later.');
+    }
+
+    try {
+      Log.info('Attempting sign in for email: $email');
+      final res = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      
+      final user = res.user;
+      if (user == null) {
+        throw const AuthException('Sign in failed: No user returned');
+      }
+      
+      _resetRateLimit(endpoint);
+      Log.info('Sign in successful for user: ${user.id}');
+      
+      // After successful login, ensure user is in usr table
+      await ensureUsrExists(user);
+    } on AuthException catch (e) {
+      Log.error('AuthException during sign in: ${e.message}');
+      rethrow;
+    } catch (e) {
+      Log.error('Unexpected error during sign in: $e');
+      throw AuthException('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  // Ensure a corresponding row exists in 'usr' for any signed-in user
+  Future<void> ensureUsrExists(User user) async {
+    final userId = user.id;
+    final userEmail = user.email;
+    if (userEmail == null) {
+      Log.error('User email is null, cannot create usr record');
+      return;
+    }
+
+    // Build best-guess display name
+    final meta = user.userMetadata ?? {};
+    final metaName = (meta['name'] ??
+            meta['full_name'] ??
+            meta['user_name'] ??
+            meta['given_name'] ??
+            '')
+        .toString()
+        .trim();
+    final fallbackName = userEmail.split('@').first;
+    final finalName = metaName.isNotEmpty ? metaName : fallbackName;
+
+    // Generate a unique pair code
+    final pairCode = await _generateUniquePairCode(_client);
+
+    try {
+      // Try to insert the user record
+      await _client.from('usr').insert({
+        'id': userId,
+        'email': userEmail,
+        'name': finalName,
+        'pair_code': pairCode,
+        'email_confirmed': true,
+      });
+      Log.info('User record created successfully for: $userEmail');
+    } catch (e) {
+      // If insert fails (user already exists), try to update
+      try {
+        await _client.from('usr').update({
+          'email': userEmail,
+          'name': finalName,
+          'email_confirmed': true,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', userId);
+        Log.info('User record updated successfully for: $userEmail');
+      } catch (updateError) {
+        Log.error('Failed to update user record: $updateError');
+      }
+    }
+  }
+
+  // Sign Out
   Future<void> signOut() async {
     try {
-      // Sign out from Google Sign-In (mobile)
-      if (!kIsWeb) {
-        await _googleSignIn.signOut();
-      }
-      
-      // Sign out from Supabase
       await _client.auth.signOut();
+      Log.info('Sign out successful');
     } catch (e) {
-      print('Sign out error: $e');
-      throw Exception('Failed to sign out');
+      Log.error('Sign out error', e);
+      throw Exception('Sign out failed: ${e.toString()}');
     }
   }
 
-  // Unpair from partner
-  Future<void> unpairFromPartner() async {
-    try {
-      final user = currentUser;
-      if (user != null) {
-        await _client
-            .from('usr')
-            .update({
-              'paired_with': null,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', user.id);
-        
-        print('Unpaired from partner successfully');
-      }
-    } catch (e) {
-      print('Unpair error: $e');
-      throw Exception('Failed to unpair from partner');
-    }
-  }
-
-  // Parse Auth Error
-  String _parseAuthError(String error) {
-    if (error.contains('Invalid login credentials')) {
-      return 'Invalid email or password';
-    } else if (error.contains('Email not confirmed')) {
-      return 'Please check your email and confirm your account';
-    } else if (error.contains('User already registered')) {
-      return 'An account with this email already exists';
-    } else if (error.contains('Password should be at least 6 characters')) {
-      return 'Password must be at least 6 characters long';
-    } else {
-      return 'Authentication failed. Please try again.';
-    }
-  }
-} 
+  // Get Current User
+  User? get currentUser => _client.auth.currentUser;
+  bool get isAuthenticated => currentUser != null;
+}
