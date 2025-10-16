@@ -17,7 +17,7 @@ class RateLimitService {
     
     final attempts = _attempts[endpoint]?[identifier] ?? [];
     if (attempts.length >= _maxAttempts) {
-      Log.warning('Rate limit exceeded for $endpoint ($identifier)');
+      Log.warn('Rate limit exceeded for $endpoint ($identifier)');
       return true;
     }
     

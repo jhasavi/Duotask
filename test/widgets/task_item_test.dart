@@ -6,14 +6,13 @@ void main() {
   final testTask = DuoTask(
     id: '1',
     title: 'Buy groceries',
-    description: 'Milk, eggs, bread',
     status: TaskStatus.unclaimed,
     ownerId: 'user1',
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );
 
-  testWidgets('TaskItem displays task title and description', (WidgetTester tester) async {
+  testWidgets('TaskItem displays task title', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

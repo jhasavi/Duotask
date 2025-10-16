@@ -23,7 +23,7 @@ class TaskCacheService {
       // Clean up old cache entries
       await _cleanupOldEntries();
     } catch (e) {
-      Log.e('Failed to initialize TaskCacheService: $e');
+      Log.error('Failed to initialize TaskCacheService: $e');
       rethrow;
     }
   }
@@ -39,7 +39,7 @@ class TaskCacheService {
       
       await _box.put(_cacheKey(userId), cacheData);
     } catch (e) {
-      Log.e('Failed to cache tasks: $e');
+      Log.error('Failed to cache tasks: $e');
     }
   }
 
@@ -62,7 +62,7 @@ class TaskCacheService {
           
       return tasks;
     } catch (e) {
-      Log.e('Failed to get cached tasks: $e');
+      Log.error('Failed to get cached tasks: $e');
       return null;
     }
   }
@@ -86,7 +86,7 @@ class TaskCacheService {
           }
         }
       } catch (e) {
-        Log.e('Error cleaning up cache: $e');
+        Log.error('Error cleaning up cache: $e');
       }
     }
     

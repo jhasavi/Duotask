@@ -41,7 +41,7 @@ class AuthService {
       // from the request headers or connection info
       return '${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
-      Log.warning('Could not get client IP: $e');
+      Log.warn('Could not get client IP: $e');
       return 'unknown';
     }
   }
