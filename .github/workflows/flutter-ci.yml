@@ -24,8 +24,8 @@ jobs:
       - name: Run static analysis
         run: flutter analyze
 
-      - name: Run tests
-        run: flutter test
+      - name: Run tests with coverage
+        run: flutter test --coverage
 
       - name: Upload coverage reports
         if: success()
