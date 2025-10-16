@@ -66,3 +66,20 @@ jobs:
 
       - name: Build Web
         run: flutter build web
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (debug)
+        run: flutter build ios --debug --no-codesign
