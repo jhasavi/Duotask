@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
-import 'package:task_bubble/models/task.dart';
-import 'package:task_bubble/utils/logger.dart';
+import '../models/task.dart';
+import '../utils/logger.dart';
 
 class TaskCacheService {
   static const String _boxName = 'task_cache';
@@ -23,12 +23,12 @@ class TaskCacheService {
       // Clean up old cache entries
       await _cleanupOldEntries();
     } catch (e) {
-      logger.e('Failed to initialize TaskCacheService: $e');
+      Log.e('Failed to initialize TaskCacheService: $e');
       rethrow;
     }
   }
 
-  Future<void> cacheTasks(String userId, List<Task> tasks) async {
+  Future<void> cacheTasks(String userId, List<DuoTask> tasks) async {
     if (!_isInitialized) await init();
     
     try {
@@ -39,11 +39,11 @@ class TaskCacheService {
       
       await _box.put(_cacheKey(userId), cacheData);
     } catch (e) {
-      logger.e('Failed to cache tasks: $e');
+      Log.e('Failed to cache tasks: $e');
     }
   }
 
-  Future<List<Task>?> getCachedTasks(String userId) async {
+  Future<List<DuoTask>?> getCachedTasks(String userId) async {
     if (!_isInitialized) await init();
     
     try {
@@ -57,12 +57,12 @@ class TaskCacheService {
       }
       
       final tasks = (cacheData['tasks'] as List)
-          .map((t) => Task.fromJson(Map<String, dynamic>.from(t)))
+          .map((t) => DuoTask.fromJson(Map<String, dynamic>.from(t)))
           .toList();
           
       return tasks;
     } catch (e) {
-      logger.e('Failed to get cached tasks: $e');
+      Log.e('Failed to get cached tasks: $e');
       return null;
     }
   }
@@ -86,7 +86,7 @@ class TaskCacheService {
           }
         }
       } catch (e) {
-        logger.e('Error cleaning up cache: $e');
+        Log.e('Error cleaning up cache: $e');
       }
     }
     

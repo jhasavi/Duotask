@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'dart:io';
 import '../utils/logger.dart';
+import 'rate_limit_service.dart';
 
 class AuthService {
   // Generate a crypto-secure random 8-character pair code

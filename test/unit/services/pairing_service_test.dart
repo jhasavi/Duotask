@@ -7,7 +7,6 @@ class MockPairingService extends Mock implements PairingService {}
 
 void main() {
   late MockPairingService pairingService;
-  final testPairCode = 'ABC12345';
   final testUser = User(
     id: 'user1',
     email: 'test@example.com',
@@ -20,33 +19,29 @@ void main() {
 
   group('PairingService Tests', () {
     test('generatePairCode - returns valid code', () async {
-      when(pairingService.generatePairCode())
-          .thenAnswer((_) async => testPairCode);
+      when(pairingService.generatePairCode('user1'))
+          .thenAnswer((_) async => '123456');
 
-      final code = await pairingService.generatePairCode();
-      
+      final code = await pairingService.generatePairCode('user1');
+
       expect(code, isA<String>());
-      expect(code.length, 8);
+      expect(code.length, 6);
     });
 
-    test('pairWithCode - successful pairing', () async {
-      when(pairingService.pairWithCode(testPairCode))
-          .thenAnswer((_) async => testUser);
+    test('getPairInfo - returns pair information', () async {
+      final pairInfo = {
+        'partner_id': 'user2',
+        'partner_name': 'Test Partner',
+        'online': true,
+      };
 
-      final result = await pairingService.pairWithCode(testPairCode);
-      
-      expect(result, isA<User>());
-      expect(result.id, 'user1');
-    });
+      when(pairingService.getPairInfo('user1'))
+          .thenAnswer((_) async => pairInfo);
 
-    test('getCurrentPair - returns paired user', () async {
-      when(pairingService.getCurrentPair())
-          .thenAnswer((_) async => testUser);
+      final result = await pairingService.getPairInfo('user1');
 
-      final result = await pairingService.getCurrentPair();
-      
-      expect(result, isA<User>());
-      expect(result.email, 'test@example.com');
+      expect(result, isNotNull);
+      expect(result!['partner_id'], 'user2');
     });
   });
 }

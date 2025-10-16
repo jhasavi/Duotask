@@ -7,11 +7,11 @@ class MockTaskService extends Mock implements TaskService {}
 
 void main() {
   late MockTaskService taskService;
-  final testTask = Task(
+  final testTask = DuoTask(
     id: '1',
     title: 'Test Task',
-    description: 'Test Description',
-    status: TaskStatus.pending,
+    status: TaskStatus.unclaimed,
+    ownerId: 'user1',
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );
@@ -32,13 +32,13 @@ void main() {
         description: 'Test Description',
       );
 
-      expect(result, isA<Task>());
+      expect(result, isA<DuoTask>());
       expect(result.title, 'Test Task');
     });
 
     test('updateTaskStatus - success', () async {
-      final updatedTask = testTask.copyWith(status: TaskStatus.completed);
-      
+      final updatedTask = testTask.copyWith(status: TaskStatus.done);
+
       when(taskService.updateTaskStatus(
         taskId: anyNamed('taskId'),
         status: anyNamed('status'),
@@ -46,10 +46,10 @@ void main() {
 
       final result = await taskService.updateTaskStatus(
         taskId: '1',
-        status: TaskStatus.completed,
+        status: TaskStatus.done,
       );
 
-      expect(result.status, TaskStatus.completed);
+      expect(result.status, TaskStatus.done);
     });
   });
 }
