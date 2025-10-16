@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:task_bubble/models/task.dart';
-import 'package:task_bubble/widgets/task_item.dart';
+import 'package:duotask/models/task.dart';
+import 'package:duotask/widgets/task_item.dart';
 
 void main() {
   final testTask = Task(

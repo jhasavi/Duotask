@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:task_bubble/models/task.dart';
-import 'package:task_bubble/services/task_service.dart';
+import 'package:duotask/models/task.dart';
+import 'package:duotask/services/task_service.dart';
 
 class MockTaskService extends Mock implements TaskService {}
 

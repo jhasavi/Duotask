@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:task_bubble/services/auth_service.dart';
+import 'package:duotask/services/auth_service.dart';
 
 class MockAuthService extends Mock implements AuthService {}
 

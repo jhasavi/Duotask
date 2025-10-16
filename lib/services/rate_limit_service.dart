@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:task_bubble/utils/logger.dart';
+import 'package:duotask/utils/logger.dart';
 
 class RateLimitService {
   final Map<String, Map<String, List<DateTime>>> _attempts = {};
@@ -17,7 +17,7 @@ class RateLimitService {
     
     final attempts = _attempts[endpoint]?[identifier] ?? [];
     if (attempts.length >= _maxAttempts) {
-      logger.warning('Rate limit exceeded for $endpoint ($identifier)');
+      Log.warning('Rate limit exceeded for $endpoint ($identifier)');
       return true;
     }
     

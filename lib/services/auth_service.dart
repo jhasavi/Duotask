@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'dart:io';
 import '../utils/logger.dart';
-import 'rate_limit_service.dart';
 
 class AuthService {
   // Generate a crypto-secure random 8-character pair code
@@ -41,7 +40,7 @@ class AuthService {
       // from the request headers or connection info
       return '${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
-      logger.warning('Could not get client IP: $e');
+      Log.warning('Could not get client IP: $e');
       return 'unknown';
     }
   }
