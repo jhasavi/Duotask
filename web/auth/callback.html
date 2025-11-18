@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Authentication - DuoTask</title>
+  <script>
+    // This page handles OAuth callbacks and redirects to the app
+    window.addEventListener('load', function() {
+      // Get the current URL with all query parameters
+      const currentUrl = window.location.href;
+      
+      // Determine if we're in local development or production
+      const isDevelopment = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+      
+      // Redirect to the root of the app with the auth hash/params
+      if (isDevelopment) {
+        // Local development - redirect to localhost
+        window.location.href = window.location.origin + '/' + window.location.hash;
+      } else {
+        // Production - redirect to root
+        window.location.href = '/' + window.location.hash;
+      }
+    });
+  </script>
+</head>
+<body>
+  <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+    <div style="text-align: center;">
+      <h2>Completing sign in...</h2>
+      <p>Please wait while we redirect you to DuoTask.</p>
+    </div>
+  </div>
+</body>
+</html>

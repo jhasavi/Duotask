@@ -1,0 +1,19 @@
+{
+  "name": "duotask-discord-bot",
+  "version": "1.0.0",
+  "description": "DuoTask Discord Bot - Task management via Discord",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["discord", "bot", "tasks", "duotask"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "@supabase/supabase-js": "^2.39.3",
+    "dotenv": "^16.4.1"
+  }
+}
