@@ -3,10 +3,6 @@
   "outputDirectory": "build/web",
   "installCommand": "echo 'No install needed'",
   "framework": null,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "cleanUrls": false,
+  "trailingSlash": false
 }
