@@ -17,6 +17,7 @@ class _PairingScreenState extends State<PairingScreen> {
   final _pairingCodeController = TextEditingController();
   String? _myPairingCode;
   bool _isLoadingCode = false;
+  List<dynamic>? _pastPartners;
 
   @override
   void initState() {
@@ -24,7 +25,24 @@ class _PairingScreenState extends State<PairingScreen> {
     // Load any existing pending pairing code
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadExistingPairingCode();
+      _loadPastPartners();
     });
+  }
+
+  Future<void> _loadPastPartners() async {
+    final authService = context.read<AuthService>();
+    final pairingService = context.read<PairingService>();
+    final userId = authService.currentUser?.id;
+    
+    if (userId == null) return;
+
+    final partners = await pairingService.getPastPartners(userId);
+    
+    if (mounted) {
+      setState(() {
+        _pastPartners = partners;
+      });
+    }
   }
 
   Future<void> _loadExistingPairingCode() async {
@@ -342,10 +360,111 @@ class _PairingScreenState extends State<PairingScreen> {
 
             // Option 2: Enter partner's code
             _buildEnterCodeCard(),
+            
+            // Past partners section
+            if (_pastPartners != null && _pastPartners!.isNotEmpty) ...[
+              const SizedBox(height: 40),
+              _buildPastPartnersSection(),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildPastPartnersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Past Partners',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Tap to quickly re-pair with a previous partner',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+        ),
+        const SizedBox(height: 16),
+        ..._pastPartners!.map((partner) => _buildPastPartnerCard(partner)),
+      ],
+    );
+  }
+
+  Widget _buildPastPartnerCard(dynamic partner) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          backgroundImage: partner.avatarUrl != null
+              ? NetworkImage(partner.avatarUrl!)
+              : null,
+          child: partner.avatarUrl == null
+              ? Text(
+                  partner.displayName?[0].toUpperCase() ?? 'P',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                )
+              : null,
+        ),
+        title: Text(
+          partner.displayName ?? 'Partner',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(partner.email),
+        trailing: FilledButton.icon(
+          onPressed: () => _repairWithUser(partner.id),
+          icon: const Icon(Icons.link, size: 18),
+          label: const Text('Re-pair'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _repairWithUser(String partnerId) async {
+    await HapticHelper.mediumImpact();
+    
+    final authService = context.read<AuthService>();
+    final pairingService = context.read<PairingService>();
+    
+    final userId = authService.currentUser?.id;
+    if (userId == null) return;
+
+    final success = await pairingService.repairWithUser(userId, partnerId);
+
+    if (mounted) {
+      if (success) {
+        await HapticHelper.success();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Successfully re-paired!')),
+        );
+        Navigator.pop(context);
+      } else {
+        await HapticHelper.error();
+        if (pairingService.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(pairingService.errorMessage!)),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildShareCodeCard() {

@@ -7,7 +7,12 @@ import '../config/theme.dart';
 class TaskCreationDialog extends StatefulWidget {
   final bool isPaired;
   final String? pairId;
-  final Function(String title, TaskVisibility visibility) onCreateTask;
+  final Function(
+    String title,
+    TaskVisibility visibility, {
+    TaskPriority priority,
+    TaskRecurrence recurrence,
+  }) onCreateTask;
 
   const TaskCreationDialog({
     super.key,
@@ -23,6 +28,8 @@ class TaskCreationDialog extends StatefulWidget {
 class _TaskCreationDialogState extends State<TaskCreationDialog> {
   final _taskController = TextEditingController();
   TaskVisibility _selectedVisibility = TaskVisibility.personal;
+  TaskPriority _selectedPriority = TaskPriority.normal;
+  TaskRecurrence _selectedRecurrence = TaskRecurrence.none;
 
   @override
   void dispose() {
@@ -34,7 +41,12 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
     final text = _taskController.text.trim();
     if (text.isEmpty) return;
 
-    widget.onCreateTask(text, _selectedVisibility);
+    widget.onCreateTask(
+      text,
+      _selectedVisibility,
+      priority: _selectedPriority,
+      recurrence: _selectedRecurrence,
+    );
     Navigator.of(context).pop();
   }
 
@@ -115,6 +127,66 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
               ),
               const SizedBox(height: 24),
             ],
+
+            // Priority selection
+            Text(
+              'Priority',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<TaskPriority>(
+              segments: const [
+                ButtonSegment(
+                  value: TaskPriority.normal,
+                  label: Text('Normal'),
+                  icon: Icon(Icons.flag_outlined),
+                ),
+                ButtonSegment(
+                  value: TaskPriority.urgent,
+                  label: Text('Urgent'),
+                  icon: Icon(Icons.priority_high),
+                ),
+              ],
+              selected: {_selectedPriority},
+              onSelectionChanged: (Set<TaskPriority> newSelection) {
+                setState(() {
+                  _selectedPriority = newSelection.first;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Recurrence selection
+            Text(
+              'Repeat',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<TaskRecurrence>(
+              segments: const [
+                ButtonSegment(
+                  value: TaskRecurrence.none,
+                  label: Text('None'),
+                ),
+                ButtonSegment(
+                  value: TaskRecurrence.daily,
+                  label: Text('Daily'),
+                  icon: Icon(Icons.today),
+                ),
+                ButtonSegment(
+                  value: TaskRecurrence.weekly,
+                  label: Text('Weekly'),
+                  icon: Icon(Icons.date_range),
+                ),
+              ],
+              selected: {_selectedRecurrence},
+              onSelectionChanged: (Set<TaskRecurrence> newSelection) {
+                setState(() {
+                  _selectedRecurrence = newSelection.first;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
 
             // Action buttons
             Row(

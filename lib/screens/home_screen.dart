@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => TaskCreationDialog(
         isPaired: pairingService.isPaired,
         pairId: pairingService.currentPairing?.id,
-        onCreateTask: (title, visibility) async {
+        onCreateTask: (title, visibility, {priority = TaskPriority.normal, recurrence = TaskRecurrence.none}) async {
           // Parse natural language input
           final parsed = taskService.parseNaturalInput(title);
 
@@ -193,7 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final task = await taskService.createTask(
             title: parsed['title'] as String,
             userId: userId,
-            priority: parsed['priority'] as TaskPriority,
+            priority: priority, // Use dialog selection, not parsed
+            recurrence: recurrence,
             dueDate: parsed['dueDate'] as DateTime?,
             assignedToId: pairingService.partner?.id,
             visibility: visibility,
@@ -509,11 +510,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             .where((t) => t.status != TaskStatus.completed)
                             .toList();
                         break;
-                      case 2: // Done
-                        filteredTasks = taskService.completedTasks;
+                      case 2: // Done - only show tasks completed in last 12 hours
+                        final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+                        filteredTasks = taskService.completedTasks
+                            .where((t) => t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo))
+                            .toList();
                         break;
-                      default: // All
-                        filteredTasks = taskService.tasks;
+                      default: // All - exclude old completed tasks
+                        final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+                        filteredTasks = taskService.tasks
+                            .where((t) => 
+                              t.status != TaskStatus.completed || 
+                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo))
+                            )
+                            .toList();
                     }
 
                     // Then filter by visibility if a filter is set

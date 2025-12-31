@@ -22,6 +22,89 @@ class PairingService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isPaired => _currentPairing?.isActive ?? false;
 
+  Future<List<AppUser>> getPastPartners(String userId) async {
+    try {
+      // Get all past cancelled pairings
+      final pairingsResponse = await _supabase
+          .from('pairings')
+          .select()
+          .or('requester_id.eq.$userId,recipient_id.eq.$userId')
+          .eq('status', PairingStatus.cancelled.name)
+          .order('updated_at', ascending: false)
+          .limit(10);
+
+      final List<AppUser> pastPartners = [];
+      final Set<String> seenPartnerIds = {};
+
+      for (final pairingJson in pairingsResponse as List) {
+        final pairing = Pairing.fromJson(pairingJson);
+        final partnerId = pairing.requesterId == userId
+            ? pairing.recipientId
+            : pairing.requesterId;
+
+        if (partnerId != null && !seenPartnerIds.contains(partnerId)) {
+          seenPartnerIds.add(partnerId);
+          
+          try {
+            final userResponse = await _supabase
+                .from('users')
+                .select()
+                .eq('id', partnerId)
+                .single();
+            
+            pastPartners.add(AppUser.fromJson(userResponse));
+          } catch (e) {
+            if (kDebugMode) print('Error loading past partner: $e');
+          }
+        }
+      }
+
+      return pastPartners;
+    } catch (e) {
+      if (kDebugMode) print('Error getting past partners: $e');
+      return [];
+    }
+  }
+
+  Future<bool> repairWithUser(String userId, String partnerId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      // Cancel any existing pending pairings
+      await _supabase
+          .from('pairings')
+          .update({'status': PairingStatus.cancelled.name})
+          .eq('requester_id', userId)
+          .eq('status', PairingStatus.pending.name);
+
+      // Create new pairing directly as active
+      final pairingCode = _generatePairingCode();
+      final pairingId = const Uuid().v4();
+
+      final pairingData = {
+        'id': pairingId,
+        'requester_id': userId,
+        'recipient_id': partnerId,
+        'pairing_code': pairingCode,
+        'status': PairingStatus.active.name,
+        'created_at': DateTime.now().toIso8601String(),
+        'accepted_at': DateTime.now().toIso8601String(),
+      };
+
+      await _supabase.from('pairings').insert(pairingData);
+      await checkPairingStatus(userId);
+
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError('Failed to re-pair. Please try again.');
+      if (kDebugMode) print('Re-pair error: $e');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<void> checkPairingStatus(String userId) async {
     _setLoading(true);
     _clearError();
