@@ -125,11 +125,37 @@ class PairingService extends ChangeNotifier {
     ).join();
   }
 
+  Future<String?> getMyPendingPairingCode(String userId) async {
+    try {
+      final response = await _supabase
+          .from('pairings')
+          .select('pairing_code')
+          .eq('requester_id', userId)
+          .eq('status', PairingStatus.pending.name)
+          .maybeSingle();
+
+      if (response != null && response['pairing_code'] != null) {
+        return response['pairing_code'] as String;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('Error getting pending pairing code: $e');
+      return null;
+    }
+  }
+
   Future<String?> createPairingCode(String userId) async {
     _setLoading(true);
     _clearError();
 
     try {
+      // Cancel any existing pending pairing requests by this user
+      await _supabase
+          .from('pairings')
+          .update({'status': PairingStatus.cancelled.name})
+          .eq('requester_id', userId)
+          .eq('status', PairingStatus.pending.name);
+
       final pairingCode = _generatePairingCode();
       final pairingId = const Uuid().v4();
 
@@ -156,6 +182,8 @@ class PairingService extends ChangeNotifier {
       return null;
     } on PostgrestException catch (e) {
       _setError('Failed to create pairing code: ${e.message}');
+      if (kDebugMode) print('PostgrestException: ${e.message}');
+      if (kDebugMode) print('Details: ${e.details}');
       _setLoading(false);
       return null;
     } catch (e) {
@@ -171,6 +199,8 @@ class PairingService extends ChangeNotifier {
     _clearError();
 
     try {
+      if (kDebugMode) print('Accepting pairing code: $pairingCode');
+      
       // Find the pairing request
       final response = await _supabase
           .from('pairings')
@@ -179,8 +209,11 @@ class PairingService extends ChangeNotifier {
           .eq('status', PairingStatus.pending.name)
           .maybeSingle();
 
+      if (kDebugMode) print('Pairing response: $response');
+
       if (response == null) {
         _setError('Invalid or expired pairing code');
+        if (kDebugMode) print('No pairing found with code: $pairingCode');
         _setLoading(false);
         return false;
       }
@@ -194,12 +227,16 @@ class PairingService extends ChangeNotifier {
         return false;
       }
 
+      if (kDebugMode) print('Updating pairing to active...');
+
       // Update pairing to active
       await _supabase.from('pairings').update({
         'recipient_id': userId,
         'status': PairingStatus.active.name,
         'accepted_at': DateTime.now().toIso8601String(),
       }).eq('id', pairing.id);
+
+      if (kDebugMode) print('Pairing updated successfully');
 
       // Load updated pairing status
       await checkPairingStatus(userId);
@@ -212,6 +249,8 @@ class PairingService extends ChangeNotifier {
       return false;
     } on PostgrestException catch (e) {
       _setError('Failed to accept pairing: ${e.message}');
+      if (kDebugMode) print('PostgrestException: ${e.message}');
+      if (kDebugMode) print('Details: ${e.details}');
       _setLoading(false);
       return false;
     } catch (e) {

@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
+import 'auth_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -345,6 +346,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed == true) {
       final authService = context.read<AuthService>();
       await authService.signOut();
+
+       // Ensure navigation resets to the auth screen after sign out
+       if (mounted) {
+         Navigator.of(context).pushAndRemoveUntil(
+           MaterialPageRoute(builder: (_) => const AuthScreen()),
+           (route) => false,
+         );
+       }
     }
   }
 

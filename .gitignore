@@ -60,3 +60,4 @@ discord-bot/node_modules/
 build/
 .vercel/
 discord-bot/bot.log
+.env*.local

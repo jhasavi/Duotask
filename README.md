@@ -2,6 +2,13 @@
 
 A visually engaging, real-time task-sharing app built with Flutter and Supabase, designed to help two people — such as couples, roommates, or teammates — coordinate daily responsibilities in a fun and effortless way.
 
+## 📚 Documentation
+
+- **[User Guide](USER_GUIDE.md)** - Complete user documentation, getting started, and troubleshooting
+- **[Developer Guide](DEVELOPER_GUIDE.md)** - Development setup, project structure, and contribution guidelines
+- **[Architecture](ARCHITECTURE.md)** - System architecture, database schema, and technical design
+- **[Pairing Test Guide](PAIRING_TEST_GUIDE.md)** - Testing pairing functionality
+
 ## 🎯 Features
 
 ### ✨ Core Functionality
@@ -40,55 +47,49 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
   - Green: Completed tasks
   - Red: Urgent tasks
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### For Users
 
-- Flutter SDK 3.0.0 or higher
-- Dart SDK 3.0.0 or higher
-- A Supabase account and project (already configured)
-- Xcode (for iOS development)
-- Android Studio (for Android development)
-- Chrome browser (for web testing)
+1. Visit the live app: **https://duotask-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app**
+2. Sign up with email or Google
+3. Generate a pairing code to connect with your partner
+4. Start adding and managing tasks together!
 
-### Quick Start
+See the **[User Guide](USER_GUIDE.md)** for detailed instructions.
 
-1. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
+### For Developers
 
-2. **Run the multi-platform test**
-   ```bash
-   ./test_all_platforms.sh
-   ```
-   
-   This will automatically:
-   - Launch the web app in Chrome
-   - Start iOS simulator and run the app
-   - Start Android emulator and run the app
-   - Provide testing instructions for pairing and features
-
-### Manual Platform Setup
-
-**Web:**
 ```bash
-flutter run -d chrome --web-port 5000
+# Clone repository
+git clone <repository-url>
+cd duotask
+
+# Install dependencies
+flutter pub get
+
+# Run on web
+flutter run -d chrome
 ```
 
-**iOS:**
-```bash
-# Ensure iOS simulator is running
-open -a Simulator
-flutter run -d ios
-```
+See the **[Developer Guide](DEVELOPER_GUIDE.md)** for full setup instructions.
 
-**Android:**
-```bash
-# Ensure Android emulator is running
-$ANDROID_HOME/emulator/emulator -avd <your_avd_name>
-flutter run -d android
-```
+## 📱 Platform Support
+
+- ✅ **Web** (Chrome, Firefox, Safari, Edge) - Production ready
+- ✅ **iOS** 12.0+ - Development ready
+- ✅ **Android** 5.0+ (API 21+) - Development ready
+- ✅ **macOS** 10.14+ - Development ready
+
+## 🏗️ Tech Stack
+
+- **Frontend**: Flutter 3.38.4 (Dart)
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **Deployment**: Vercel (Web)
+- **State Management**: Provider pattern
+- **Authentication**: Email + Google OAuth with PKCE
+
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for technical details.
 
 ## 📁 Project Structure
 
@@ -129,152 +130,75 @@ duotask/
 
 ## 🛠️ Configuration
 
-### Supabase Setup
+See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for complete setup instructions including:
+- Supabase configuration
+- Google OAuth setup
+- Environment variables
+- Database schema deployment
 
-1. Create a new Supabase project
-2. Run the SQL schema from `supabase/schema.sql`
-3. Enable Google OAuth in Authentication settings
-4. Add your redirect URLs in Authentication settings
-5. Enable real-time for the tables (users, tasks, pairings)
+## 🚢 Deployment
 
-### Google OAuth Setup
+### Web (Vercel)
 
-1. Create a project in Google Cloud Console
-2. Enable Google+ API and Google People API
-3. Create OAuth 2.0 credentials (Web, iOS, Android)
-4. Add authorized redirect URIs:
-   - `http://localhost:5000` (development)
-   - `https://your-supabase-url.supabase.co/auth/v1/callback`
-5. Update `.env` with your client IDs
+```bash
+# Build Flutter web
+flutter build web --release
 
-### Firebase Setup (Optional - for FCM)
+# Deploy to Vercel
+npx vercel deploy --prod
+```
 
-1. Create a Firebase project
-2. Add your Flutter app (iOS, Android, Web)
-3. Download configuration files
-4. Enable Firebase Cloud Messaging
-5. Update app configuration files
+**Production URL**: https://duotask-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app
 
-## 🎮 Usage
+### Mobile
 
-### Creating a Pairing
-
-1. User A: Tap the person icon → Generate pairing code
-2. User A: Share the 8-character code with User B
-3. User B: Tap the person icon → Enter the code
-4. Both users are now paired and can see shared tasks
-
-### Adding Tasks
-
-**Quick Add (Natural Language):**
-- "Grocery @6pm" → Task due at 6 PM today
-- "Call mom tomorrow" → Task due tomorrow at 9 AM
-- "Urgent: Fix bug" → High priority task
-- "Clean kitchen" → Simple task
-
-**Detailed Add:**
-- Long-press a bubble to edit details
-- Set priority, recurrence, description
-
-### Task Lifecycle
-
-1. **Unclaimed** (Large bubble, orange)
-   - Tap to claim the task
-2. **Claimed** (Medium bubble, blue)
-   - Tap to mark as complete
-3. **Completed** (Small bubble, green, faded)
-   - Tap to unclaim (cycle back)
-
-## 📱 Platform Support
-
-- ✅ Web (Chrome, Firefox, Safari, Edge)
-- ✅ iOS 12.0+
-- ✅ Android 5.0+ (API 21+)
-- ✅ macOS 10.14+
+See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#deployment)** for iOS and Android deployment instructions.
 
 ## 🧪 Testing
 
-### Automated Multi-Platform Testing
-```bash
-# Run comprehensive test across all platforms
-./test_all_platforms.sh
-```
-
-### Individual Platform Testing
 ```bash
 # Run unit tests
 flutter test
 
 # Run with coverage
 flutter test --coverage
-
-# Run integration tests
-flutter drive --target=test_driver/app.dart
 ```
 
-### Testing Workflow
-1. **Launch all platforms** using the test script
-2. **Create account** on one platform (Web is recommended)
-3. **Generate pairing code** 
-4. **Join from second platform** using the code
-5. **Test task creation, claiming, and completion**
-6. **Verify real-time sync** across platforms
-7. **Test notifications** and offline functionality
+See **[PAIRING_TEST_GUIDE.md](PAIRING_TEST_GUIDE.md)** for pairing functionality tests.
 
-## 🚢 Deployment
+## 🔮 Roadmap
 
-### Web
+### Version 1.1 (Q1 2026)
+- Push notifications for task reminders
+- Native mobile apps (iOS/Android)
+- Offline mode with sync
+- Task templates
 
-```bash
-flutter build web
-# Deploy the build/web folder to your hosting provider
-```
+### Version 1.2 (Q2 2026)
+- In-app messaging between partners
+- File attachments for tasks
+- Task analytics and insights
+- Export tasks (CSV, PDF)
 
-### iOS
-
-```bash
-flutter build ios
-# Open Xcode and archive the app
-```
-
-### Android
-
-```bash
-flutter build appbundle
-# Upload to Google Play Console
-```
-
-## 🔮 Planned Features
-
-- [ ] Voice input for task creation
-- [ ] Calendar integration
-- [ ] Smart suggestions based on usage patterns
-- [ ] Task templates
-- [ ] Multi-language support
-- [ ] Dark mode preferences
-- [ ] Task categories
-- [ ] File attachments
-- [ ] In-app messaging
-- [ ] Analytics dashboard
+### Version 2.0 (Q3 2026)
+- Multi-partner support (teams)
+- Advanced task filtering
+- Custom themes
+- Calendar integration
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Flutter team for the amazing framework
-- Supabase for the backend infrastructure
-- Material Design for the design system
-- All contributors and testers
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-For support, email support@duotask.app or join our Discord community.
+- **Documentation**: See guides in repository root
+- **Issues**: Open an issue on GitHub
+- **Questions**: Contact maintainer
 
 ## 🎉 Author
 

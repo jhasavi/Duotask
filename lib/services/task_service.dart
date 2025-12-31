@@ -144,6 +144,8 @@ class TaskService extends ChangeNotifier {
     TaskRecurrence recurrence = TaskRecurrence.none,
     DateTime? dueDate,
     bool isPersonal = false,
+    TaskVisibility visibility = TaskVisibility.personal,
+    String? pairId,
   }) async {
     _setLoading(true);
     _clearError();
@@ -163,7 +165,9 @@ class TaskService extends ChangeNotifier {
         'recurrence': recurrence.name,
         'due_date': dueDate?.toIso8601String(),
         'created_at': now.toIso8601String(),
-        'is_personal': isPersonal,
+        'is_personal': isPersonal, // Kept for backward compatibility
+        'visibility': visibility.name,
+        'pair_id': pairId,
       };
 
       final response =
@@ -307,39 +311,61 @@ class TaskService extends ChangeNotifier {
   }
 
   Future<bool> cycleTaskStatus(Task task, String userId) async {
-    TaskStatus newStatus;
-    String? claimedById;
-    DateTime? completedAt;
+    _setLoading(true);
+    _clearError();
 
-    switch (task.status) {
-      case TaskStatus.unclaimed:
-        newStatus = TaskStatus.claimed;
-        claimedById = userId;
-        break;
-      case TaskStatus.claimed:
-        newStatus = TaskStatus.completed;
-        claimedById = task.claimedById;
-        completedAt = DateTime.now();
-        
-        // Create recurring task if applicable
-        if (task.recurrence != TaskRecurrence.none) {
-          await createRecurringTask(task);
+    try {
+      // Use RPC function for atomic status transition (prevents race conditions)
+      final response = await _supabase.rpc('cycle_task_status', params: {
+        'task_uuid': task.id,
+        'user_uuid': userId,
+      }).select().single();
+
+      if (response != null) {
+        // Update local task list
+        final index = _tasks.indexWhere((t) => t.id == task.id);
+        if (index != -1) {
+          final updatedTask = Task.fromJson({
+            ...task.toJson(),
+            'status': response['status'],
+            'claimed_by_id': response['claimed_by_id'],
+            'claimed_at': response['claimed_at'],
+            'completed_at': response['completed_at'],
+            'updated_at': response['updated_at'],
+          });
+          
+          _tasks[index] = updatedTask;
+          
+          // Create recurring task if completed and has recurrence
+          if (updatedTask.status == TaskStatus.completed &&
+              task.recurrence != TaskRecurrence.none) {
+            await createRecurringTask(task);
+          }
+          
+          notifyListeners();
         }
-        break;
-      case TaskStatus.completed:
-        newStatus = TaskStatus.unclaimed;
-        claimedById = null;
-        completedAt = null;
-        break;
+        
+        _setLoading(false);
+        return true;
+      }
+      
+      _setLoading(false);
+      return false;
+    } on SocketException {
+      _setError('No internet connection. Cannot update task.');
+      _setLoading(false);
+      return false;
+    } on PostgrestException catch (e) {
+      _setError('Failed to update task: ${e.message}');
+      if (kDebugMode) print('Cycle task status error: ${e.message}');
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('Failed to update task. Please try again.');
+      if (kDebugMode) print('Cycle task status error: $e');
+      _setLoading(false);
+      return false;
     }
-
-    final updatedTask = task.copyWith(
-      status: newStatus,
-      claimedById: claimedById,
-      completedAt: completedAt,
-    );
-
-    return await updateTask(updatedTask);
   }
 
   Future<bool> deleteTask(String taskId) async {

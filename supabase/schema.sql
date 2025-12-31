@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   completed_at TIMESTAMPTZ,
-  is_personal BOOLEAN DEFAULT FALSE
+  is_personal BOOLEAN DEFAULT FALSE,
+  visibility TEXT NOT NULL DEFAULT 'personal' CHECK (visibility IN ('personal', 'group')),
+  pair_id UUID REFERENCES pairings(id) ON DELETE SET NULL
 );
 
 -- Pairings table
@@ -55,6 +57,8 @@ CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_claimed_by ON tasks(claimed_by_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_tasks_pair_id ON tasks(pair_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_visibility ON tasks(visibility);
 CREATE INDEX IF NOT EXISTS idx_pairings_code ON pairings(pairing_code);
 CREATE INDEX IF NOT EXISTS idx_pairings_requester ON pairings(requester_id);
 CREATE INDEX IF NOT EXISTS idx_pairings_recipient ON pairings(recipient_id);
@@ -120,10 +124,19 @@ DROP POLICY IF EXISTS "Users can view their own tasks" ON tasks;
 CREATE POLICY "Users can view their own tasks"
   ON tasks FOR SELECT
   USING (
-    auth.uid() = created_by_id OR
+    -- Personal tasks: only creator can see
+    (visibility = 'personal' AND auth.uid() = created_by_id)
+    OR
+    -- Group tasks: both users in the pair can see
+    (visibility = 'group' AND pair_id IN (
+      SELECT id FROM pairings 
+      WHERE status = 'active' 
+      AND (requester_id = auth.uid() OR recipient_id = auth.uid())
+    ))
+    OR
+    -- Backward compatibility: tasks assigned to or claimed by user
     auth.uid() = assigned_to_id OR
-    auth.uid() = claimed_by_id OR
-    auth.uid() IN (SELECT paired_with_id FROM users WHERE id = created_by_id)
+    auth.uid() = claimed_by_id
   );
 
 DROP POLICY IF EXISTS "Users can create tasks" ON tasks;
@@ -135,9 +148,18 @@ DROP POLICY IF EXISTS "Users can update their own tasks" ON tasks;
 CREATE POLICY "Users can update their own tasks"
   ON tasks FOR UPDATE
   USING (
-    auth.uid() = created_by_id OR
-    auth.uid() = assigned_to_id OR
-    auth.uid() IN (SELECT paired_with_id FROM users WHERE id = created_by_id)
+    -- Personal tasks: only creator can update
+    (visibility = 'personal' AND auth.uid() = created_by_id)
+    OR
+    -- Group tasks: both users in the pair can update
+    (visibility = 'group' AND pair_id IN (
+      SELECT id FROM pairings 
+      WHERE status = 'active' 
+      AND (requester_id = auth.uid() OR recipient_id = auth.uid())
+    ))
+    OR
+    -- Backward compatibility
+    auth.uid() = assigned_to_id
   );
 
 DROP POLICY IF EXISTS "Users can delete their own tasks" ON tasks;
@@ -147,9 +169,16 @@ CREATE POLICY "Users can delete their own tasks"
 
 -- Pairings policies
 DROP POLICY IF EXISTS "Users can view pairings they're involved in" ON pairings;
-CREATE POLICY "Users can view pairings they're involved in"
+DROP POLICY IF EXISTS "Users can view their pairings or search pending codes" ON pairings;
+CREATE POLICY "Users can view their pairings or search pending codes"
   ON pairings FOR SELECT
-  USING (auth.uid() = requester_id OR auth.uid() = recipient_id);
+  USING (
+    -- User is involved in this pairing
+    (auth.uid() = requester_id OR auth.uid() = recipient_id)
+    OR
+    -- OR it's a pending pairing (allows searching by code)
+    (status = 'pending')
+  );
 
 DROP POLICY IF EXISTS "Users can create pairing requests" ON pairings;
 CREATE POLICY "Users can create pairing requests"
@@ -227,6 +256,68 @@ CREATE TRIGGER on_pairing_status_change
   BEFORE UPDATE ON pairings
   FOR EACH ROW
   EXECUTE FUNCTION sync_pairing_status();
+
+-- Function to cycle task status atomically (prevents race conditions)
+CREATE OR REPLACE FUNCTION cycle_task_status(
+  task_uuid UUID,
+  user_uuid UUID
+)
+RETURNS TABLE (
+  id UUID,
+  status TEXT,
+  claimed_by_id UUID,
+  claimed_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+) AS $$
+DECLARE
+  current_status TEXT;
+  new_status TEXT;
+  new_claimed_by UUID;
+  new_claimed_at TIMESTAMPTZ;
+  new_completed_at TIMESTAMPTZ;
+BEGIN
+  -- Lock the row for update
+  SELECT tasks.status INTO current_status
+  FROM tasks
+  WHERE tasks.id = task_uuid
+  FOR UPDATE;
+
+  -- Determine new status based on current status
+  CASE current_status
+    WHEN 'unclaimed' THEN
+      new_status := 'claimed';
+      new_claimed_by := user_uuid;
+      new_claimed_at := NOW();
+      new_completed_at := NULL;
+    WHEN 'claimed' THEN
+      new_status := 'completed';
+      new_claimed_by := (SELECT tasks.claimed_by_id FROM tasks WHERE tasks.id = task_uuid);
+      new_claimed_at := (SELECT tasks.claimed_at FROM tasks WHERE tasks.id = task_uuid);
+      new_completed_at := NOW();
+    WHEN 'completed' THEN
+      new_status := 'unclaimed';
+      new_claimed_by := NULL;
+      new_claimed_at := NULL;
+      new_completed_at := NULL;
+    ELSE
+      RAISE EXCEPTION 'Invalid task status: %', current_status;
+  END CASE;
+
+  -- Update and return the task
+  RETURN QUERY
+  UPDATE tasks
+  SET 
+    status = new_status,
+    claimed_by_id = new_claimed_by,
+    claimed_at = new_claimed_at,
+    completed_at = new_completed_at,
+    updated_at = NOW()
+  WHERE tasks.id = task_uuid
+  RETURNING tasks.id, tasks.status::TEXT, tasks.claimed_by_id, 
+            tasks.claimed_at, tasks.completed_at, tasks.updated_at;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Enable realtime for all tables
 ALTER PUBLICATION supabase_realtime ADD TABLE users;

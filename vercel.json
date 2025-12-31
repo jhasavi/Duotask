@@ -1,8 +1,29 @@
 {
-  "buildCommand": "echo 'Using pre-built files'",
+  "buildCommand": "echo 'Using pre-built files from build/web'",
   "outputDirectory": "build/web",
-  "installCommand": "echo 'No install needed'",
+  "installCommand": "echo 'No install needed - using pre-built Flutter web app'",
   "framework": null,
   "cleanUrls": false,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "credentialless"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        }
+      ]
+    }
+  ]
 }

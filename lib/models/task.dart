@@ -15,6 +15,20 @@ enum TaskStatus {
   }
 }
 
+enum TaskVisibility {
+  personal,
+  group;
+
+  String get displayName {
+    switch (this) {
+      case TaskVisibility.personal:
+        return 'Personal';
+      case TaskVisibility.group:
+        return 'Group';
+    }
+  }
+}
+
 enum TaskPriority {
   normal,
   urgent;
@@ -60,7 +74,9 @@ class Task {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? completedAt;
-  final bool isPersonal;
+  final bool isPersonal; // Deprecated: use visibility instead
+  final TaskVisibility visibility;
+  final String? pairId;
 
   Task({
     required this.id,
@@ -76,10 +92,26 @@ class Task {
     required this.createdAt,
     this.updatedAt,
     this.completedAt,
-    required this.isPersonal,
+    this.isPersonal = false, // Deprecated: use visibility instead
+    this.visibility = TaskVisibility.personal,
+    this.pairId,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
+    // Handle backward compatibility
+    TaskVisibility visibility;
+    if (json['visibility'] != null) {
+      visibility = TaskVisibility.values.firstWhere(
+        (e) => e.name == json['visibility'],
+        orElse: () => TaskVisibility.personal,
+      );
+    } else {
+      // Fallback to isPersonal for backward compatibility
+      visibility = (json['is_personal'] == true)
+          ? TaskVisibility.personal
+          : TaskVisibility.group;
+    }
+
     return Task(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -110,6 +142,8 @@ class Task {
           ? DateTime.parse(json['completed_at'] as String)
           : null,
       isPersonal: json['is_personal'] as bool? ?? false,
+      visibility: visibility,
+      pairId: json['pair_id'] as String?,
     );
   }
 
@@ -128,7 +162,9 @@ class Task {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'completed_at': completedAt?.toIso8601String(),
-      'is_personal': isPersonal,
+      'is_personal': isPersonal, // Deprecated: kept for backward compatibility
+      'visibility': visibility.name,
+      'pair_id': pairId,
     };
   }
 
@@ -147,6 +183,8 @@ class Task {
     DateTime? updatedAt,
     DateTime? completedAt,
     bool? isPersonal,
+    TaskVisibility? visibility,
+    String? pairId,
   }) {
     return Task(
       id: id ?? this.id,
@@ -163,6 +201,8 @@ class Task {
       updatedAt: updatedAt ?? this.updatedAt,
       completedAt: completedAt ?? this.completedAt,
       isPersonal: isPersonal ?? this.isPersonal,
+      visibility: visibility ?? this.visibility,
+      pairId: pairId ?? this.pairId,
     );
   }
 

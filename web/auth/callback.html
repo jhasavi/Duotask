@@ -6,21 +6,20 @@
   <script>
     // This page handles OAuth callbacks and redirects to the app
     window.addEventListener('load', function() {
-      // Get the current URL with all query parameters
-      const currentUrl = window.location.href;
+      console.log('OAuth callback received');
+      console.log('Hash:', window.location.hash);
+      console.log('Search:', window.location.search);
       
-      // Determine if we're in local development or production
-      const isDevelopment = window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1';
+      // Get the auth token from hash or query params
+      const hash = window.location.hash;
+      const search = window.location.search;
       
-      // Redirect to the root of the app with the auth hash/params
-      if (isDevelopment) {
-        // Local development - redirect to localhost
-        window.location.href = window.location.origin + '/' + window.location.hash;
-      } else {
-        // Production - redirect to root
-        window.location.href = '/' + window.location.hash;
-      }
+      // Redirect to the root of the app with the auth data
+      // Supabase will handle the session automatically
+      const redirectUrl = window.location.origin + '/' + (hash || search);
+      console.log('Redirecting to:', redirectUrl);
+      
+      window.location.href = redirectUrl;
     });
   </script>
 </head>
