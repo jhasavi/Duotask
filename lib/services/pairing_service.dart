@@ -110,17 +110,22 @@ class PairingService extends ChangeNotifier {
     _clearError();
 
     try {
-      // Check if user has an active pairing
+      // Check if user has an active pairing (get all and take the most recent)
       final response = await _supabase
           .from('pairings')
           .select()
           .or('requester_id.eq.$userId,recipient_id.eq.$userId')
           .eq('status', PairingStatus.active.name)
-          .maybeSingle();
+          .order('accepted_at', ascending: false)
+          .limit(1);
 
-      if (response != null) {
-        _currentPairing = Pairing.fromJson(response);
+      if (response != null && (response as List).isNotEmpty) {
+        _currentPairing = Pairing.fromJson(response.first);
         await _loadPartner(userId);
+      } else {
+        // Ensure no stale data
+        _currentPairing = null;
+        _partner = null;
       }
 
       _setLoading(false);
@@ -349,34 +354,45 @@ class PairingService extends ChangeNotifier {
     _clearError();
 
     try {
-      if (_currentPairing == null) {
+      // Find ALL active pairings for this user (should only be one, but handle edge cases)
+      final activePairings = await _supabase
+          .from('pairings')
+          .select()
+          .or('requester_id.eq.$userId,recipient_id.eq.$userId')
+          .eq('status', PairingStatus.active.name);
+
+      if (activePairings.isEmpty) {
         _setError('No active pairing to remove');
         _setLoading(false);
         return false;
       }
 
-      // Update pairing status to cancelled
-      await _supabase.from('pairings').update({
-        'status': PairingStatus.cancelled.name,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', _currentPairing!.id);
+      // Cancel all active pairings
+      for (final pairingData in activePairings as List) {
+        final pairing = Pairing.fromJson(pairingData);
+        await _supabase.from('pairings').update({
+          'status': PairingStatus.cancelled.name,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', pairing.id);
 
-      // Clear pairing info from both users
-      final partnerId = _currentPairing!.requesterId == userId
-          ? _currentPairing!.recipientId
-          : _currentPairing!.requesterId;
+        // Clear pairing info from both users
+        final partnerId = pairing.requesterId == userId
+            ? pairing.recipientId
+            : pairing.requesterId;
 
+        if (partnerId != null) {
+          await _supabase.from('users').update({
+            'paired_with_id': null,
+            'paired_with_name': null,
+          }).eq('id', partnerId);
+        }
+      }
+
+      // Clear current user's pairing info
       await _supabase.from('users').update({
         'paired_with_id': null,
         'paired_with_name': null,
       }).eq('id', userId);
-
-      if (partnerId != null) {
-        await _supabase.from('users').update({
-          'paired_with_id': null,
-          'paired_with_name': null,
-        }).eq('id', partnerId);
-      }
 
       _currentPairing = null;
       _partner = null;

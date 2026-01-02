@@ -10,6 +10,8 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/shimmer_loading.dart';
 import '../widgets/animated_bubble_layout.dart';
 import '../widgets/task_creation_dialog.dart';
+import '../widgets/daily_checkin_banner.dart';
+import '../widgets/weekly_summary_modal.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 import '../utils/haptic_helper.dart';
@@ -29,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     duration: AppConstants.confettiDuration,
   );
   final _taskInputController = TextEditingController();
-  int _selectedTab = 0; // 0=All, 1=Active, 2=Done
+  int _selectedTab = 0; // 0=Personal, 1=Paired
   TaskVisibility? _visibilityFilter; // null=All, personal, group
 
   @override
@@ -59,7 +61,50 @@ class _HomeScreenState extends State<HomeScreen> {
         taskService.loadTasks(userId),
         pairingService.checkPairingStatus(userId),
       ]);
+
+      // Show weekly summary if it's time and user is paired
+      if (pairingService.isPaired && pairingService.partner != null) {
+        _checkAndShowWeeklySummary(userId, pairingService);
+      }
     }
+  }
+
+  Future<void> _checkAndShowWeeklySummary(
+    String userId,
+    PairingService pairingService,
+  ) async {
+    // Check if it's Sunday and we haven't shown this week
+    final now = DateTime.now();
+    if (now.weekday != DateTime.sunday) return;
+    if (now.hour < 9) return; // Only show after 9am
+
+    final shouldShow = await WeeklySummaryModal.shouldShow();
+    if (!shouldShow) return;
+
+    final taskService = context.read<TaskService>();
+    final authService = context.read<AuthService>();
+    
+    // Get weekly completion counts
+    final counts = await taskService.getWeeklyCompletions(
+      userId,
+      pairingService.partner?.id,
+    );
+
+    if (!mounted) return;
+
+    // Show modal
+    await showDialog(
+      context: context,
+      builder: (context) => WeeklySummaryModal(
+        userName: authService.currentUser?.displayName ?? 'You',
+        partnerName: pairingService.partner?.displayName ?? 'Partner',
+        userCompletedCount: counts['user'] ?? 0,
+        partnerCompletedCount: counts['partner'] ?? 0,
+      ),
+    );
+
+    // Mark as shown
+    await WeeklySummaryModal.markAsShown();
   }
 
   Future<void> _handleTaskTap(Task task) async {
@@ -397,39 +442,38 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // Tab selector
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: SegmentedButton<int>(
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              Consumer<PairingService>(
+                builder: (context, pairingService, child) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SegmentedButton<int>(
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        visualDensity: VisualDensity.standard,
+                      ),
+                      segments: [
+                        const ButtonSegment(
+                          value: 0,
+                          label: Text('Personal'),
+                          icon: Icon(Icons.person),
+                        ),
+                        ButtonSegment(
+                          value: 1,
+                          label: Text(pairingService.isPaired ? 'Paired' : 'Shared'),
+                          icon: const Icon(Icons.people),
+                        ),
+                      ],
+                      selected: {_selectedTab},
+                      onSelectionChanged: (Set<int> newSelection) {
+                        setState(() {
+                          _selectedTab = newSelection.first;
+                        });
+                      },
                     ),
-                    visualDensity: VisualDensity.standard,
-                  ),
-                  segments: const [
-                    ButtonSegment(
-                      value: 0,
-                      label: Text('All'),
-                      icon: Icon(Icons.apps),
-                    ),
-                    ButtonSegment(
-                      value: 1,
-                      label: Text('Active'),
-                      icon: Icon(Icons.pending_actions),
-                    ),
-                    ButtonSegment(
-                      value: 2,
-                      label: Text('Done'),
-                      icon: Icon(Icons.check_circle),
-                    ),
-                  ],
-                  selected: {_selectedTab},
-                  onSelectionChanged: (Set<int> newSelection) {
-                    setState(() {
-                      _selectedTab = newSelection.first;
-                    });
-                  },
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
@@ -503,75 +547,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     List<Task> filteredTasks;
                     
-                    // First filter by status (All/Active/Done)
-                    switch (_selectedTab) {
-                      case 1: // Active
-                        filteredTasks = taskService.tasks
-                            .where((t) => t.status != TaskStatus.completed)
-                            .toList();
-                        break;
-                      case 2: // Done - only show tasks completed in last 12 hours
-                        final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
-                        filteredTasks = taskService.completedTasks
-                            .where((t) => t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo))
-                            .toList();
-                        break;
-                      default: // All - exclude old completed tasks
-                        final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
-                        filteredTasks = taskService.tasks
-                            .where((t) => 
-                              t.status != TaskStatus.completed || 
-                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo))
-                            )
-                            .toList();
-                    }
-
-                    // Then filter by visibility if a filter is set
-                    if (_visibilityFilter != null) {
-                      filteredTasks = filteredTasks
-                          .where((t) => t.visibility == _visibilityFilter)
+                    // Filter by tab (Personal vs Paired)
+                    if (_selectedTab == 0) {
+                      // Personal tab - show only personal tasks (exclude old completed)
+                      final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+                      filteredTasks = taskService.tasks
+                          .where((t) => 
+                            t.visibility == TaskVisibility.personal &&
+                            (t.status != TaskStatus.completed || 
+                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo)))
+                          )
+                          .toList();
+                    } else {
+                      // Paired tab - show only group tasks (exclude old completed)
+                      final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+                      filteredTasks = taskService.tasks
+                          .where((t) => 
+                            t.visibility == TaskVisibility.group &&
+                            (t.status != TaskStatus.completed || 
+                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo)))
+                          )
                           .toList();
                     }
 
-                    if (filteredTasks.isEmpty) {
-                      String emptyTitle;
-                      String emptyMessage;
-                      IconData emptyIcon;
+                    return Column(
+                      children: [
+                        // Daily Check-In Banner
+                        DailyCheckInBanner(
+                          onFocusMode: () {
+                            // Switch to Paired tab
+                            setState(() {
+                              _selectedTab = 1;
+                            });
+                          },
+                        ),
 
-                      switch (_selectedTab) {
-                        case 1: // Active
-                          emptyTitle = 'All caught up!';
-                          emptyMessage =
-                              'No active tasks right now.\nCreate a new one or take a break! 🎉';
-                          emptyIcon = Icons.check_circle_outline;
-                          break;
-                        case 2: // Done
-                          emptyTitle = 'No completed tasks yet';
-                          emptyMessage =
-                              'Tasks you complete will appear here.\nGet started by claiming a task!';
-                          emptyIcon = Icons.emoji_events_outlined;
-                          break;
-                        default: // All
-                          emptyTitle = 'No tasks yet';
-                          emptyMessage =
-                              'Start by adding your first task above.\nTry: "Buy groceries @6pm" 🛒';
-                          emptyIcon = Icons.lightbulb_outline;
-                      }
-
-                      return EmptyStateWidget(
-                        icon: emptyIcon,
-                        title: emptyTitle,
-                        message: emptyMessage,
-                        iconSize: 100,
-                      );
-                    }
-
-                    return AnimatedBubbleLayout(
-                      tasks: filteredTasks,
-                      isCreatedByPartner: (task) =>
-                          task.createdById != currentUserId,
-                      onTaskTap: _handleTaskTap,
-                      onTaskLongPress: _showTaskDetail,
+                        // Task List
+                        Expanded(
+                          child: filteredTasks.isEmpty
+                              ? _buildEmptyState()
+                              : AnimatedBubbleLayout(
+                                  tasks: filteredTasks,
+                                  isCreatedByPartner: (task) =>
+                                      task.createdById != currentUserId,
+                                  onTaskTap: _handleTaskTap,
+                                  onTaskLongPress: _showTaskDetail,
+                                ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -604,6 +627,33 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('New Task'),
         tooltip: 'Create new task',
       ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    String emptyTitle;
+    String emptyMessage;
+    IconData emptyIcon;
+
+    switch (_selectedTab) {
+      case 1: // Paired
+        emptyTitle = 'No shared tasks yet';
+        emptyMessage =
+            'Tasks marked as "Group" will appear here.\nCreate a shared task to get started! 👥';
+        emptyIcon = Icons.people_outline;
+        break;
+      default: // Personal
+        emptyTitle = 'No personal tasks yet';
+        emptyMessage =
+            'Start by adding your first task above.\nTry: "Buy groceries @6pm" 🛒';
+        emptyIcon = Icons.person_outline;
+    }
+
+    return EmptyStateWidget(
+      icon: emptyIcon,
+      title: emptyTitle,
+      message: emptyMessage,
+      iconSize: 100,
     );
   }
 }

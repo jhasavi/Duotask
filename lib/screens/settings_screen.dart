@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
+import '../services/pairing_service.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 import 'auth_screen.dart';
+import 'pairing_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -112,6 +115,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const Divider(),
 
+          // Pairing Management Section
+          _SectionHeader(title: 'Partner Pairing'),
+          Consumer<PairingService>(
+            builder: (context, pairingService, child) {
+              if (pairingService.isPaired && pairingService.partner != null) {
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.people),
+                      title: const Text('Current Partner'),
+                      subtitle: Text(
+                        '${pairingService.partner!.displayName} (${pairingService.partner!.email})',
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.link_off),
+                      title: const Text('Unpair'),
+                      textColor: AppTheme.urgentColor,
+                      iconColor: AppTheme.urgentColor,
+                      onTap: () => _showUnpairDialog(),
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.person_add),
+                      title: const Text('Connect with Partner'),
+                      subtitle: const Text('Tap to pair with someone'),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const PairingScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    FutureBuilder<String?>(
+                      future: pairingService.getMyPendingPairingCode(
+                        context.read<AuthService>().currentUser!.id,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data != null) {
+                          return ListTile(
+                            leading: const Icon(Icons.qr_code),
+                            title: const Text('My Pairing Code'),
+                            subtitle: Text(
+                              snapshot.data!,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.copy),
+                              onPressed: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: snapshot.data!),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Pairing code copied!'),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+
+          const Divider(),
+
           // App Settings
           _SectionHeader(title: 'App Settings'),
           Consumer<PreferencesService>(
@@ -195,6 +279,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showUnpairDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unpair Confirmation'),
+        content: const Text(
+          'Are you sure you want to unpair? This will remove the connection between you and your partner.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.urgentColor,
+            ),
+            child: const Text('Unpair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final authService = context.read<AuthService>();
+      final pairingService = context.read<PairingService>();
+      final userId = authService.currentUser?.id;
+
+      if (userId != null) {
+        final success = await pairingService.unpair(userId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                success
+                    ? 'Unpairing successful'
+                    : pairingService.errorMessage ?? 'Failed to unpair',
+              ),
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showEditProfileDialog() async {

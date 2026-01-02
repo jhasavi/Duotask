@@ -191,7 +191,7 @@ class _PairingScreenState extends State<PairingScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Partner Pairing'),
+        title: const Text('Partner'),
         elevation: 0,
       ),
       body: Consumer<PairingService>(
@@ -285,7 +285,7 @@ class _PairingScreenState extends State<PairingScreen> {
             OutlinedButton.icon(
               onPressed: _unpair,
               icon: const Icon(Icons.link_off),
-              label: const Text('Disconnect Partner'),
+              label: const Text('Unpair'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.urgentColor,
                 side: BorderSide(color: AppTheme.urgentColor),

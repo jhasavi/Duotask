@@ -356,7 +356,12 @@ class TaskService extends ChangeNotifier {
       _setLoading(false);
       return false;
     } on PostgrestException catch (e) {
-      _setError('Failed to update task: ${e.message}');
+      // Check for ownership lock error
+      if (e.message.contains('Only the task owner can complete')) {
+        _setError('Only the task owner can complete this task');
+      } else {
+        _setError('Failed to update task: ${e.message}');
+      }
       if (kDebugMode) print('Cycle task status error: ${e.message}');
       _setLoading(false);
       return false;
@@ -479,6 +484,48 @@ class TaskService extends ChangeNotifier {
     }
 
     return result;
+  }
+
+  /// Get weekly completion counts for user and partner
+  Future<Map<String, int>> getWeeklyCompletions(
+    String userId,
+    String? partnerId,
+  ) async {
+    try {
+      // Get current week's Sunday and next Sunday
+      final now = DateTime.now();
+      final sunday = now.subtract(Duration(days: now.weekday % 7));
+      final startOfWeek = DateTime(sunday.year, sunday.month, sunday.day);
+      final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
+      final response = await _supabase
+          .from('tasks')
+          .select('claimed_by_id')
+          .eq('visibility', 'group')
+          .eq('status', 'completed')
+          .gte('completed_at', startOfWeek.toIso8601String())
+          .lt('completed_at', endOfWeek.toIso8601String());
+
+      int userCount = 0;
+      int partnerCount = 0;
+
+      for (final task in response as List) {
+        final claimedById = task['claimed_by_id'] as String?;
+        if (claimedById == userId) {
+          userCount++;
+        } else if (claimedById == partnerId) {
+          partnerCount++;
+        }
+      }
+
+      return {
+        'user': userCount,
+        'partner': partnerCount,
+      };
+    } catch (e) {
+      if (kDebugMode) print('Get weekly completions error: $e');
+      return {'user': 0, 'partner': 0};
+    }
   }
 
   void _setLoading(bool value) {

@@ -10,6 +10,7 @@ import 'services/auth_service.dart';
 import 'services/task_service.dart';
 import 'services/pairing_service.dart';
 import 'services/notification_service.dart';
+import 'services/nudge_service.dart';
 import 'services/preferences_service.dart';
 import 'services/connectivity_service.dart';
 import 'screens/auth_screen.dart';
@@ -101,6 +102,12 @@ class DuoTaskApp extends StatelessWidget {
         
         ChangeNotifierProvider<PairingService>(
           create: (context) => PairingService(
+            context.read<SupabaseClient>(),
+          ),
+        ),
+        
+        ChangeNotifierProvider<NudgeService>(
+          create: (context) => NudgeService(
             context.read<SupabaseClient>(),
           ),
         ),
