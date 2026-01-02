@@ -1,0 +1,7 @@
+# Ignore everything except build/web
+*
+!build/
+!build/web/
+!build/web/**
+!vercel.json
+!.gitignore
