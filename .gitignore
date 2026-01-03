@@ -34,6 +34,9 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Except web build (needed for Vercel)
+!/build/web/
+
 # Symbolication related
 app.*.symbols
 
@@ -57,7 +60,7 @@ firebase_options.dart
 .vercel
 node_modules/
 discord-bot/node_modules/
-build/
+# build/ is allowed for web deployment
 .vercel/
 discord-bot/bot.log
 .env*.local

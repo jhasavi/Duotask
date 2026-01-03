@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Authentication - DuoTask</title>
+  <script>
+    // This page handles OAuth callbacks and redirects to the app
+    window.addEventListener('load', function() {
+      console.log('OAuth callback received');
+      console.log('Hash:', window.location.hash);
+      console.log('Search:', window.location.search);
+      
+      // Get the auth token from hash or query params
+      const hash = window.location.hash;
+      const search = window.location.search;
+      
+      // Redirect to the root of the app with the auth data
+      // Supabase will handle the session automatically
+      const redirectUrl = window.location.origin + '/' + (hash || search);
+      console.log('Redirecting to:', redirectUrl);
+      
+      window.location.href = redirectUrl;
+    });
+  </script>
+</head>
+<body>
+  <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+    <div style="text-align: center;">
+      <h2>Completing sign in...</h2>
+      <p>Please wait while we redirect you to DuoTask.</p>
+    </div>
+  </div>
+</body>
+</html>
