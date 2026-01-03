@@ -208,7 +208,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'DuoTask <noreply@duotask.app>',
+            from: 'DuoTask <onboarding@resend.dev>',
             to: [emailData.user_email],
             subject: `Your Daily DuoTask Digest - ${emailData.total_open} task${emailData.total_open !== 1 ? 's' : ''}`,
             html: htmlContent,
