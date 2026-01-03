@@ -58,12 +58,51 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
 
   void _initializeBubblePositions() {
     _bubblePositions.clear();
+    
     for (int i = 0; i < widget.tasks.length; i++) {
-      _bubblePositions.add(BubblePosition(
-        dx: _random.nextDouble(),
-        dy: _random.nextDouble(),
-        rotation: _random.nextDouble() * 0.2 - 0.1, // -0.1 to 0.1 radians
-      ));
+      bool positionFound = false;
+      int attempts = 0;
+      const maxAttempts = 50;
+      
+      while (!positionFound && attempts < maxAttempts) {
+        final newPosition = BubblePosition(
+          dx: _random.nextDouble(),
+          dy: _random.nextDouble(),
+          rotation: _random.nextDouble() * 0.2 - 0.1,
+        );
+        
+        // Check if this position overlaps with existing bubbles
+        bool overlaps = false;
+        for (var existingPos in _bubblePositions) {
+          final distance = sqrt(
+            pow(newPosition.dx - existingPos.dx, 2) +
+            pow(newPosition.dy - existingPos.dy, 2)
+          );
+          
+          // Minimum distance threshold (adjust based on bubble sizes)
+          // 0.2 means bubbles need ~20% of container width/height apart
+          if (distance < 0.25) {
+            overlaps = true;
+            break;
+          }
+        }
+        
+        if (!overlaps) {
+          _bubblePositions.add(newPosition);
+          positionFound = true;
+        }
+        
+        attempts++;
+      }
+      
+      // If no position found after max attempts, place it anyway
+      if (!positionFound) {
+        _bubblePositions.add(BubblePosition(
+          dx: _random.nextDouble(),
+          dy: _random.nextDouble(),
+          rotation: _random.nextDouble() * 0.2 - 0.1,
+        ));
+      }
     }
   }
 

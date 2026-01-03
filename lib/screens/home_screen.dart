@@ -477,62 +477,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Visibility filter (when paired)
-              Consumer<PairingService>(
-                builder: (context, pairingService, child) {
-                  if (!pairingService.isPaired) return const SizedBox.shrink();
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Task Type',
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            FilterChip(
-                              label: const Text('All'),
-                              selected: _visibilityFilter == null,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _visibilityFilter = null;
-                                });
-                              },
-                            ),
-                            FilterChip(
-                              label: const Text('Group'),
-                              avatar: const Icon(Icons.people, size: 18),
-                              selected: _visibilityFilter == TaskVisibility.group,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _visibilityFilter = selected ? TaskVisibility.group : null;
-                                });
-                              },
-                            ),
-                            FilterChip(
-                              label: const Text('Personal'),
-                              avatar: const Icon(Icons.person, size: 18),
-                              selected: _visibilityFilter == TaskVisibility.personal,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _visibilityFilter = selected ? TaskVisibility.personal : null;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
               // Task bubbles
               Expanded(
                 child: Consumer<TaskService>(
