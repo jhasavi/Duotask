@@ -194,6 +194,19 @@ Contributions are welcome! See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🚀 Deployment
+
+### Vercel (Web)
+DuoTask is configured for automatic deployment on Vercel.
+
+1. Connect your GitHub repository to Vercel
+2. Vercel will automatically build and deploy on pushes to main
+3. The web app will be available at your Vercel domain
+
+### Mobile Apps
+- **Android**: Build APK with `flutter build apk --release`
+- **iOS**: Build IPA with `flutter build ios --release` (requires Apple Developer account)
+
 ## 📞 Support
 
 - **Documentation**: See guides in repository root
