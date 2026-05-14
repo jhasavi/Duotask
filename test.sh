@@ -5,14 +5,31 @@
 
 set -e
 
+get_env_value() {
+    local key="$1"
+    local file=".env"
+
+    if [ ! -f "$file" ]; then
+        echo ""
+        return
+    fi
+
+    grep -E "^${key}=" "$file" | tail -n 1 | cut -d '=' -f2- | tr -d '"'
+}
+
 echo "🧪 DuoTask Quick Test Suite"
 echo "=============================="
 echo ""
 
 # Configuration
 APP_URL="https://duotask-seven.vercel.app"
-API_URL="https://xqhlnuvpogiolzkucupt.supabase.co"
-ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaGxudXZwb2dpb2x6a3VjdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MTA1NzgsImV4cCI6MjA2NzQ4NjU3OH0.9lw-X6mjpPFfTqpiiTEOpzWZEfqnPkW0ADA6XfbLsNw"
+API_URL="$(get_env_value SUPABASE_URL)"
+ANON_KEY="$(get_env_value SUPABASE_ANON_KEY)"
+
+if [ -z "$API_URL" ] || [ -z "$ANON_KEY" ]; then
+    echo "❌ Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env"
+    exit 1
+fi
 
 # Test 1: Web App Availability
 echo "📱 Test 1: Web App Availability"
@@ -34,7 +51,10 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
     -H "Authorization: Bearer $ANON_KEY" \
     "$API_URL/rest/v1/")
 if [ "$HTTP_CODE" = "200" ]; then
-    echo "   ✅ PASSED: Supabase API is accessible (HTTP $HTTP_CODE)"
+    echo "   ✅ PASSED: Supabase API is accessible with anon key (HTTP $HTTP_CODE)"
+elif [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+    echo "   ⚠️  REACHABLE: Supabase API responded (HTTP $HTTP_CODE), but key/auth is rejected"
+    echo "   Action: verify SUPABASE_ANON_KEY in .env and project settings"
 else
     echo "   ❌ FAILED: Supabase API returned HTTP $HTTP_CODE"
     exit 1

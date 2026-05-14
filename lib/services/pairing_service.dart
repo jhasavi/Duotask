@@ -119,7 +119,7 @@ class PairingService extends ChangeNotifier {
           .order('accepted_at', ascending: false)
           .limit(1);
 
-      if (response != null && (response as List).isNotEmpty) {
+      if ((response as List).isNotEmpty) {
         _currentPairing = Pairing.fromJson(response.first);
         await _loadPartner(userId);
       } else {
@@ -184,23 +184,46 @@ class PairingService extends ChangeNotifier {
         .subscribe();
   }
 
+  bool _isPairingRelevant(Map<String, dynamic> record, String userId) {
+    if (record.isEmpty) return false;
+
+    final requesterId = record['requester_id']?.toString();
+    final recipientId = record['recipient_id']?.toString();
+
+    return requesterId == userId || recipientId == userId;
+  }
+
   void _handleRealtimeUpdate(PostgresChangePayload payload, String userId) {
     final eventType = payload.eventType;
     final newRecord = payload.newRecord;
+    final oldRecord = payload.oldRecord;
+
+    final isRelevant =
+        _isPairingRelevant(newRecord, userId) || _isPairingRelevant(oldRecord, userId);
+    if (!isRelevant) {
+      return;
+    }
 
     if (eventType == PostgresChangeEvent.update ||
         eventType == PostgresChangeEvent.insert) {
-      if (newRecord != null) {
+      if (newRecord.isNotEmpty) {
         final pairing = Pairing.fromJson(newRecord);
         if (pairing.isActive) {
           _currentPairing = pairing;
           _loadPartner(userId);
+        } else if (_currentPairing?.id == pairing.id) {
+          _currentPairing = null;
+          _partner = null;
+          notifyListeners();
         }
       }
     } else if (eventType == PostgresChangeEvent.delete) {
-      _currentPairing = null;
-      _partner = null;
-      notifyListeners();
+      final deletedPairingId = oldRecord['id']?.toString();
+      if (deletedPairingId != null && _currentPairing?.id == deletedPairingId) {
+        _currentPairing = null;
+        _partner = null;
+        notifyListeners();
+      }
     }
   }
 

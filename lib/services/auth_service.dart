@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import 'dart:io';
 import '../config/app_config.dart';
@@ -194,6 +193,12 @@ class AuthService extends ChangeNotifier {
         }
         // Explicitly load the user and ensure it completes before returning
         await _loadCurrentUser();
+
+        if (!isAuthenticated) {
+          _setError('Sign in succeeded but your profile could not be loaded. Please try again.');
+          _setLoading(false);
+          return false;
+        }
         
         // Give the UI a moment to rebuild
         await Future.delayed(const Duration(milliseconds: 100));
@@ -283,6 +288,13 @@ class AuthService extends ChangeNotifier {
           print('Session created, loading user...');
         }
         await _loadCurrentUser();
+
+        if (!isAuthenticated) {
+          _setError('Account created, but profile setup is still in progress. Please try signing in again.');
+          _setLoading(false);
+          return false;
+        }
+
         _setLoading(false);
         return true;
       }
@@ -298,6 +310,13 @@ class AuthService extends ChangeNotifier {
         );
         if (signInResponse.session != null) {
           await _loadCurrentUser();
+
+          if (!isAuthenticated) {
+            _setError('Account created, but profile setup is still in progress. Please try signing in again.');
+            _setLoading(false);
+            return false;
+          }
+
           _setLoading(false);
           return true;
         }
@@ -406,6 +425,13 @@ class AuthService extends ChangeNotifier {
 
         if (response.session != null) {
           await _loadCurrentUser();
+
+          if (!isAuthenticated) {
+            _setError('Google sign in succeeded but your profile could not be loaded. Please try again.');
+            _setLoading(false);
+            return false;
+          }
+
           _setLoading(false);
           return true;
         }
