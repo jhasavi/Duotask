@@ -5,6 +5,8 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
 import '../services/pairing_service.dart';
+import '../services/email_preferences_service.dart';
+import '../config/app_config.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 import 'auth_screen.dart';
@@ -18,6 +20,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthService>().currentUser?.id;
+      if (userId != null) {
+        context.read<EmailPreferencesService>().loadPreferences(userId);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = context.read<AuthService>();
@@ -109,6 +122,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     }
                   },
                 ),
+              );
+            },
+          ),
+
+          Consumer<EmailPreferencesService>(
+            builder: (context, emailPrefs, _) {
+              return SwitchListTile(
+                title: const Text('Daily Email Digest'),
+                subtitle: const Text('Receive task summary via email at 8 AM UTC'),
+                value: emailPrefs.dailyEmailEnabled,
+                onChanged: emailPrefs.isLoading
+                    ? null
+                    : (value) async {
+                        final userId =
+                            context.read<AuthService>().currentUser?.id;
+                        if (userId == null) return;
+
+                        final success = await emailPrefs.setDailyEmailEnabled(
+                          userId,
+                          value,
+                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? value
+                                        ? 'Daily email digest enabled'
+                                        : 'Daily email digest disabled'
+                                    : emailPrefs.errorMessage ??
+                                        'Failed to update email preferences',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                secondary: const Icon(Icons.email_outlined),
               );
             },
           ),
@@ -258,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('Version'),
-            subtitle: Text('${AppConstants.appName} v1.0.0'),
+            subtitle: Text('${AppConfig.appName} v${AppConfig.appVersion}'),
           ),
           ListTile(
             leading: const Icon(Icons.description),

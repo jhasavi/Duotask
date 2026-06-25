@@ -5,6 +5,35 @@ All notable changes to DuoTask will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-25
+
+### Added
+- Nudge UI: long-press menu, send dialog, inbox screen, unread badge
+- Real-time nudge notification snackbar
+- Email digest preferences toggle in Settings
+- Task owner initials badge on claimed bubbles
+- Undo snackbar after task completion
+- Today view filter chip
+- Task search by title
+- Pull-to-refresh on home screen
+- Group task creation confirmation dialog
+- Remember last Personal/Group visibility preference
+- Smart task sorting (urgent → due date → recent)
+- Offline banner Retry button
+- GitHub Actions CI pipeline
+- Email preferences service with Supabase integration
+- `revertCompletion()` for undo support
+- Unit tests for task sort/search utilities
+
+### Fixed
+- Test infrastructure: `.env.example` as asset, `assets/icons/` directory
+- Widget test updated for current app structure
+- Service error messages displayed to users
+
+### Changed
+- App version bumped to 1.2.0
+- Long-press on tasks opens action sheet (Details / Nudge)
+
 ## [1.0.0] - 2025-10-28
 
 ### Added - Initial Release

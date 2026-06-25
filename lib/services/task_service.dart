@@ -373,6 +373,35 @@ class TaskService extends ChangeNotifier {
     }
   }
 
+  Future<bool> revertCompletion(Task task) async {
+    if (task.status != TaskStatus.completed) return false;
+
+    _clearError();
+
+    try {
+      await _supabase.from('tasks').update({
+        'status': TaskStatus.claimed.name,
+        'completed_at': null,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', task.id);
+
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        _tasks[index] = task.copyWith(
+          status: TaskStatus.claimed,
+          completedAt: null,
+          updatedAt: DateTime.now(),
+        );
+        notifyListeners();
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('Revert completion error: $e');
+      return false;
+    }
+  }
+
   Future<bool> deleteTask(String taskId) async {
     _setLoading(true);
     _clearError();

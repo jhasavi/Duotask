@@ -38,6 +38,15 @@ class ConnectivityService extends ChangeNotifier {
     }
   }
 
+  Future<void> checkConnection() async {
+    final result = await _connectivity.checkConnectivity();
+    final wasOnline = _isOnline;
+    _isOnline = result != ConnectivityResult.none;
+    if (wasOnline != _isOnline) {
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

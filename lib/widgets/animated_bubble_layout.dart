@@ -8,6 +8,7 @@ class AnimatedBubbleLayout extends StatefulWidget {
   final bool Function(Task) isCreatedByPartner;
   final Function(Task) onTaskTap;
   final Function(Task) onTaskLongPress;
+  final String? Function(Task)? getClaimerInitials;
 
   const AnimatedBubbleLayout({
     super.key,
@@ -15,6 +16,7 @@ class AnimatedBubbleLayout extends StatefulWidget {
     required this.isCreatedByPartner,
     required this.onTaskTap,
     required this.onTaskLongPress,
+    this.getClaimerInitials,
   });
 
   @override
@@ -176,6 +178,7 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
                             child: TaskBubble(
                               task: task,
                               isCreatedByPartner: widget.isCreatedByPartner(task),
+                              claimerInitials: widget.getClaimerInitials?.call(task),
                               onTap: () => widget.onTaskTap(task),
                               onLongPress: () => widget.onTaskLongPress(task),
                             ),

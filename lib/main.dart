@@ -13,14 +13,22 @@ import 'services/notification_service.dart';
 import 'services/nudge_service.dart';
 import 'services/preferences_service.dart';
 import 'services/connectivity_service.dart';
+import 'services/email_preferences_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
+
+Future<void> _loadEnvironment() async {
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    await dotenv.load(fileName: '.env.example');
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  await _loadEnvironment();
 
   // Initialize Supabase
   await Supabase.initialize(
@@ -108,6 +116,12 @@ class DuoTaskApp extends StatelessWidget {
         
         ChangeNotifierProvider<NudgeService>(
           create: (context) => NudgeService(
+            context.read<SupabaseClient>(),
+          ),
+        ),
+
+        ChangeNotifierProvider<EmailPreferencesService>(
+          create: (context) => EmailPreferencesService(
             context.read<SupabaseClient>(),
           ),
         ),
