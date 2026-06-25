@@ -4,6 +4,9 @@ import 'package:confetti/confetti.dart';
 import '../services/auth_service.dart';
 import '../services/task_service.dart';
 import '../services/pairing_service.dart';
+import '../services/nudge_service.dart';
+import '../services/email_preferences_service.dart';
+import '../services/preferences_service.dart';
 import '../models/task.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/empty_state_widget.dart';
@@ -12,12 +15,15 @@ import '../widgets/animated_bubble_layout.dart';
 import '../widgets/task_creation_dialog.dart';
 import '../widgets/daily_checkin_banner.dart';
 import '../widgets/weekly_summary_modal.dart';
+import '../widgets/nudge_dialog.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 import '../utils/haptic_helper.dart';
+import '../utils/task_sort.dart';
 import 'pairing_screen.dart';
 import 'task_detail_screen.dart';
 import 'settings_screen.dart';
+import 'nudge_inbox_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,22 +37,30 @@ class _HomeScreenState extends State<HomeScreen> {
     duration: AppConstants.confettiDuration,
   );
   final _taskInputController = TextEditingController();
+  final _searchController = TextEditingController();
   int _selectedTab = 0; // 0=Personal, 1=Paired
   TaskVisibility? _visibilityFilter; // null=All, personal, group
+  bool _showTodayOnly = false;
+  String _searchQuery = '';
+  int _lastNudgeCount = 0;
+  NudgeService? _nudgeService;
 
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to avoid calling setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nudgeService = context.read<NudgeService>();
       _loadData();
+      _listenForNudges();
     });
   }
 
   @override
   void dispose() {
+    _nudgeService?.removeListener(_onNudgeUpdate);
     _confettiController.dispose();
     _taskInputController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -54,19 +68,56 @@ class _HomeScreenState extends State<HomeScreen> {
     final authService = context.read<AuthService>();
     final taskService = context.read<TaskService>();
     final pairingService = context.read<PairingService>();
+    final nudgeService = context.read<NudgeService>();
+    final emailPrefs = context.read<EmailPreferencesService>();
 
     final userId = authService.currentUser?.id;
     if (userId != null) {
       await Future.wait([
         taskService.loadTasks(userId),
         pairingService.checkPairingStatus(userId),
+        nudgeService.loadNudges(userId),
+        emailPrefs.loadPreferences(userId),
       ]);
+
+      _lastNudgeCount = nudgeService.unreadCount;
 
       // Show weekly summary if it's time and user is paired
       if (pairingService.isPaired && pairingService.partner != null) {
         _checkAndShowWeeklySummary(userId, pairingService);
       }
     }
+  }
+
+  void _listenForNudges() {
+    _nudgeService ??= context.read<NudgeService>();
+    _nudgeService!.addListener(_onNudgeUpdate);
+  }
+
+  void _onNudgeUpdate() {
+    final nudgeService = context.read<NudgeService>();
+    if (nudgeService.unreadCount > _lastNudgeCount && mounted) {
+      final latest = nudgeService.unreadNudges.firstOrNull;
+      if (latest != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(latest.message),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NudgeInboxScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    }
+    _lastNudgeCount = nudgeService.unreadCount;
   }
 
   Future<void> _checkAndShowWeeklySummary(
@@ -108,34 +159,138 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleTaskTap(Task task) async {
-    // Provide immediate haptic feedback
     await HapticHelper.mediumImpact();
-    
+
     final authService = context.read<AuthService>();
     final taskService = context.read<TaskService>();
     final userId = authService.currentUser?.id;
 
     if (userId == null) return;
 
-    // Cycle task status
+    final previousStatus = task.status;
     final success = await taskService.cycleTaskStatus(task, userId);
 
-    if (success && task.status == TaskStatus.claimed) {
-      // Show confetti when task is completed (going from claimed to completed)
-      _confettiController.play();
-      
-      // Success haptic feedback
-      await HapticHelper.success();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppConstants.successTaskCompleted),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+    if (!mounted) return;
+
+    if (!success && taskService.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(taskService.errorMessage!)),
+      );
+      return;
     }
+
+    if (success && previousStatus == TaskStatus.claimed) {
+      _confettiController.play();
+      await HapticHelper.success();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(AppConstants.successTaskCompleted),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              await taskService.revertCompletion(task);
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleTaskLongPress(Task task) async {
+    final pairingService = context.read<PairingService>();
+    final canNudge = pairingService.isPaired &&
+        task.visibility == TaskVisibility.group &&
+        task.createdById != context.read<AuthService>().currentUser?.id;
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('View Details'),
+              onTap: () {
+                Navigator.pop(context);
+                _showTaskDetail(task);
+              },
+            ),
+            if (canNudge)
+              ListTile(
+                leading: const Icon(Icons.notifications_active),
+                title: const Text('Nudge Partner'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showNudgeDialog(task);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showNudgeDialog(Task task) async {
+    final authService = context.read<AuthService>();
+    final pairingService = context.read<PairingService>();
+    final nudgeService = context.read<NudgeService>();
+
+    final userId = authService.currentUser?.id;
+    final partner = pairingService.partner;
+    final pair = pairingService.currentPairing;
+
+    if (userId == null || partner == null || pair == null) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => NudgeDialog(
+        task: task,
+        partnerName: partner.displayName ?? 'Partner',
+        onSend: () => nudgeService.sendNudge(
+          pairId: pair.id,
+          taskId: task.id,
+          taskTitle: task.title,
+          fromUserId: userId,
+          fromUserName: authService.currentUser?.displayName ?? 'Partner',
+          toUserId: partner.id,
+        ),
+      ),
+    );
+  }
+
+  String? _getClaimerInitials(Task task, String? currentUserId, String? partnerName) {
+    if (task.claimedById == null || task.status != TaskStatus.claimed) {
+      return null;
+    }
+    if (task.claimedById == currentUserId) return 'Me';
+    if (partnerName != null && partnerName.isNotEmpty) {
+      return partnerName[0].toUpperCase();
+    }
+    return '?';
+  }
+
+  List<Task> _filterTasks(List<Task> tasks) {
+    final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
+    var filtered = tasks.where((t) {
+      if (t.status == TaskStatus.completed &&
+          (t.completedAt == null || t.completedAt!.isBefore(twelveHoursAgo))) {
+        return false;
+      }
+      if (_selectedTab == 0) {
+        return t.visibility == TaskVisibility.personal;
+      }
+      return t.visibility == TaskVisibility.group;
+    }).toList();
+
+    filtered = filtered
+        .where((t) => taskMatchesSearch(t, _searchQuery))
+        .where((t) => taskMatchesTodayFilter(t, _showTodayOnly))
+        .toList();
+
+    return sortTasksForDisplay(filtered);
   }
 
   Future<void> _showTaskDetail(Task task) async {
@@ -226,7 +381,34 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => TaskCreationDialog(
         isPaired: pairingService.isPaired,
         pairId: pairingService.currentPairing?.id,
+        defaultVisibility: context.read<PreferencesService>().defaultTaskVisibility,
         onCreateTask: (title, visibility, {priority = TaskPriority.normal, recurrence = TaskRecurrence.none}) async {
+          if (visibility == TaskVisibility.group) {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Create Group Task?'),
+                content: const Text(
+                  'This task will be visible to both you and your partner.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Create'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed != true) return;
+          }
+
+          await context.read<PreferencesService>().setDefaultTaskVisibility(
+                visibility.name,
+              );
           // Parse natural language input
           final parsed = taskService.parseNaturalInput(title);
 
@@ -274,6 +456,28 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text(AppConstants.appName),
         actions: [
+          // Nudge inbox with badge
+          Consumer<NudgeService>(
+            builder: (context, nudgeService, _) {
+              return Badge(
+                isLabelVisible: nudgeService.unreadCount > 0,
+                label: Text('${nudgeService.unreadCount}'),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  tooltip: 'Nudges',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NudgeInboxScreen(),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+
           // Pairing status
           Consumer<PairingService>(
             builder: (context, pairingService, child) {
@@ -441,6 +645,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+              const SizedBox(height: 8),
+
+              // Search and filters
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search tasks...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        onChanged: (value) =>
+                            setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      label: const Text('Today'),
+                      selected: _showTodayOnly,
+                      onSelected: (selected) {
+                        setState(() => _showTodayOnly = selected);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
               // Tab selector
               Consumer<PairingService>(
                 builder: (context, pairingService, child) {
@@ -479,66 +728,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Task bubbles
               Expanded(
-                child: Consumer<TaskService>(
-                  builder: (context, taskService, child) {
-                    // Show shimmer loading while tasks are being loaded
+                child: Consumer2<TaskService, PairingService>(
+                  builder: (context, taskService, pairingService, child) {
                     if (taskService.isLoading && taskService.tasks.isEmpty) {
                       return const TaskListShimmer(itemCount: 3);
                     }
 
                     final authService = context.read<AuthService>();
                     final currentUserId = authService.currentUser?.id;
+                    final partnerName = pairingService.partner?.displayName;
+                    final filteredTasks = _filterTasks(taskService.tasks);
 
-                    List<Task> filteredTasks;
-                    
-                    // Filter by tab (Personal vs Paired)
-                    if (_selectedTab == 0) {
-                      // Personal tab - show only personal tasks (exclude old completed)
-                      final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
-                      filteredTasks = taskService.tasks
-                          .where((t) => 
-                            t.visibility == TaskVisibility.personal &&
-                            (t.status != TaskStatus.completed || 
-                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo)))
-                          )
-                          .toList();
-                    } else {
-                      // Paired tab - show only group tasks (exclude old completed)
-                      final twelveHoursAgo = DateTime.now().subtract(const Duration(hours: 12));
-                      filteredTasks = taskService.tasks
-                          .where((t) => 
-                            t.visibility == TaskVisibility.group &&
-                            (t.status != TaskStatus.completed || 
-                              (t.completedAt != null && t.completedAt!.isAfter(twelveHoursAgo)))
-                          )
-                          .toList();
-                    }
-
-                    return Column(
-                      children: [
-                        // Daily Check-In Banner
-                        DailyCheckInBanner(
-                          onFocusMode: () {
-                            // Switch to Paired tab
-                            setState(() {
-                              _selectedTab = 1;
-                            });
-                          },
-                        ),
-
-                        // Task List
-                        Expanded(
-                          child: filteredTasks.isEmpty
-                              ? _buildEmptyState()
-                              : AnimatedBubbleLayout(
-                                  tasks: filteredTasks,
-                                  isCreatedByPartner: (task) =>
-                                      task.createdById != currentUserId,
-                                  onTaskTap: _handleTaskTap,
-                                  onTaskLongPress: _showTaskDetail,
-                                ),
-                        ),
-                      ],
+                    return RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: Column(
+                        children: [
+                          DailyCheckInBanner(
+                            onFocusMode: () {
+                              setState(() => _selectedTab = 1);
+                            },
+                          ),
+                          Expanded(
+                            child: filteredTasks.isEmpty
+                                ? ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.3,
+                                        child: _buildEmptyState(),
+                                      ),
+                                    ],
+                                  )
+                                : AnimatedBubbleLayout(
+                                    tasks: filteredTasks,
+                                    isCreatedByPartner: (task) =>
+                                        task.createdById != currentUserId,
+                                    getClaimerInitials: (task) =>
+                                        _getClaimerInitials(
+                                      task,
+                                      currentUserId,
+                                      partnerName,
+                                    ),
+                                    onTaskTap: _handleTaskTap,
+                                    onTaskLongPress: _handleTaskLongPress,
+                                  ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),

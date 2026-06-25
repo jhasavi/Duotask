@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/connectivity_service.dart';
+import '../services/task_service.dart';
+import '../services/auth_service.dart';
 import '../config/theme.dart';
 
 class OfflineBanner extends StatelessWidget {
@@ -57,6 +59,23 @@ class OfflineBanner extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await connectivity.checkConnection();
+                    if (connectivity.isOnline && context.mounted) {
+                      final authService = context.read<AuthService>();
+                      final taskService = context.read<TaskService>();
+                      final userId = authService.currentUser?.id;
+                      if (userId != null) {
+                        await taskService.loadTasks(userId);
+                      }
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Retry'),
                 ),
               ],
             ),

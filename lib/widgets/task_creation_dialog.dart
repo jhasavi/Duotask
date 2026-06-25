@@ -7,6 +7,7 @@ import '../config/theme.dart';
 class TaskCreationDialog extends StatefulWidget {
   final bool isPaired;
   final String? pairId;
+  final String defaultVisibility;
   final Function(
     String title,
     TaskVisibility visibility, {
@@ -18,6 +19,7 @@ class TaskCreationDialog extends StatefulWidget {
     super.key,
     required this.isPaired,
     this.pairId,
+    this.defaultVisibility = 'personal',
     required this.onCreateTask,
   });
 
@@ -27,9 +29,17 @@ class TaskCreationDialog extends StatefulWidget {
 
 class _TaskCreationDialogState extends State<TaskCreationDialog> {
   final _taskController = TextEditingController();
-  TaskVisibility _selectedVisibility = TaskVisibility.personal;
+  late TaskVisibility _selectedVisibility;
   TaskPriority _selectedPriority = TaskPriority.normal;
   TaskRecurrence _selectedRecurrence = TaskRecurrence.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedVisibility = widget.defaultVisibility == 'group'
+        ? TaskVisibility.group
+        : TaskVisibility.personal;
+  }
 
   @override
   void dispose() {

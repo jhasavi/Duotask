@@ -7,7 +7,8 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 - **[User Guide](USER_GUIDE.md)** - Complete user documentation, getting started, and troubleshooting
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Development setup, project structure, and contribution guidelines
 - **[Architecture](ARCHITECTURE.md)** - System architecture, database schema, and technical design
-- **[Pairing Test Guide](PAIRING_TEST_GUIDE.md)** - Testing pairing functionality
+- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - v1.2 improvements and next steps
+- **[Project Status](PROJECT_STATUS.md)** - Current state and pending manual steps
 
 ## 🎯 Features
 
@@ -168,22 +169,23 @@ See **[PAIRING_TEST_GUIDE.md](PAIRING_TEST_GUIDE.md)** for pairing functionality
 
 ## 🔮 Roadmap
 
-### Version 1.1 (Q1 2026)
+### Version 1.2 (Current — June 2026)
+- ✅ Nudge system UI
+- ✅ Email preferences
+- ✅ Task search, today filter, undo
+- ✅ CI/CD pipeline
+- ✅ Production documentation
+
+### Version 1.3 (Q3 2026)
 - Push notifications for task reminders
-- Native mobile apps (iOS/Android)
 - Offline mode with sync
-- Task templates
+- Task categories/tags
+- Monthly recurring tasks
 
-### Version 1.2 (Q2 2026)
-- In-app messaging between partners
-- File attachments for tasks
-- Task analytics and insights
-- Export tasks (CSV, PDF)
-
-### Version 2.0 (Q3 2026)
+### Version 2.0 (Q4 2026)
 - Multi-partner support (teams)
-- Advanced task filtering
-- Custom themes
+- Task analytics dashboard
+- File attachments
 - Calendar integration
 
 ## 🤝 Contributing

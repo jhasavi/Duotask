@@ -5,15 +5,18 @@ class PreferencesService extends ChangeNotifier {
   static const String _themeModeKey = 'theme_mode';
   static const String _dailySummaryKey = 'daily_summary_enabled';
   static const String _languageKey = 'language_code';
+  static const String _defaultVisibilityKey = 'default_task_visibility';
 
   SharedPreferences? _prefs;
   ThemeMode _themeMode = ThemeMode.system;
   bool _dailySummaryEnabled = true;
   String _languageCode = 'en';
+  String _defaultTaskVisibility = 'personal';
 
   ThemeMode get themeMode => _themeMode;
   bool get dailySummaryEnabled => _dailySummaryEnabled;
   String get languageCode => _languageCode;
+  String get defaultTaskVisibility => _defaultTaskVisibility;
 
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
@@ -35,6 +38,9 @@ class PreferencesService extends ChangeNotifier {
     // Load language
     _languageCode = _prefs!.getString(_languageKey) ?? 'en';
 
+    _defaultTaskVisibility =
+        _prefs!.getString(_defaultVisibilityKey) ?? 'personal';
+
     notifyListeners();
   }
 
@@ -53,6 +59,12 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setLanguageCode(String code) async {
     _languageCode = code;
     await _prefs?.setString(_languageKey, code);
+    notifyListeners();
+  }
+
+  Future<void> setDefaultTaskVisibility(String visibility) async {
+    _defaultTaskVisibility = visibility;
+    await _prefs?.setString(_defaultVisibilityKey, visibility);
     notifyListeners();
   }
 

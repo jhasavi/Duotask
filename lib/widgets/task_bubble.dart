@@ -9,6 +9,7 @@ class TaskBubble extends StatefulWidget {
   final bool isCreatedByPartner;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final String? claimerInitials;
 
   const TaskBubble({
     super.key,
@@ -16,6 +17,7 @@ class TaskBubble extends StatefulWidget {
     required this.isCreatedByPartner,
     required this.onTap,
     this.onLongPress,
+    this.claimerInitials,
   });
 
   @override
@@ -159,6 +161,33 @@ class _TaskBubbleState extends State<TaskBubble>
                   ),
                 ),
                 
+                // Claimer initials badge
+                if (widget.task.status == TaskStatus.claimed &&
+                    widget.claimerInitials != null)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          widget.claimerInitials!,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Priority indicator
                 if (widget.task.priority == TaskPriority.urgent)
                   Positioned(
