@@ -13,6 +13,15 @@ class AuthService extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // The auth-state listener calls _loadCurrentUser() in the background on
+  // every session change, and signIn/signUp ALSO call it explicitly right
+  // after establishing a session — so on sign-up, two concurrent calls used
+  // to both see "no profile row yet" and both try to INSERT the same primary
+  // key. The loser got a duplicate-key error, which the catch-all treated as
+  // fatal and signed the brand-new user back out with no message shown. This
+  // future dedupes concurrent calls so only one actually runs at a time.
+  Future<void>? _loadUserFuture;
+
   AuthService(this._supabase) {
     _initAuthListener();
   }
@@ -70,7 +79,22 @@ class AuthService extends ChangeNotifier {
     await _loadCurrentUser();
   }
 
-  Future<void> _loadCurrentUser() async {
+  Future<void> _loadCurrentUser() {
+    // Reuse the in-flight call instead of starting a second one — see the
+    // comment on _loadUserFuture for why this matters.
+    final existing = _loadUserFuture;
+    if (existing != null) return existing;
+    final future = _loadCurrentUserOnce();
+    _loadUserFuture = future;
+    future.whenComplete(() {
+      if (identical(_loadUserFuture, future)) {
+        _loadUserFuture = null;
+      }
+    });
+    return future;
+  }
+
+  Future<void> _loadCurrentUserOnce() async {
     try {
       if (kDebugMode) {
         print('🔐 Loading current user...');
@@ -119,12 +143,22 @@ class AuthService extends ChangeNotifier {
         // Generate pairing code
         final pairingCode = _generatePairingCode();
 
-        await _supabase.from('users').insert({
-          'id': userId,
-          'email': authUser.email,
-          'display_name': displayName,
-          'pairing_code': pairingCode,
-        });
+        // Upsert + ignoreDuplicates instead of insert: defense in depth
+        // alongside the _loadUserFuture guard above. If some other path
+        // (a stale listener callback, a second tab, a future refactor)
+        // still manages to race this, the loser now silently becomes a
+        // no-op instead of throwing a duplicate-key error that used to
+        // get caught below and sign the brand-new user back out.
+        await _supabase.from('users').upsert(
+          {
+            'id': userId,
+            'email': authUser.email,
+            'display_name': displayName,
+            'pairing_code': pairingCode,
+          },
+          onConflict: 'id',
+          ignoreDuplicates: true,
+        );
 
         if (kDebugMode) {
           print('🔐 User profile created with pairing code: $pairingCode');
