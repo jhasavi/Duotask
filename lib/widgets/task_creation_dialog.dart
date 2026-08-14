@@ -121,7 +121,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
                     _selectedVisibility = newSelection.first;
                   });
                 },
-                style: ButtonStyle(
+                style: const ButtonStyle(
                   visualDensity: VisualDensity.comfortable,
                 ),
               ),

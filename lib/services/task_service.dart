@@ -78,14 +78,12 @@ class TaskService extends ChangeNotifier {
 
     switch (eventType) {
       case PostgresChangeEvent.insert:
-        if (newRecord != null) {
-          final task = Task.fromJson(newRecord);
-          _tasks.insert(0, task);
-          notifyListeners();
-        }
+        final inserted = Task.fromJson(newRecord);
+        _tasks.insert(0, inserted);
+        notifyListeners();
         break;
       case PostgresChangeEvent.update:
-        if (newRecord != null) {
+        {
           final task = Task.fromJson(newRecord);
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
@@ -93,10 +91,9 @@ class TaskService extends ChangeNotifier {
             _tasks[index] = task;
             
             // Check if partner claimed or completed the task
-            if (_notificationService != null && 
-                _currentUserId != null && 
-                task.createdById == _currentUserId &&
-                oldRecord != null) {
+            if (_notificationService != null &&
+                _currentUserId != null &&
+                task.createdById == _currentUserId) {
               
               // Partner claimed task
               if (oldTask.status == TaskStatus.unclaimed && 
@@ -125,7 +122,9 @@ class TaskService extends ChangeNotifier {
         }
         break;
       case PostgresChangeEvent.delete:
-        if (oldRecord != null) {
+        // On delete the payload carries only the primary key, and is empty
+        // when the table has no replica identity configured.
+        if (oldRecord.isNotEmpty) {
           _tasks.removeWhere((t) => t.id == oldRecord['id']);
           notifyListeners();
         }
@@ -319,38 +318,34 @@ class TaskService extends ChangeNotifier {
       final response = await _supabase.rpc('cycle_task_status', params: {
         'task_uuid': task.id,
         'user_uuid': userId,
-      }).select().single();
+      },).select().single();
 
-      if (response != null) {
-        // Update local task list
-        final index = _tasks.indexWhere((t) => t.id == task.id);
-        if (index != -1) {
-          final updatedTask = Task.fromJson({
-            ...task.toJson(),
-            'status': response['status'],
-            'claimed_by_id': response['claimed_by_id'],
-            'claimed_at': response['claimed_at'],
-            'completed_at': response['completed_at'],
-            'updated_at': response['updated_at'],
-          });
-          
-          _tasks[index] = updatedTask;
-          
-          // Create recurring task if completed and has recurrence
-          if (updatedTask.status == TaskStatus.completed &&
-              task.recurrence != TaskRecurrence.none) {
-            await createRecurringTask(task);
-          }
-          
-          notifyListeners();
+      // `.single()` either returns a row or throws, so reaching this point
+      // means the transition succeeded.
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        final updatedTask = Task.fromJson({
+          ...task.toJson(),
+          'status': response['status'],
+          'claimed_by_id': response['claimed_by_id'],
+          'claimed_at': response['claimed_at'],
+          'completed_at': response['completed_at'],
+          'updated_at': response['updated_at'],
+        });
+
+        _tasks[index] = updatedTask;
+
+        // Create recurring task if completed and has recurrence
+        if (updatedTask.status == TaskStatus.completed &&
+            task.recurrence != TaskRecurrence.none) {
+          await createRecurringTask(task);
         }
-        
-        _setLoading(false);
-        return true;
+
+        notifyListeners();
       }
-      
+
       _setLoading(false);
-      return false;
+      return true;
     } on SocketException {
       _setError('No internet connection. Cannot update task.');
       _setLoading(false);

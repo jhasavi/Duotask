@@ -8,7 +8,6 @@ import '../services/pairing_service.dart';
 import '../services/email_preferences_service.dart';
 import '../config/app_config.dart';
 import '../config/theme.dart';
-import '../config/constants.dart';
 import 'auth_screen.dart';
 import 'pairing_screen.dart';
 
@@ -77,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Notifications Section
-          _SectionHeader(title: 'Notifications'),
+          const _SectionHeader(title: 'Notifications'),
           Consumer<NotificationService>(
             builder: (context, notificationService, child) {
               return SwitchListTile(
@@ -166,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Pairing Management Section
-          _SectionHeader(title: 'Partner Pairing'),
+          const _SectionHeader(title: 'Partner Pairing'),
           Consumer<PairingService>(
             builder: (context, pairingService, child) {
               if (pairingService.isPaired && pairingService.partner != null) {
@@ -247,7 +246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // App Settings
-          _SectionHeader(title: 'App Settings'),
+          const _SectionHeader(title: 'App Settings'),
           Consumer<PreferencesService>(
             builder: (context, prefsService, child) {
               return ListTile(
@@ -276,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Account Section
-          _SectionHeader(title: 'Account'),
+          const _SectionHeader(title: 'Account'),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Edit Profile'),
@@ -304,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // About Section
-          _SectionHeader(title: 'About'),
+          const _SectionHeader(title: 'About'),
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('Version'),
@@ -437,6 +436,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              controller: currentPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Current Password',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
               controller: newPasswordController,
               obscureText: true,
               decoration: const InputDecoration(
@@ -460,10 +467,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final currentPassword = currentPasswordController.text;
               final newPassword = newPasswordController.text;
               final confirmPassword = confirmPasswordController.text;
 
-              if (newPassword.isEmpty || confirmPassword.isEmpty) {
+              if (currentPassword.isEmpty ||
+                  newPassword.isEmpty ||
+                  confirmPassword.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please fill all fields')),
                 );
@@ -487,13 +497,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
 
               final authService = context.read<AuthService>();
-              final success = await authService.updatePassword(newPassword);
+              final success = await authService.updatePassword(
+                newPassword,
+                currentPassword: currentPassword,
+              );
 
               if (context.mounted) {
-                Navigator.pop(context);
                 if (success) {
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Password updated')),
+                  );
+                } else {
+                  // Keep the dialog open so the user can correct the current
+                  // password instead of silently losing what they typed.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        authService.errorMessage ?? 'Password update failed',
+                      ),
+                    ),
                   );
                 }
               }

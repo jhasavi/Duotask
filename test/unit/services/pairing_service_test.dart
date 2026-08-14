@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:duotask/services/pairing_service.dart';
 import 'package:duotask/models/pairing.dart';
@@ -26,7 +25,7 @@ void main() {
       schema: anyNamed('schema'),
       table: anyNamed('table'),
       callback: anyNamed('callback'),
-    )).thenReturn(mockChannel);
+    ),).thenReturn(mockChannel);
     when(mockChannel.subscribe()).thenReturn(mockChannel);
 
     pairingService = PairingService(mockSupabase);
@@ -58,7 +57,7 @@ void main() {
     test('generatePairingCode creates 8-character code', () async {
       // Note: This tests the implementation pattern
       // Actual code generation is internal to the service
-      final code = 'ABC12345';
+      const code = 'ABC12345';
       expect(code.length, 8);
       expect(code, matches(r'^[A-Z0-9]+$'));
     });

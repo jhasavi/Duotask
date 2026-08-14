@@ -9,10 +9,8 @@ class MockConnectivity extends Mock implements Connectivity {}
 
 void main() {
   late ConnectivityService connectivityService;
-  late MockConnectivity mockConnectivity;
 
   setUp(() {
-    mockConnectivity = MockConnectivity();
     // Note: ConnectivityService uses Connectivity() internally
     // These tests focus on the service's API and state management
     connectivityService = ConnectivityService();

@@ -222,7 +222,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
             // Priority
             DropdownButtonFormField<TaskPriority>(
-              value: _selectedPriority,
+              initialValue: _selectedPriority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
                 prefixIcon: Icon(Icons.flag),
@@ -259,7 +259,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
             // Recurrence
             DropdownButtonFormField<TaskRecurrence>(
-              value: _selectedRecurrence,
+              initialValue: _selectedRecurrence,
               decoration: const InputDecoration(
                 labelText: 'Recurrence',
                 prefixIcon: Icon(Icons.repeat),
@@ -390,7 +390,7 @@ class _StatusBadge extends StatelessWidget {
         status.displayName,
         style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       side: BorderSide(color: color, width: 1),
     );
   }

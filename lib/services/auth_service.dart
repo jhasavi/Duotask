@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import 'dart:io';
 import '../config/app_config.dart';
@@ -601,9 +600,46 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> updatePassword(String newPassword) async {
+  /// Changes the signed-in user's password.
+  ///
+  /// [currentPassword] is verified first by re-authenticating. Supabase's
+  /// `updateUser` only requires a valid session, so without this check anyone
+  /// with access to an already-signed-in device could set a new password and
+  /// take over the account permanently. Callers must supply it.
+  Future<bool> updatePassword(
+    String newPassword, {
+    required String currentPassword,
+  }) async {
     _setLoading(true);
     _clearError();
+
+    final email = _currentUser?.email ?? _supabase.auth.currentUser?.email;
+    if (email == null) {
+      _setError('You must be signed in to change your password.');
+      _setLoading(false);
+      return false;
+    }
+
+    try {
+      // Re-authenticate. Throws AuthException on a wrong current password.
+      await _supabase.auth.signInWithPassword(
+        email: email,
+        password: currentPassword,
+      );
+    } on SocketException {
+      _setError('No internet connection. Please check your network.');
+      _setLoading(false);
+      return false;
+    } on AuthException {
+      _setError('Current password is incorrect.');
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('Could not verify your current password. Please try again.');
+      if (kDebugMode) print('Reauth error: $e');
+      _setLoading(false);
+      return false;
+    }
 
     try {
       await _supabase.auth.updateUser(
