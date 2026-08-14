@@ -208,7 +208,9 @@ class Task {
 
   bool get isUrgent => priority == TaskPriority.urgent;
   bool get isOverdue =>
-      dueDate != null && dueDate!.isBefore(DateTime.now()) && status != TaskStatus.completed;
+      dueDate != null &&
+      dueDate!.isBefore(DateTime.now()) &&
+      status != TaskStatus.completed;
   bool get isDueToday =>
       dueDate != null &&
       dueDate!.year == DateTime.now().year &&

@@ -57,9 +57,12 @@ See [docs/RELEASE.md](docs/RELEASE.md) for how to provision the test project.
 flutter analyze
 ```
 
-**Errors and warnings must be zero.** CI enforces this. Infos are currently
-tolerated; there is a known backlog (see
-[UNIMPLEMENTED_FEATURES.md](UNIMPLEMENTED_FEATURES.md)).
+**The tree is at zero analyzer issues and CI is fatal on all of them**,
+including infos. Formatting is enforced too:
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
+```
 
 Do not reintroduce `--no-fatal-warnings`. A suppressed "unused variable"
 warning concealed a real security bug: the password-change dialog declared a

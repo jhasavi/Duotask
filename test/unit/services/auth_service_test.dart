@@ -27,10 +27,12 @@ void main() {
   group('AuthService - Sign In', () {
     test('signInWithEmail fails with invalid credentials', () async {
       // Arrange
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(
         const AuthException('Invalid login credentials', statusCode: '400'),
       );
 
@@ -44,18 +46,22 @@ void main() {
       expect(result, false);
       expect(authService.errorMessage, isNotNull);
       expect(authService.errorMessage, contains('Invalid'));
-      verify(mockAuth.signInWithPassword(
-        email: 'wrong@example.com',
-        password: 'wrongpass',
-      ),).called(1);
+      verify(
+        mockAuth.signInWithPassword(
+          email: 'wrong@example.com',
+          password: 'wrongpass',
+        ),
+      ).called(1);
     });
 
     test('signInWithEmail handles unexpected errors', () async {
       // Arrange
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(
         Exception('Unexpected error'),
       );
 
@@ -73,10 +79,12 @@ void main() {
 
     test('signInWithEmail sets loading state correctly', () async {
       // Arrange
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(
         const AuthException('Invalid credentials'),
       );
 
@@ -96,11 +104,13 @@ void main() {
   group('AuthService - Sign Up', () {
     test('signUpWithEmail fails with existing email', () async {
       // Arrange
-      when(mockAuth.signUp(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-        data: anyNamed('data'),
-      ),).thenThrow(
+      when(
+        mockAuth.signUp(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+          data: anyNamed('data'),
+        ),
+      ).thenThrow(
         const AuthException('User already registered'),
       );
 
@@ -114,20 +124,24 @@ void main() {
       // Assert
       expect(result, false);
       expect(authService.errorMessage, contains('already registered'));
-      verify(mockAuth.signUp(
-        email: 'existing@example.com',
-        password: 'password123',
-        data: {'display_name': 'Test User'},
-      ),).called(1);
+      verify(
+        mockAuth.signUp(
+          email: 'existing@example.com',
+          password: 'password123',
+          data: {'display_name': 'Test User'},
+        ),
+      ).called(1);
     });
 
     test('signUpWithEmail fails with weak password', () async {
       // Arrange
-      when(mockAuth.signUp(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-        data: anyNamed('data'),
-      ),).thenThrow(
+      when(
+        mockAuth.signUp(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+          data: anyNamed('data'),
+        ),
+      ).thenThrow(
         const AuthException('Password should be at least 6 characters'),
       );
 
@@ -173,10 +187,12 @@ void main() {
   group('AuthService - Password Management', () {
     test('resetPassword sends email successfully', () async {
       // Arrange
-      when(mockAuth.resetPasswordForEmail(
-        any,
-        redirectTo: anyNamed('redirectTo'),
-      ),).thenAnswer((_) async => {});
+      when(
+        mockAuth.resetPasswordForEmail(
+          any,
+          redirectTo: anyNamed('redirectTo'),
+        ),
+      ).thenAnswer((_) async => {});
 
       // Act
       final result = await authService.resetPassword('test@example.com');
@@ -184,18 +200,22 @@ void main() {
       // Assert
       expect(result, true);
       expect(authService.errorMessage, isNull);
-      verify(mockAuth.resetPasswordForEmail(
-        'test@example.com',
-        redirectTo: anyNamed('redirectTo'),
-      ),).called(1);
+      verify(
+        mockAuth.resetPasswordForEmail(
+          'test@example.com',
+          redirectTo: anyNamed('redirectTo'),
+        ),
+      ).called(1);
     });
 
     test('resetPassword handles errors', () async {
       // Arrange
-      when(mockAuth.resetPasswordForEmail(
-        any,
-        redirectTo: anyNamed('redirectTo'),
-      ),).thenThrow(const AuthException('Email not found'));
+      when(
+        mockAuth.resetPasswordForEmail(
+          any,
+          redirectTo: anyNamed('redirectTo'),
+        ),
+      ).thenThrow(const AuthException('Email not found'));
 
       // Act
       final result = await authService.resetPassword('invalid@example.com');
@@ -221,10 +241,12 @@ void main() {
 
     test('clearError clears error message', () async {
       // Set an error first
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(const AuthException('Test error'));
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(const AuthException('Test error'));
 
       await authService.signInWithEmail('test@example.com', 'wrong');
       expect(authService.errorMessage, isNotNull);
@@ -237,10 +259,12 @@ void main() {
 
   group('AuthService - Error Messages', () {
     test('provides user-friendly error for invalid credentials', () async {
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(
         const AuthException('Invalid login credentials', statusCode: '400'),
       );
 
@@ -251,10 +275,12 @@ void main() {
     });
 
     test('provides user-friendly error for rate limiting', () async {
-      when(mockAuth.signInWithPassword(
-        email: anyNamed('email'),
-        password: anyNamed('password'),
-      ),).thenThrow(
+      when(
+        mockAuth.signInWithPassword(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenThrow(
         const AuthException('Too many requests', statusCode: '429'),
       );
 

@@ -89,14 +89,13 @@ class TaskService extends ChangeNotifier {
           if (index != -1) {
             final oldTask = _tasks[index];
             _tasks[index] = task;
-            
+
             // Check if partner claimed or completed the task
             if (_notificationService != null &&
                 _currentUserId != null &&
                 task.createdById == _currentUserId) {
-              
               // Partner claimed task
-              if (oldTask.status == TaskStatus.unclaimed && 
+              if (oldTask.status == TaskStatus.unclaimed &&
                   task.status == TaskStatus.claimed &&
                   task.claimedById != _currentUserId) {
                 // Get partner name from task or use default
@@ -105,9 +104,9 @@ class TaskService extends ChangeNotifier {
                   'Your partner',
                 );
               }
-              
+
               // Partner completed task
-              if (oldTask.status != TaskStatus.completed && 
+              if (oldTask.status != TaskStatus.completed &&
                   task.status == TaskStatus.completed &&
                   task.claimedById != _currentUserId) {
                 await _notificationService!.showTaskCompletedNotification(
@@ -116,7 +115,7 @@ class TaskService extends ChangeNotifier {
                 );
               }
             }
-            
+
             notifyListeners();
           }
         }
@@ -173,12 +172,12 @@ class TaskService extends ChangeNotifier {
           await _supabase.from('tasks').insert(taskData).select().single();
 
       final task = Task.fromJson(response);
-      
+
       // Schedule notification if task has a due date
       if (task.dueDate != null && _notificationService != null) {
         await _notificationService!.scheduleTaskReminder(task);
       }
-      
+
       _setLoading(false);
       return task;
     } on SocketException {
@@ -315,10 +314,16 @@ class TaskService extends ChangeNotifier {
 
     try {
       // Use RPC function for atomic status transition (prevents race conditions)
-      final response = await _supabase.rpc('cycle_task_status', params: {
-        'task_uuid': task.id,
-        'user_uuid': userId,
-      },).select().single();
+      final response = await _supabase
+          .rpc(
+            'cycle_task_status',
+            params: {
+              'task_uuid': task.id,
+              'user_uuid': userId,
+            },
+          )
+          .select()
+          .single();
 
       // `.single()` either returns a row or throws, so reaching this point
       // means the transition succeeded.
@@ -463,11 +468,14 @@ class TaskService extends ChangeNotifier {
         input.toLowerCase().contains('asap') ||
         input.toLowerCase().contains('!')) {
       result['priority'] = TaskPriority.urgent;
-      result['title'] = input.replaceAll(RegExp(r'urgent|asap|!', caseSensitive: false), '').trim();
+      result['title'] = input
+          .replaceAll(RegExp(r'urgent|asap|!', caseSensitive: false), '')
+          .trim();
     }
 
     // Parse time patterns
-    final timePattern = RegExp(r'@(\d{1,2}):?(\d{2})?\s*(am|pm)?', caseSensitive: false);
+    final timePattern =
+        RegExp(r'@(\d{1,2}):?(\d{2})?\s*(am|pm)?', caseSensitive: false);
     final match = timePattern.firstMatch(input);
 
     if (match != null) {
@@ -499,12 +507,17 @@ class TaskService extends ChangeNotifier {
     // Parse relative time (tomorrow, tonight, etc.)
     if (input.toLowerCase().contains('tomorrow')) {
       final tomorrow = DateTime.now().add(const Duration(days: 1));
-      result['dueDate'] = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
-      result['title'] = input.replaceAll(RegExp(r'tomorrow', caseSensitive: false), '').trim();
+      result['dueDate'] =
+          DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+      result['title'] = input
+          .replaceAll(RegExp(r'tomorrow', caseSensitive: false), '')
+          .trim();
     } else if (input.toLowerCase().contains('tonight')) {
       final tonight = DateTime.now();
-      result['dueDate'] = DateTime(tonight.year, tonight.month, tonight.day, 20, 0);
-      result['title'] = input.replaceAll(RegExp(r'tonight', caseSensitive: false), '').trim();
+      result['dueDate'] =
+          DateTime(tonight.year, tonight.month, tonight.day, 20, 0);
+      result['title'] =
+          input.replaceAll(RegExp(r'tonight', caseSensitive: false), '').trim();
     }
 
     return result;

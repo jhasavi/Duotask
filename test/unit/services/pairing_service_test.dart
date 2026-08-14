@@ -20,12 +20,14 @@ void main() {
 
     when(mockSupabase.realtime).thenReturn(mockRealtime);
     when(mockRealtime.channel(any)).thenReturn(mockChannel);
-    when(mockChannel.onPostgresChanges(
-      event: anyNamed('event'),
-      schema: anyNamed('schema'),
-      table: anyNamed('table'),
-      callback: anyNamed('callback'),
-    ),).thenReturn(mockChannel);
+    when(
+      mockChannel.onPostgresChanges(
+        event: anyNamed('event'),
+        schema: anyNamed('schema'),
+        table: anyNamed('table'),
+        callback: anyNamed('callback'),
+      ),
+    ).thenReturn(mockChannel);
     when(mockChannel.subscribe()).thenReturn(mockChannel);
 
     pairingService = PairingService(mockSupabase);
@@ -120,7 +122,7 @@ void main() {
       // Create a new instance to test disposal
       final service = PairingService(mockSupabase);
       service.dispose();
-      
+
       // Service should be disposed without errors
       expect(service.isLoading, false);
     });

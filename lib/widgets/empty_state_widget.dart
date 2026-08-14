@@ -21,7 +21,7 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32.0),
@@ -39,20 +39,22 @@ class EmptyStateWidget extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: (iconColor ?? theme.primaryColor).withValues(alpha: 0.1),
+                      color: (iconColor ?? theme.primaryColor)
+                          .withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       icon,
                       size: iconSize,
-                      color: iconColor ?? theme.primaryColor.withValues(alpha: 0.5),
+                      color: iconColor ??
+                          theme.primaryColor.withValues(alpha: 0.5),
                     ),
                   ),
                 );
               },
             ),
             const SizedBox(height: 32),
-            
+
             // Title with fade-in effect
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
@@ -71,13 +73,14 @@ class EmptyStateWidget extends StatelessWidget {
                 title,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.textTheme.headlineMedium?.color?.withValues(alpha: 0.8),
+                  color: theme.textTheme.headlineMedium?.color
+                      ?.withValues(alpha: 0.8),
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Message with fade-in effect (delayed)
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
@@ -95,12 +98,13 @@ class EmptyStateWidget extends StatelessWidget {
               child: Text(
                 message,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
+                  color:
+                      theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
-            
+
             // Action button with fade-in (if provided)
             if (action != null) ...[
               const SizedBox(height: 32),

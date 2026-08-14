@@ -159,7 +159,7 @@ class _TaskBubbleState extends State<TaskBubble>
                     ),
                   ),
                 ),
-                
+
                 // Claimer initials badge
                 if (widget.task.status == TaskStatus.claimed &&
                     widget.claimerInitials != null)
@@ -207,14 +207,16 @@ class _TaskBubbleState extends State<TaskBubble>
                   ),
 
                 // Due date indicator
-                if (widget.task.dueDate != null && widget.task.status != TaskStatus.completed)
+                if (widget.task.dueDate != null &&
+                    widget.task.status != TaskStatus.completed)
                   Positioned(
                     bottom: 8,
                     left: 0,
                     right: 0,
                     child: Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(12),

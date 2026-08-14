@@ -39,9 +39,9 @@ class AuthService extends ChangeNotifier {
           print('   User: ${data.session?.user.email}');
         }
       }
-      
+
       final session = data.session;
-      
+
       if (session != null) {
         if (kDebugMode) {
           print('🔐 [AuthListener] Session found → loading user...');
@@ -114,11 +114,8 @@ class AuthService extends ChangeNotifier {
       }
 
       // Try to get user profile
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      final response =
+          await _supabase.from('users').select().eq('id', userId).maybeSingle();
 
       if (response != null) {
         if (kDebugMode) {
@@ -134,7 +131,7 @@ class AuthService extends ChangeNotifier {
         if (kDebugMode) {
           print('🔐 User profile not found, creating...');
         }
-        
+
         final displayName = authUser.userMetadata?['display_name'] as String? ??
             authUser.email?.split('@').first ??
             'User';
@@ -164,16 +161,14 @@ class AuthService extends ChangeNotifier {
         }
 
         // Load the newly created user
-        final newResponse = await _supabase
-            .from('users')
-            .select()
-            .eq('id', userId)
-            .single();
+        final newResponse =
+            await _supabase.from('users').select().eq('id', userId).single();
 
         _currentUser = AppUser.fromJson(newResponse);
         notifyListeners();
         if (kDebugMode) {
-          print('🔐 ✅ User created and authenticated! isAuthenticated=$isAuthenticated');
+          print(
+              '🔐 ✅ User created and authenticated! isAuthenticated=$isAuthenticated');
         }
       }
     } catch (e) {
@@ -206,7 +201,7 @@ class AuthService extends ChangeNotifier {
     try {
       final trimmedEmail = email.trim().toLowerCase();
       final trimmedPassword = password.trim();
-      
+
       if (kDebugMode) {
         print('🔐 Signing in with email: $trimmedEmail');
       }
@@ -227,12 +222,13 @@ class AuthService extends ChangeNotifier {
         }
         // Explicitly load the user and ensure it completes before returning
         await _loadCurrentUser();
-        
+
         // Give the UI a moment to rebuild
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         if (kDebugMode) {
-          print('🔐 ✅ Sign in complete! isAuthenticated=$isAuthenticated, currentUser=${_currentUser?.email}');
+          print(
+              '🔐 ✅ Sign in complete! isAuthenticated=$isAuthenticated, currentUser=${_currentUser?.email}');
         }
         _setLoading(false);
         return true;
@@ -270,36 +266,36 @@ class AuthService extends ChangeNotifier {
       final trimmedEmail = email.trim().toLowerCase();
       final trimmedPassword = password.trim();
       final trimmedDisplayName = displayName.trim();
-      
+
       if (trimmedEmail.isEmpty) {
         _setError('Email is required');
         _setLoading(false);
         return false;
       }
-      
+
       // Basic email validation
       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(trimmedEmail)) {
         _setError('Invalid email format. Please enter a valid email address.');
         _setLoading(false);
         return false;
       }
-      
+
       if (trimmedPassword.isEmpty || trimmedPassword.length < 6) {
         _setError('Password must be at least 6 characters long');
         _setLoading(false);
         return false;
       }
-      
+
       if (trimmedDisplayName.isEmpty) {
         _setError('Display name is required');
         _setLoading(false);
         return false;
       }
-      
+
       if (kDebugMode) {
         print('Signing up with email: $trimmedEmail');
       }
-      
+
       final response = await _supabase.auth.signUp(
         email: trimmedEmail,
         password: trimmedPassword,
@@ -341,7 +337,8 @@ class AuthService extends ChangeNotifier {
         // Fall through to friendly message
       }
 
-      _setError('Account created. You can sign in now or check your email if confirmation is enabled.');
+      _setError(
+          'Account created. You can sign in now or check your email if confirmation is enabled.');
       _setLoading(false);
       return false;
     } on SocketException {
@@ -384,7 +381,7 @@ class AuthService extends ChangeNotifier {
           redirectTo: callbackUrl,
           authScreenLaunchMode: LaunchMode.platformDefault,
         );
-        
+
         // For web, we don't wait for completion here
         // The callback will handle the session
         _setLoading(false);
@@ -396,7 +393,8 @@ class AuthService extends ChangeNotifier {
         final androidClientId = AppConfig.googleAndroidClientId;
 
         if (webClientId.isEmpty) {
-          _setError('Google Web Client ID is missing. Set GOOGLE_WEB_CLIENT_ID in .env');
+          _setError(
+              'Google Web Client ID is missing. Set GOOGLE_WEB_CLIENT_ID in .env');
           _setLoading(false);
           return false;
         }
@@ -497,7 +495,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       if (kDebugMode) print('Signing out...');
-      
+
       // Sign out from Google if needed
       if (!kIsWeb) {
         try {
@@ -512,11 +510,11 @@ class AuthService extends ChangeNotifier {
 
       await _supabase.auth.signOut();
       _currentUser = null;
-      
+
       if (kDebugMode) print('Sign out complete');
-      
+
       _setLoading(false);
-      
+
       // Ensure listeners are notified after loading is false
       notifyListeners();
     } on SocketException {
@@ -682,7 +680,9 @@ class AuthService extends ChangeNotifier {
       case '500':
         return 'Server error. Please try again later.';
       default:
-        return e.message.isNotEmpty ? e.message : 'Authentication failed. Please try again.';
+        return e.message.isNotEmpty
+            ? e.message
+            : 'Authentication failed. Please try again.';
     }
   }
 

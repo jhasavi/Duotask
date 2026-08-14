@@ -127,8 +127,9 @@ class WidgetTestHelpers {
   /// Find text in widget tree (case-insensitive)
   static Finder findTextContaining(String text) {
     return find.byWidgetPredicate(
-      (widget) => widget is Text && 
-        widget.data?.toLowerCase().contains(text.toLowerCase()) == true,
+      (widget) =>
+          widget is Text &&
+          widget.data?.toLowerCase().contains(text.toLowerCase()) == true,
     );
   }
 

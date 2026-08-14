@@ -59,7 +59,9 @@ Three things still need a human. See
 | 29 | Migrations applied by CI, not by hand | ✅ |
 | 30 | Automated deploy from source + post-deploy smoke test | ✅ |
 | 31 | Secret scanning in CI and at build time | ✅ |
-| 32 | `flutter analyze` fatal on warnings again (0 errors, 0 warnings) | ✅ |
+| 32 | `flutter analyze` fatal on everything — 0 issues, down from 169 | ✅ |
+| 33 | All 36 `use_build_context_synchronously` crash risks fixed | ✅ |
+| 34 | Radio widgets migrated to `RadioGroup`; `dart format` enforced in CI | ✅ |
 
 ## Next phase (v1.3)
 
@@ -73,8 +75,5 @@ Three things still need a human. See
 
 ## Engineering backlog
 
-- 36 `use_build_context_synchronously` analyzer infos — real crash risk in
-  edge cases; needs per-site review
-- 12 Radio `groupValue`/`onChanged` deprecations — migrate to `RadioGroup`
 - Reconcile any live migrations not present in `supabase/migrations/`
 - Stop committing `build/web` once a CI deploy has run green

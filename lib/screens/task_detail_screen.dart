@@ -54,6 +54,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
 
     if (date != null) {
+      if (!mounted) return;
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDueDate ?? DateTime.now()),
@@ -137,26 +138,28 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     final taskService = context.read<TaskService>();
-    final success = await taskService.deleteTask(_task.id);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
-    if (mounted) {
-      if (success) {
-        await HapticHelper.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Task deleted')),
-        );
-        Navigator.pop(context);
-      } else {
-        await HapticHelper.error();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(taskService.errorMessage ?? 'Failed to delete task'),
-          ),
-        );
-      }
+    final success = await taskService.deleteTask(_task.id);
+    if (!mounted) return;
+
+    if (success) {
+      await HapticHelper.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Task deleted')),
+      );
+      navigator.pop();
+    } else {
+      await HapticHelper.error();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(taskService.errorMessage ?? 'Failed to delete task'),
+        ),
+      );
     }
   }
 
@@ -337,12 +340,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     const Divider(),
                     _InfoRow(
                       label: 'Created',
-                      value: DateFormat('MMM d, y h:mm a').format(_task.createdAt),
+                      value:
+                          DateFormat('MMM d, y h:mm a').format(_task.createdAt),
                     ),
                     if (_task.updatedAt != null)
                       _InfoRow(
                         label: 'Updated',
-                        value: DateFormat('MMM d, y h:mm a').format(_task.updatedAt!),
+                        value: DateFormat('MMM d, y h:mm a')
+                            .format(_task.updatedAt!),
                       ),
                     _InfoRow(
                       label: 'Type',

@@ -29,17 +29,16 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Errors and warnings fail the build. Infos do not (yet) — there is a
-      # tracked backlog of use_build_context_synchronously and Radio API
-      # deprecations. Do not loosen this back to --no-fatal-warnings: real
-      # warnings hid a security bug (an unused currentPasswordController that
-      # revealed the password-change flow never verified the old password).
+      # The tree is at zero analyzer issues, so everything is fatal — that is
+      # the cheapest moment to lock it in. Do not loosen this: the previous
+      # --no-fatal-warnings setting hid a security bug (an unused
+      # currentPasswordController, which was the visible symptom of a
+      # password-change flow that never verified the old password).
       - name: Analyze
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze
 
-      - name: Verify formatting of changed Dart sources
+      - name: Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
-        continue-on-error: true
 
       - name: Run hermetic tests
         run: flutter test

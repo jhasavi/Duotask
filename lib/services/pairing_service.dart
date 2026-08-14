@@ -44,14 +44,14 @@ class PairingService extends ChangeNotifier {
 
         if (partnerId != null && !seenPartnerIds.contains(partnerId)) {
           seenPartnerIds.add(partnerId);
-          
+
           try {
             final userResponse = await _supabase
                 .from('users')
                 .select()
                 .eq('id', partnerId)
                 .single();
-            
+
             pastPartners.add(AppUser.fromJson(userResponse));
           } catch (e) {
             if (kDebugMode) print('Error loading past partner: $e');
@@ -153,11 +153,8 @@ class PairingService extends ChangeNotifier {
 
       if (partnerId == null) return;
 
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('id', partnerId)
-          .single();
+      final response =
+          await _supabase.from('users').select().eq('id', partnerId).single();
 
       _partner = AppUser.fromJson(response);
       notifyListeners();
@@ -286,7 +283,7 @@ class PairingService extends ChangeNotifier {
 
     try {
       if (kDebugMode) print('Accepting pairing code: $pairingCode');
-      
+
       // Find the pairing request
       final response = await _supabase
           .from('pairings')

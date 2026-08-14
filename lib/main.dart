@@ -69,11 +69,13 @@ void main() async {
   final connectivityService = ConnectivityService();
   await connectivityService.initialize();
 
-  runApp(DuoTaskApp(
-    notifications: notifications,
-    preferencesService: preferencesService,
-    connectivityService: connectivityService,
-  ),);
+  runApp(
+    DuoTaskApp(
+      notifications: notifications,
+      preferencesService: preferencesService,
+      connectivityService: connectivityService,
+    ),
+  );
 }
 
 class DuoTaskApp extends StatelessWidget {
@@ -96,43 +98,44 @@ class DuoTaskApp extends StatelessWidget {
         Provider<SupabaseClient>(
           create: (_) => Supabase.instance.client,
         ),
-        
+
         ChangeNotifierProvider<PreferencesService>.value(
           value: preferencesService,
         ),
-        
+
         ChangeNotifierProvider<ConnectivityService>.value(
           value: connectivityService,
         ),
-        
+
         ChangeNotifierProvider<AuthService>(
           create: (context) => AuthService(
             context.read<SupabaseClient>(),
           ),
         ),
-        
+
         ChangeNotifierProvider<NotificationService>(
           create: (_) => NotificationService(notifications),
         ),
-        
+
         ChangeNotifierProxyProvider<NotificationService, TaskService>(
           create: (context) => TaskService(
             context.read<SupabaseClient>(),
             context.read<NotificationService>(),
           ),
           update: (context, notificationService, previous) =>
-              previous ?? TaskService(
+              previous ??
+              TaskService(
                 context.read<SupabaseClient>(),
                 notificationService,
               ),
         ),
-        
+
         ChangeNotifierProvider<PairingService>(
           create: (context) => PairingService(
             context.read<SupabaseClient>(),
           ),
         ),
-        
+
         ChangeNotifierProvider<NudgeService>(
           create: (context) => NudgeService(
             context.read<SupabaseClient>(),

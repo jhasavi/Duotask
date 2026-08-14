@@ -51,7 +51,9 @@ class _AuthScreenState extends State<AuthScreen> {
         // Success - the auth listener will handle navigation
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isSignIn ? 'Signed in successfully!' : 'Account created successfully!'),
+            content: Text(_isSignIn
+                ? 'Signed in successfully!'
+                : 'Account created successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -193,7 +195,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
                         if (!_isMagicLink) ...[
                           TextFormField(
                             controller: _passwordController,
@@ -215,7 +216,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
-
                         if (!_isSignIn && !_isMagicLink) ...[
                           TextFormField(
                             controller: _displayNameController,
@@ -268,7 +268,8 @@ class _AuthScreenState extends State<AuthScreen> {
                             children: [
                               const Expanded(child: Divider()),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   'or',
                                   style: Theme.of(context).textTheme.bodyMedium,

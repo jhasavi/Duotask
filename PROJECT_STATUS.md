@@ -9,7 +9,7 @@
 | Branch | `main` (ahead of `origin/main` — **not yet pushed**) |
 | Hermetic tests | 76 passing |
 | Integration tests | 5 written, **not yet executed** (need a test project) |
-| Static analysis | 0 errors, 0 warnings, 48 infos |
+| Static analysis | **0 issues** (was 169) |
 | Production deploy | **Stale and leaking — see below** |
 
 ---
@@ -32,7 +32,8 @@ in git history.
 - [ ] Rotate the Vercel token
 - [ ] Check Resend and Supabase auth logs for unauthorized use
 
-Full detail in [SECURITY.md](SECURITY.md).
+Step-by-step: **[docs/CREDENTIAL_ROTATION.md](docs/CREDENTIAL_ROTATION.md)**.
+Background: [SECURITY.md](SECURITY.md).
 
 ### 2. Redeploy — *the sign-up fix has never reached users*
 
@@ -83,18 +84,20 @@ exist. See [docs/RELEASE.md](docs/RELEASE.md#one-time-setup).
   existed only in `schema.sql` and never in a migration.
 
 ### Code quality
-- 0 errors, 0 warnings (was 16 warnings hidden by `--no-fatal-warnings`)
+- **0 analyzer issues, down from 169.** CI is now fatal on everything.
+- All 36 `use_build_context_synchronously` sites fixed — context-dependent
+  objects are resolved before the first `await`, so a user navigating away
+  mid-request can no longer crash the screen
+- Radio widgets migrated to `RadioGroup`
 - `withOpacity` deprecations migrated to `withValues`
+- `dart format` enforced in CI; `require_trailing_commas` removed (it fights
+  the current formatter)
 - Dead error-handling branches removed
 
 ---
 
 ## Known gaps (not blocking)
 
-- 36 `use_build_context_synchronously` infos — real crash risk in edge cases,
-  needs per-site review
-- 12 Radio `groupValue`/`onChanged` deprecations — mechanical migration to
-  `RadioGroup`
 - Live database may still contain migrations (`20250828152200/152300/152400`)
   that exist in no local file. Run `supabase migration list` once linked and
   reconcile.

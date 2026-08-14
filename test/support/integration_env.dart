@@ -31,12 +31,18 @@ class IntegrationEnv {
   /// Returns null when credentials are not configured, which callers should
   /// treat as "skip this test" rather than as a failure.
   static IntegrationEnv? tryLoad() {
-    final url = _read('SUPABASE_TEST_URL',
-        const String.fromEnvironment('SUPABASE_TEST_URL'),);
-    final anonKey = _read('SUPABASE_TEST_ANON_KEY',
-        const String.fromEnvironment('SUPABASE_TEST_ANON_KEY'),);
-    final serviceRoleKey = _read('SUPABASE_TEST_SERVICE_ROLE_KEY',
-        const String.fromEnvironment('SUPABASE_TEST_SERVICE_ROLE_KEY'),);
+    final url = _read(
+      'SUPABASE_TEST_URL',
+      const String.fromEnvironment('SUPABASE_TEST_URL'),
+    );
+    final anonKey = _read(
+      'SUPABASE_TEST_ANON_KEY',
+      const String.fromEnvironment('SUPABASE_TEST_ANON_KEY'),
+    );
+    final serviceRoleKey = _read(
+      'SUPABASE_TEST_SERVICE_ROLE_KEY',
+      const String.fromEnvironment('SUPABASE_TEST_SERVICE_ROLE_KEY'),
+    );
 
     if (url.isEmpty || anonKey.isEmpty || serviceRoleKey.isEmpty) return null;
     return IntegrationEnv._(url, anonKey, serviceRoleKey);

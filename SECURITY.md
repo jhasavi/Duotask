@@ -54,6 +54,8 @@ history**. Rotation is the only real remediation:
 - [ ] Rotate the Vercel token
 - [ ] Review Resend send logs and Supabase auth logs for unauthorized use
 
+**Step-by-step instructions: [docs/CREDENTIAL_ROTATION.md](docs/CREDENTIAL_ROTATION.md).**
+
 Optionally, purge the blobs from history with `git filter-repo` and force-push.
 Rotation matters more; history rewriting without rotation fixes nothing,
 because clones and forks may already exist.

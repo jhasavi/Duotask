@@ -59,7 +59,8 @@ void main() {
           ),
         );
         userId = created.user?.id;
-        expect(userId, isNotNull, reason: 'admin.createUser did not return a user');
+        expect(userId, isNotNull,
+            reason: 'admin.createUser did not return a user');
 
         // Discovery made while writing this test: a database trigger (not
         // present anywhere in this repo's migrations — see PROJECT_STATUS.md
@@ -75,8 +76,11 @@ void main() {
         // gets modified, or fails in some future migration.
         await admin.from('users').delete().eq('id', userId!);
         final before = await admin.from('users').select().eq('id', userId);
-        expect(before, isEmpty,
-            reason: 'test setup invalid: a profile row still exists after delete',);
+        expect(
+          before,
+          isEmpty,
+          reason: 'test setup invalid: a profile row still exists after delete',
+        );
 
         final authService = AuthService(client);
         final ok = await authService.signInWithEmail(email, password);

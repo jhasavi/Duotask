@@ -142,7 +142,7 @@ class NudgeService extends ChangeNotifier {
 
     try {
       final message = '$fromUserName nudged you about "$taskTitle"';
-      
+
       final nudgeData = {
         'pair_id': pairId,
         'task_id': taskId,
@@ -169,10 +169,7 @@ class NudgeService extends ChangeNotifier {
 
   Future<bool> markAsRead(String nudgeId) async {
     try {
-      await _supabase
-          .from('nudges')
-          .update({'read': true})
-          .eq('id', nudgeId);
+      await _supabase.from('nudges').update({'read': true}).eq('id', nudgeId);
 
       final index = _nudges.indexWhere((n) => n.id == nudgeId);
       if (index != -1) {

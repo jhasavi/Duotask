@@ -47,14 +47,6 @@ Shipped work has been removed from this list. See
 
 ## Engineering backlog
 
-### Analyzer infos (48 remaining)
-- **36 × `use_build_context_synchronously`** — a `BuildContext` used after an
-  `await` without a `mounted` check. Each site needs individual review; some
-  are genuine crash risks when a user navigates away mid-request.
-- **12 × Radio deprecations** — `groupValue`/`onChanged` on `Radio` were
-  deprecated after Flutter 3.32. Migrate the six radio tiles in
-  `settings_screen.dart` to a `RadioGroup` ancestor.
-
 ### Schema reconciliation
 The live database was previously modified through the Supabase SQL Editor. It
 may contain migrations (`20250828152200`, `20250828152300`, `20250828152400`)

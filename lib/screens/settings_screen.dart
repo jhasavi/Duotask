@@ -101,23 +101,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: Switch(
                   value: prefsService.dailySummaryEnabled,
                   onChanged: (value) async {
+                    final notificationService =
+                        context.read<NotificationService>();
+                    final messenger = ScaffoldMessenger.of(context);
+
                     await prefsService.setDailySummaryEnabled(value);
-                    
-                    final notificationService = context.read<NotificationService>();
+
                     if (value) {
-                      await notificationService.scheduleDailySummary(hour: 20, minute: 0);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Daily summary enabled at 8 PM')),
-                        );
-                      }
+                      await notificationService.scheduleDailySummary(
+                        hour: 20,
+                        minute: 0,
+                      );
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Daily summary enabled at 8 PM'),
+                        ),
+                      );
                     } else {
                       await notificationService.cancelAllNotifications();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Daily summary disabled')),
-                        );
-                      }
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Daily summary disabled')),
+                      );
                     }
                   },
                 ),
@@ -129,7 +133,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, emailPrefs, _) {
               return SwitchListTile(
                 title: const Text('Daily Email Digest'),
-                subtitle: const Text('Receive task summary via email at 8 AM UTC'),
+                subtitle:
+                    const Text('Receive task summary via email at 8 AM UTC'),
                 value: emailPrefs.dailyEmailEnabled,
                 onChanged: emailPrefs.isLoading
                     ? null
@@ -137,25 +142,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         final userId =
                             context.read<AuthService>().currentUser?.id;
                         if (userId == null) return;
+                        final messenger = ScaffoldMessenger.of(context);
 
                         final success = await emailPrefs.setDailyEmailEnabled(
                           userId,
                           value,
                         );
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                success
-                                    ? value
-                                        ? 'Daily email digest enabled'
-                                        : 'Daily email digest disabled'
-                                    : emailPrefs.errorMessage ??
-                                        'Failed to update email preferences',
-                              ),
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              success
+                                  ? value
+                                      ? 'Daily email digest enabled'
+                                      : 'Daily email digest disabled'
+                                  : emailPrefs.errorMessage ??
+                                      'Failed to update email preferences',
                             ),
-                          );
-                        }
+                          ),
+                        );
                       },
                 secondary: const Icon(Icons.email_outlined),
               );
@@ -548,63 +552,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed == true) {
+      if (!mounted) return;
       final authService = context.read<AuthService>();
+      final navigator = Navigator.of(context);
+
       await authService.signOut();
 
-       // Ensure navigation resets to the auth screen after sign out
-       if (mounted) {
-         Navigator.of(context).pushAndRemoveUntil(
-           MaterialPageRoute(builder: (_) => const AuthScreen()),
-           (route) => false,
-         );
-       }
+      // Ensure navigation resets to the auth screen after sign out
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false,
+      );
     }
   }
 
   Future<void> _showThemeDialog() async {
     final prefsService = context.read<PreferencesService>();
-    
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Theme'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              title: const Text('Light'),
-              value: ThemeMode.light,
-              groupValue: prefsService.themeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('Dark'),
-              value: ThemeMode.dark,
-              groupValue: prefsService.themeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('System'),
-              value: ThemeMode.system,
-              groupValue: prefsService.themeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<ThemeMode>(
+          groupValue: prefsService.themeMode,
+          onChanged: (value) {
+            if (value != null) {
+              prefsService.setThemeMode(value);
+              Navigator.pop(context);
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: Text('Light'),
+                value: ThemeMode.light,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('Dark'),
+                value: ThemeMode.dark,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('System'),
+                value: ThemeMode.system,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -612,66 +605,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showLanguageDialog() async {
     final prefsService = context.read<PreferencesService>();
-    
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Language'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('English'),
-              value: 'en',
-              groupValue: prefsService.languageCode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setLanguageCode(value);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Language changed to English'),
-                    ),
-                  );
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('Español'),
-              value: 'es',
-              groupValue: prefsService.languageCode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setLanguageCode(value);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Idioma cambiado a Español'),
-                    ),
-                  );
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('Français'),
-              value: 'fr',
-              groupValue: prefsService.languageCode,
-              onChanged: (value) {
-                if (value != null) {
-                  prefsService.setLanguageCode(value);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Langue changée en Français'),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: prefsService.languageCode,
+          onChanged: (value) {
+            if (value == null) return;
+            final messenger = ScaffoldMessenger.of(context);
+            prefsService.setLanguageCode(value);
+            Navigator.pop(context);
+            messenger.showSnackBar(
+              SnackBar(content: Text(_languageChangedMessage(value))),
+            );
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: Text('English'),
+                value: 'en',
+              ),
+              RadioListTile<String>(
+                title: Text('Español'),
+                value: 'es',
+              ),
+              RadioListTile<String>(
+                title: Text('Français'),
+                value: 'fr',
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Confirmation shown in the language the user just picked.
+  static String _languageChangedMessage(String code) {
+    switch (code) {
+      case 'es':
+        return 'Idioma cambiado a Español';
+      case 'fr':
+        return 'Langue changée en Français';
+      default:
+        return 'Language changed to English';
+    }
   }
 
   Future<void> _openDocument(String docName) async {
@@ -679,8 +660,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => _DocumentViewer(
-          title: docName == 'terms_of_service' 
-              ? 'Terms of Service' 
+          title: docName == 'terms_of_service'
+              ? 'Terms of Service'
               : 'Privacy Policy',
           assetPath: 'assets/docs/$docName.md',
         ),
