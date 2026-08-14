@@ -555,20 +555,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryColor.withOpacity(0.1),
-                            AppTheme.secondaryColor.withOpacity(0.1),
+                            AppTheme.primaryColor.withValues(alpha: 0.1),
+                            AppTheme.secondaryColor.withValues(alpha: 0.1),
                           ],
                         ),
                         border: Border(
                           bottom: BorderSide(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.people,
                             color: AppTheme.primaryColor,
                             size: 32,

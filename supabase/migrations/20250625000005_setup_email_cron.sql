@@ -1,57 +1,84 @@
 -- ============================================================================
 -- DuoTask: Setup Daily Email Cron Job
--- Run this in Supabase SQL Editor after deploying the edge function
+-- Run this in Supabase SQL Editor after deploying the edge function.
+-- ============================================================================
+--
+-- PREREQUISITE — store the credentials in Vault first, so no key is ever
+-- written into this file or into the cron job definition. Run once:
+--
+--   select vault.create_secret(
+--     'https://<project-ref>.supabase.co', 'project_url');
+--   select vault.create_secret(
+--     '<anon key>', 'anon_key');
+--
+-- To rotate a key later, update the Vault secret; the cron job picks up the
+-- new value on its next run with no migration change.
 -- ============================================================================
 
--- 1. Enable pg_cron extension (if not already enabled)
+-- 1. Extensions
 CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- 2. Enable pg_net extension for HTTP requests (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS pg_net;
+CREATE EXTENSION IF NOT EXISTS supabase_vault;
 
--- 3. Delete existing cron job if it exists
+-- 2. Fail loudly if the Vault secrets are missing, rather than scheduling a
+--    job that silently 401s every morning.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM vault.decrypted_secrets WHERE name = 'project_url'
+  ) THEN
+    RAISE EXCEPTION 'Vault secret "project_url" is missing. See the header of this file.';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key'
+  ) THEN
+    RAISE EXCEPTION 'Vault secret "anon_key" is missing. See the header of this file.';
+  END IF;
+END $$;
+
+-- 3. Remove any existing job so this migration is re-runnable.
 SELECT cron.unschedule('daily-email-digest') WHERE EXISTS (
   SELECT 1 FROM cron.job WHERE jobname = 'daily-email-digest'
 );
 
--- 4. Schedule daily email at 8 AM UTC (3 AM EST, 12 AM PST)
--- Adjust the time as needed for your timezone
+-- 4. Schedule daily email at 8 AM UTC.
+--    NOTE: this fires at a single UTC instant for every user regardless of
+--    their local timezone. Per-user send times are tracked as a known gap.
 SELECT cron.schedule(
   'daily-email-digest',
-  '0 8 * * *',  -- Every day at 8 AM UTC
+  '0 8 * * *',
   $$
-  SELECT
-    net.http_post(
-      url:='https://xqhlnuvpogiolzkucupt.supabase.co/functions/v1/daily-email-digest',
-      headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaGxudXZwb2dpb2x6a3VjdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MTA1NzgsImV4cCI6MjA2NzQ4NjU3OH0.9lw-X6mjpPFfTqpiiTEOpzWZEfqnPkW0ADA6XfbLsNw"}'::jsonb,
-      body:='{}'::jsonb
-    ) as request_id;
+  SELECT net.http_post(
+    url := (
+      SELECT decrypted_secret FROM vault.decrypted_secrets
+      WHERE name = 'project_url'
+    ) || '/functions/v1/daily-email-digest',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (
+        SELECT decrypted_secret FROM vault.decrypted_secrets
+        WHERE name = 'anon_key'
+      )
+    ),
+    body := '{}'::jsonb
+  ) AS request_id;
   $$
 );
 
--- 5. Verify the cron job was created
-SELECT * FROM cron.job WHERE jobname = 'daily-email-digest';
+-- 5. Verify
+SELECT jobname, schedule, active FROM cron.job WHERE jobname = 'daily-email-digest';
 
--- 6. Check recent cron job runs (after it runs once)
--- SELECT * FROM cron.job_run_details WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'daily-email-digest') ORDER BY start_time DESC LIMIT 10;
+-- 6. Check recent runs (after it has fired at least once)
+-- SELECT * FROM cron.job_run_details
+--   WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'daily-email-digest')
+--   ORDER BY start_time DESC LIMIT 10;
 
--- ============================================================================
--- READY TO RUN! The Authorization token has been configured with your anon key.
--- Copy this entire file and paste into Supabase SQL Editor, then click RUN.
--- ============================================================================
-
--- Success message
 DO $$
 BEGIN
   RAISE NOTICE '';
-  RAISE NOTICE '✅ Daily email cron job scheduled successfully!';
+  RAISE NOTICE '✅ Daily email cron job scheduled.';
+  RAISE NOTICE '⏰ Schedule: every day at 08:00 UTC';
+  RAISE NOTICE '📧 Recipients: users with daily_email_enabled = true';
+  RAISE NOTICE '🔐 Credentials read from Vault at run time (no keys in SQL).';
   RAISE NOTICE '';
-  RAISE NOTICE '⏰ Schedule: Every day at 8 AM UTC';
-  RAISE NOTICE '📧 Sends emails to all users with daily_email_enabled=true';
-  RAISE NOTICE '';
-  RAISE NOTICE '⚠️  NEXT STEP: Update the Authorization token in the cron job';
-  RAISE NOTICE '   1. Go to: https://supabase.com/dashboard/project/xqhlnuvpogiolzkucupt/settings/api';
-  RAISE NOTICE '   2. Copy your anon (public) key';
-  RAISE NOTICE '   3. Replace the "example" token in this script';
-  RAISE NOTICE '   4. Re-run this script';
 END $$;

@@ -78,7 +78,7 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
         for (var existingPos in _bubblePositions) {
           final distance = sqrt(
             pow(newPosition.dx - existingPos.dx, 2) +
-            pow(newPosition.dy - existingPos.dy, 2)
+            pow(newPosition.dy - existingPos.dy, 2),
           );
           
           // Minimum distance threshold (adjust based on bubble sizes)
@@ -103,7 +103,7 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
           dx: _random.nextDouble(),
           dy: _random.nextDouble(),
           rotation: _random.nextDouble() * 0.2 - 0.1,
-        ));
+        ),);
       }
     }
   }
@@ -151,7 +151,7 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
                   final y = padding + (maxY - padding * 2) * position.dy;
 
                   // Animate entry
-                  final curve = Curves.easeOutBack;
+                  const curve = Curves.easeOutBack;
                   final animation = CurvedAnimation(
                     parent: _controller,
                     curve: Interval(

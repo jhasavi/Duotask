@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../models/task.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
@@ -72,7 +71,7 @@ class _TaskBubbleState extends State<TaskBubble>
 
   Color _getBubbleColor() {
     if (widget.task.status == TaskStatus.completed) {
-      return AppTheme.completedColor.withOpacity(0.7);
+      return AppTheme.completedColor.withValues(alpha: 0.7);
     }
 
     if (widget.task.priority == TaskPriority.urgent) {
@@ -122,7 +121,7 @@ class _TaskBubbleState extends State<TaskBubble>
               color: color,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -195,7 +194,7 @@ class _TaskBubbleState extends State<TaskBubble>
                     right: 8,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
@@ -217,7 +216,7 @@ class _TaskBubbleState extends State<TaskBubble>
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

@@ -1,0 +1,12 @@
+# Test suite configuration.
+#
+# The default `flutter test` run must stay hermetic — no network, no live
+# Supabase project. Tests that talk to a real backend carry the `integration`
+# tag and are excluded by default; they self-skip anyway when credentials are
+# absent (see test/support/integration_env.dart).
+#
+#   flutter test                      # hermetic unit + widget tests
+#   flutter test --tags integration   # live-backend tests (needs credentials)
+tags:
+  integration:
+    skip: "Live-backend test. Run explicitly with --tags integration."

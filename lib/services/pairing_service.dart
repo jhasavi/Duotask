@@ -119,7 +119,7 @@ class PairingService extends ChangeNotifier {
           .order('accepted_at', ascending: false)
           .limit(1);
 
-      if (response != null && (response as List).isNotEmpty) {
+      if ((response as List).isNotEmpty) {
         _currentPairing = Pairing.fromJson(response.first);
         await _loadPartner(userId);
       } else {
@@ -190,12 +190,10 @@ class PairingService extends ChangeNotifier {
 
     if (eventType == PostgresChangeEvent.update ||
         eventType == PostgresChangeEvent.insert) {
-      if (newRecord != null) {
-        final pairing = Pairing.fromJson(newRecord);
-        if (pairing.isActive) {
-          _currentPairing = pairing;
-          _loadPartner(userId);
-        }
+      final pairing = Pairing.fromJson(newRecord);
+      if (pairing.isActive) {
+        _currentPairing = pairing;
+        _loadPartner(userId);
       }
     } else if (eventType == PostgresChangeEvent.delete) {
       _currentPairing = null;

@@ -126,7 +126,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo and Title
-                  Icon(
+                  const Icon(
                     Icons.bubble_chart,
                     size: 80,
                     color: AppTheme.primaryColor,

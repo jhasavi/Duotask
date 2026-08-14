@@ -15,34 +15,33 @@
 // session with no `users` row). We admin-create a confirmed disposable user,
 // then drive the app's real signInWithEmail() against it.
 //
-// Run with: flutter test test/integration/signup_race_test.dart
+// Credentials come from the environment (see test/support/integration_env.dart).
+// This test creates and deletes real auth users, so point it at a dedicated
+// test project — never production.
+//
+// Run with: flutter test --tags integration
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:duotask/services/auth_service.dart';
 
-// Same project the app actually uses (public URL + anon key, safe to embed —
-// these are client-side credentials by design, gated by RLS not secrecy).
-const _url = 'https://xqhlnuvpogiolzkucupt.supabase.co';
-const _anonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaGxudXZwb2dpb2x6a3VjdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MTA1NzgsImV4cCI6MjA2NzQ4NjU3OH0.9lw-X6mjpPFfTqpiiTEOpzWZEfqnPkW0ADA6XfbLsNw';
-// Service-role key: used ONLY to admin-create/confirm and later delete the
-// disposable test user this test creates. Never used by the app itself.
-const _serviceRoleKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaGxudXZwb2dpb2x6a3VjdXB0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTkxMDU3OCwiZXhwIjoyMDY3NDg2NTc4fQ.qV_Ewz2hh_Xyq1mOPXjUr6FrI_02U1-mc6VO_ql-Yps';
+import '../support/integration_env.dart';
 
 void main() {
+  final env = IntegrationEnv.tryLoad();
+
   test(
     'first sign-in survives the auth-listener / explicit-load race without '
     'being signed back out (regression test for the duplicate-key bug)',
     () async {
-      final admin = SupabaseClient(_url, _serviceRoleKey);
+      final admin = SupabaseClient(env!.url, env.serviceRoleKey);
       // authFlowType: implicit — the app itself relies on Supabase.initialize()
       // to supply PKCE storage; a bare SupabaseClient here has none, and
       // email/password auth doesn't need PKCE (that's for OAuth/magic links).
       final client = SupabaseClient(
-        _url,
-        _anonKey,
-        authOptions: const AuthClientOptions(authFlowType: AuthFlowType.implicit),
+        env.url,
+        env.anonKey,
+        authOptions:
+            const AuthClientOptions(authFlowType: AuthFlowType.implicit),
       );
 
       final stamp = DateTime.now().millisecondsSinceEpoch;
@@ -77,7 +76,7 @@ void main() {
         await admin.from('users').delete().eq('id', userId!);
         final before = await admin.from('users').select().eq('id', userId);
         expect(before, isEmpty,
-            reason: 'test setup invalid: a profile row still exists after delete');
+            reason: 'test setup invalid: a profile row still exists after delete',);
 
         final authService = AuthService(client);
         final ok = await authService.signInWithEmail(email, password);
@@ -113,5 +112,7 @@ void main() {
         }
       }
     },
+    tags: ['integration'],
+    skip: env == null ? IntegrationEnv.skipReason : null,
   );
 }

@@ -122,11 +122,9 @@ class NudgeService extends ChangeNotifier {
             value: userId,
           ),
           callback: (payload) {
-            if (payload.newRecord != null) {
-              final nudge = Nudge.fromJson(payload.newRecord!);
-              _nudges.insert(0, nudge);
-              notifyListeners();
-            }
+            final nudge = Nudge.fromJson(payload.newRecord);
+            _nudges.insert(0, nudge);
+            notifyListeners();
           },
         )
         .subscribe();

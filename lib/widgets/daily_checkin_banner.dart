@@ -79,7 +79,7 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
         final activeTasks = groupTasks
             .where((t) => 
               t.status == TaskStatus.unclaimed || 
-              t.status == TaskStatus.claimed
+              t.status == TaskStatus.claimed,
             )
             .toList();
 
@@ -109,15 +109,15 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primaryColor.withOpacity(0.1),
-                AppTheme.primaryColor.withOpacity(0.05),
+                AppTheme.primaryColor.withValues(alpha: 0.1),
+                AppTheme.primaryColor.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppTheme.primaryColor.withOpacity(0.2),
+              color: AppTheme.primaryColor.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -127,7 +127,7 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
               // Header
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.today,
                     color: AppTheme.primaryColor,
                     size: 24,
@@ -196,7 +196,7 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
                         ),
                       ],
                     ),
-                  )),
+                  ),),
 
               const SizedBox(height: 16),
 
@@ -244,10 +244,10 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
