@@ -46,7 +46,9 @@ enum TaskPriority {
 enum TaskRecurrence {
   none,
   daily,
-  weekly;
+  weekly,
+  monthly,
+  yearly;
 
   String get displayName {
     switch (this) {
@@ -56,6 +58,10 @@ enum TaskRecurrence {
         return 'Daily';
       case TaskRecurrence.weekly:
         return 'Weekly';
+      case TaskRecurrence.monthly:
+        return 'Monthly';
+      case TaskRecurrence.yearly:
+        return 'Yearly';
     }
   }
 }
@@ -70,6 +76,7 @@ class Task {
   final TaskStatus status;
   final TaskPriority priority;
   final TaskRecurrence recurrence;
+  final DateTime? recurrenceEndDate;
   final DateTime? dueDate;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -77,6 +84,7 @@ class Task {
   final bool isPersonal; // Deprecated: use visibility instead
   final TaskVisibility visibility;
   final String? pairId;
+  final List<String> tags;
 
   Task({
     required this.id,
@@ -88,6 +96,7 @@ class Task {
     required this.status,
     required this.priority,
     required this.recurrence,
+    this.recurrenceEndDate,
     this.dueDate,
     required this.createdAt,
     this.updatedAt,
@@ -95,6 +104,7 @@ class Task {
     this.isPersonal = false, // Deprecated: use visibility instead
     this.visibility = TaskVisibility.personal,
     this.pairId,
+    this.tags = const [],
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -131,6 +141,9 @@ class Task {
         (e) => e.name == json['recurrence'],
         orElse: () => TaskRecurrence.none,
       ),
+      recurrenceEndDate: json['recurrence_end_date'] != null
+          ? DateTime.parse(json['recurrence_end_date'] as String)
+          : null,
       dueDate: json['due_date'] != null
           ? DateTime.parse(json['due_date'] as String)
           : null,
@@ -144,6 +157,9 @@ class Task {
       isPersonal: json['is_personal'] as bool? ?? false,
       visibility: visibility,
       pairId: json['pair_id'] as String?,
+      tags: json['tags'] != null
+          ? List<String>.from(json['tags'] as List)
+          : const [],
     );
   }
 
@@ -158,6 +174,7 @@ class Task {
       'status': status.name,
       'priority': priority.name,
       'recurrence': recurrence.name,
+      'recurrence_end_date': recurrenceEndDate?.toIso8601String(),
       'due_date': dueDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
@@ -165,6 +182,7 @@ class Task {
       'is_personal': isPersonal, // Deprecated: kept for backward compatibility
       'visibility': visibility.name,
       'pair_id': pairId,
+      'tags': tags,
     };
   }
 
@@ -178,6 +196,8 @@ class Task {
     TaskStatus? status,
     TaskPriority? priority,
     TaskRecurrence? recurrence,
+    DateTime? recurrenceEndDate,
+    bool clearRecurrenceEndDate = false,
     DateTime? dueDate,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -185,6 +205,7 @@ class Task {
     bool? isPersonal,
     TaskVisibility? visibility,
     String? pairId,
+    List<String>? tags,
   }) {
     return Task(
       id: id ?? this.id,
@@ -196,6 +217,9 @@ class Task {
       status: status ?? this.status,
       priority: priority ?? this.priority,
       recurrence: recurrence ?? this.recurrence,
+      recurrenceEndDate: clearRecurrenceEndDate
+          ? null
+          : (recurrenceEndDate ?? this.recurrenceEndDate),
       dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -203,6 +227,7 @@ class Task {
       isPersonal: isPersonal ?? this.isPersonal,
       visibility: visibility ?? this.visibility,
       pairId: pairId ?? this.pairId,
+      tags: tags ?? this.tags,
     );
   }
 

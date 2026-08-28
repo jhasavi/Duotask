@@ -133,8 +133,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, emailPrefs, _) {
               return SwitchListTile(
                 title: const Text('Daily Email Digest'),
-                subtitle:
-                    const Text('Receive task summary via email at 8 AM UTC'),
+                subtitle: const Text(
+                  'Receive task summary via email at 8 AM your local time',
+                ),
                 value: emailPrefs.dailyEmailEnabled,
                 onChanged: emailPrefs.isLoading
                     ? null

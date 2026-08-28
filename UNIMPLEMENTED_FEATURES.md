@@ -1,6 +1,6 @@
 # Unimplemented Features
 
-*Last updated: August 14, 2026*
+*Last updated: August 28, 2026*
 
 Shipped work has been removed from this list. See
 [PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) for what exists today and
@@ -19,10 +19,6 @@ Shipped work has been removed from this list. See
 - Queue task changes locally
 - Sync when connection restored
 
-### Task Categories/Tags
-- Add tags (#home, #work, #urgent)
-- Filter by tags
-
 ### File Attachments
 - Attach images/files via Supabase Storage
 
@@ -31,17 +27,8 @@ Shipped work has been removed from this list. See
 - Streak tracking
 - Partner collaboration stats
 
-### Advanced Recurrence
-- Monthly/yearly recurrence
-- End date for recurring tasks
-
 ### Multi-Partner Support
 - Teams beyond two people
-
-### Timezone Unification
-- The email digest cron fires at a single 08:00 UTC instant for every user
-- Needs a per-user timezone and either per-timezone cron rows or an
-  hourly job that selects users whose local time is 08:00
 
 ---
 
@@ -50,8 +37,14 @@ Shipped work has been removed from this list. See
 ### Schema reconciliation
 The live database was previously modified through the Supabase SQL Editor. It
 may contain migrations (`20250828152200`, `20250828152300`, `20250828152400`)
-that exist in no local file. Once linked, run `supabase migration list` and
-either write the missing migrations or repair the history.
+that exist in no local file. Checked 2026-08-28: no trace of these timestamps
+exists anywhere in `supabase/migrations/`, `supabase/schema.sql`, or git
+history — they can't be reconstructed locally. Once linked to the live
+project, run `supabase migration list --linked` (or `supabase db diff`) and
+either write the missing migrations from what's found or repair the history.
+Separately, `supabase/schema.sql` itself is stale — it predates the
+`email_preferences`/`nudges` migrations and should not be treated as
+authoritative; `supabase/migrations/00000000000000_baseline_schema.sql` is.
 
 ### Stop committing `build/web`
 Tracked only because Vercel currently serves the committed directory. Once a

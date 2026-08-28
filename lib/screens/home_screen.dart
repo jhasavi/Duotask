@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   TaskVisibility? _visibilityFilter; // null=All, personal, group
   bool _showTodayOnly = false;
   String _searchQuery = '';
+  String? _tagFilter;
   int _lastNudgeCount = 0;
   NudgeService? _nudgeService;
 
@@ -291,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
     filtered = filtered
         .where((t) => taskMatchesSearch(t, _searchQuery))
         .where((t) => taskMatchesTodayFilter(t, _showTodayOnly))
+        .where((t) => taskMatchesTag(t, _tagFilter))
         .toList();
 
     return sortTasksForDisplay(filtered);
@@ -393,7 +395,9 @@ class _HomeScreenState extends State<HomeScreen> {
         defaultVisibility: preferencesService.defaultTaskVisibility,
         onCreateTask: (title, visibility,
             {priority = TaskPriority.normal,
-            recurrence = TaskRecurrence.none}) async {
+            recurrence = TaskRecurrence.none,
+            recurrenceEndDate,
+            tags = const []}) async {
           if (visibility == TaskVisibility.group) {
             final confirmed = await showDialog<bool>(
               context: dialogContext,
@@ -432,10 +436,12 @@ class _HomeScreenState extends State<HomeScreen> {
             userId: userId,
             priority: priority, // Use dialog selection, not parsed
             recurrence: recurrence,
+            recurrenceEndDate: recurrenceEndDate,
             dueDate: parsed['dueDate'] as DateTime?,
             assignedToId: pairingService.partner?.id,
             visibility: visibility,
             pairId: pairId,
+            tags: tags,
           );
 
           if (task != null) {
@@ -699,6 +705,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
+              // Tag filter chips (only shown once there are tagged tasks)
+              Consumer<TaskService>(
+                builder: (context, taskService, child) {
+                  final allTags = taskService.tasks
+                      .expand((t) => t.tags)
+                      .toSet()
+                      .toList()
+                    ..sort();
+                  if (allTags.isEmpty) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SizedBox(
+                      height: 32,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: allTags
+                            .map((tag) => Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(tag),
+                                    selected: _tagFilter == tag,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        _tagFilter = selected ? tag : null;
+                                      });
+                                    },
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               const SizedBox(height: 8),
 
               // Tab selector

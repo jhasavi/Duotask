@@ -21,10 +21,17 @@ List<Task> sortTasksForDisplay(List<Task> tasks) {
 
 bool taskMatchesSearch(Task task, String query) {
   if (query.isEmpty) return true;
-  return task.title.toLowerCase().contains(query.toLowerCase());
+  final lowerQuery = query.toLowerCase();
+  if (task.title.toLowerCase().contains(lowerQuery)) return true;
+  return task.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
 }
 
 bool taskMatchesTodayFilter(Task task, bool showTodayOnly) {
   if (!showTodayOnly) return true;
   return task.isDueToday || task.status != TaskStatus.completed;
+}
+
+bool taskMatchesTag(Task task, String? tag) {
+  if (tag == null) return true;
+  return task.tags.contains(tag);
 }

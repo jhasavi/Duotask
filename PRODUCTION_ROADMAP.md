@@ -1,6 +1,6 @@
 # DuoTask Production Roadmap
 
-*Last updated: August 14, 2026*
+*Last updated: August 28, 2026*
 
 ## Where we are
 
@@ -63,15 +63,22 @@ Three things still need a human. See
 | 33 | All 36 `use_build_context_synchronously` crash risks fixed | ✅ |
 | 34 | Radio widgets migrated to `RadioGroup`; `dart format` enforced in CI | ✅ |
 
-## Next phase (v1.3)
+## v1.3 feature work (shipped 2026-08-28)
+
+| # | Improvement | Status |
+|---|-------------|--------|
+| 35 | Per-user timezone for the daily email digest (cron now runs hourly; edge function sends each user at their local `email_time`) | ✅ |
+| 36 | Task tags — add, remove, search, and filter by tag | ✅ |
+| 37 | Monthly/yearly recurrence, plus an optional recurrence end date | ✅ |
+
+## Next phase (v1.4)
 
 - Push notifications (FCM) — needs Firebase setup and APNs certificates
 - Offline task queue with sync
-- Task categories/tags
-- Monthly/yearly recurrence with end dates
 - Analytics dashboard
 - Multi-partner (team) support
-- Per-user timezone for the daily email digest (currently fixed at 08:00 UTC)
+- Timezone picker in Settings (today the timezone is captured silently from
+  the device's UTC offset on first load — see `EmailPreferencesService`)
 
 ## Engineering backlog
 

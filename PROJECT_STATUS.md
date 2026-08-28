@@ -99,9 +99,13 @@ exist. See [docs/RELEASE.md](docs/RELEASE.md#one-time-setup).
 ## Known gaps (not blocking)
 
 - Live database may still contain migrations (`20250828152200/152300/152400`)
-  that exist in no local file. Run `supabase migration list` once linked and
-  reconcile.
-- Email digest sends at a fixed 08:00 UTC for every user regardless of timezone
+  that exist in no local file. Checked locally (2026-08-28): no trace of them
+  in migrations, `schema.sql`, or git history — run `supabase migration list
+  --linked` once linked and reconcile from what the live project actually has.
+- Timezone for the email digest is captured silently from the device's UTC
+  offset (`EmailPreferencesService.deviceOffsetTimezone`); there's no explicit
+  picker in Settings yet, and non-whole-hour offsets (e.g. UTC+5:30) fall back
+  to UTC.
 
 See [UNIMPLEMENTED_FEATURES.md](UNIMPLEMENTED_FEATURES.md) for the feature
 backlog.

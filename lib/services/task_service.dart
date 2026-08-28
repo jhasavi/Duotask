@@ -140,10 +140,12 @@ class TaskService extends ChangeNotifier {
     String? assignedToId,
     TaskPriority priority = TaskPriority.normal,
     TaskRecurrence recurrence = TaskRecurrence.none,
+    DateTime? recurrenceEndDate,
     DateTime? dueDate,
     bool isPersonal = false,
     TaskVisibility visibility = TaskVisibility.personal,
     String? pairId,
+    List<String> tags = const [],
   }) async {
     _setLoading(true);
     _clearError();
@@ -161,11 +163,13 @@ class TaskService extends ChangeNotifier {
         'status': TaskStatus.unclaimed.name,
         'priority': priority.name,
         'recurrence': recurrence.name,
+        'recurrence_end_date': recurrenceEndDate?.toIso8601String(),
         'due_date': dueDate?.toIso8601String(),
         'created_at': now.toIso8601String(),
         'is_personal': isPersonal, // Kept for backward compatibility
         'visibility': visibility.name,
         'pair_id': pairId,
+        'tags': tags,
       };
 
       final response =
@@ -438,9 +442,23 @@ class TaskService extends ChangeNotifier {
         case TaskRecurrence.weekly:
           newDueDate = originalTask.dueDate!.add(const Duration(days: 7));
           break;
+        case TaskRecurrence.monthly:
+          newDueDate = _addMonths(originalTask.dueDate!, 1);
+          break;
+        case TaskRecurrence.yearly:
+          newDueDate = _addMonths(originalTask.dueDate!, 12);
+          break;
         case TaskRecurrence.none:
           break;
       }
+    }
+
+    // Stop recurring once the next occurrence would fall on or after the
+    // configured end date.
+    if (originalTask.recurrenceEndDate != null &&
+        newDueDate != null &&
+        !newDueDate.isBefore(originalTask.recurrenceEndDate!)) {
+      return null;
     }
 
     return await createTask(
@@ -450,8 +468,30 @@ class TaskService extends ChangeNotifier {
       assignedToId: originalTask.assignedToId,
       priority: originalTask.priority,
       recurrence: originalTask.recurrence,
+      recurrenceEndDate: originalTask.recurrenceEndDate,
       dueDate: newDueDate,
       isPersonal: originalTask.isPersonal,
+      visibility: originalTask.visibility,
+      pairId: originalTask.pairId,
+      tags: originalTask.tags,
+    );
+  }
+
+  /// Adds calendar months to [date], clamping the day when the target month
+  /// is shorter (e.g. Jan 31 + 1 month -> Feb 28/29, not Mar 3).
+  DateTime _addMonths(DateTime date, int months) {
+    final totalMonths = date.month - 1 + months;
+    final year = date.year + totalMonths ~/ 12;
+    final month = totalMonths % 12 + 1;
+    final daysInTargetMonth = DateTime(year, month + 1, 0).day;
+    final day = date.day > daysInTargetMonth ? daysInTargetMonth : date.day;
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
     );
   }
 

@@ -23,9 +23,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   late Task _task;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tagController = TextEditingController();
   DateTime? _selectedDueDate;
   TaskPriority _selectedPriority = TaskPriority.normal;
   TaskRecurrence _selectedRecurrence = TaskRecurrence.none;
+  DateTime? _recurrenceEndDate;
+  late List<String> _tags;
 
   @override
   void initState() {
@@ -36,13 +39,41 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _selectedDueDate = _task.dueDate;
     _selectedPriority = _task.priority;
     _selectedRecurrence = _task.recurrence;
+    _recurrenceEndDate = _task.recurrenceEndDate;
+    _tags = List.of(_task.tags);
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _tagController.dispose();
     super.dispose();
+  }
+
+  void _addTag(String raw) {
+    final tag = raw.trim();
+    if (tag.isEmpty || _tags.contains(tag)) {
+      _tagController.clear();
+      return;
+    }
+    setState(() {
+      _tags.add(tag);
+      _tagController.clear();
+    });
+  }
+
+  Future<void> _pickRecurrenceEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _recurrenceEndDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      setState(() => _recurrenceEndDate = picked);
+    }
   }
 
   Future<void> _selectDueDate() async {
@@ -91,6 +122,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       dueDate: _selectedDueDate,
       priority: _selectedPriority,
       recurrence: _selectedRecurrence,
+      recurrenceEndDate: _selectedRecurrence == TaskRecurrence.none
+          ? null
+          : _recurrenceEndDate,
+      clearRecurrenceEndDate: _selectedRecurrence == TaskRecurrence.none,
+      tags: _tags,
     );
 
     final success = await taskService.updateTask(updatedTask);
@@ -278,11 +314,74 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       if (value != null) {
                         setState(() {
                           _selectedRecurrence = value;
+                          if (value == TaskRecurrence.none) {
+                            _recurrenceEndDate = null;
+                          }
                         });
                       }
                     }
                   : null,
             ),
+            if (_selectedRecurrence != TaskRecurrence.none)
+              ListTile(
+                leading: const Icon(Icons.event_busy),
+                title: Text(
+                  _recurrenceEndDate != null
+                      ? DateFormat('MMM d, y').format(_recurrenceEndDate!)
+                      : 'No end date',
+                ),
+                subtitle: const Text('Recurrence ends'),
+                trailing: isOwner
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_recurrenceEndDate != null)
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () =>
+                                  setState(() => _recurrenceEndDate = null),
+                            ),
+                          IconButton(
+                            icon: Icon(
+                              _recurrenceEndDate != null
+                                  ? Icons.edit
+                                  : Icons.add,
+                            ),
+                            onPressed: _pickRecurrenceEndDate,
+                          ),
+                        ],
+                      )
+                    : null,
+                contentPadding: EdgeInsets.zero,
+              ),
+            const SizedBox(height: 16),
+
+            // Tags
+            if (isOwner)
+              TextField(
+                controller: _tagController,
+                decoration: const InputDecoration(
+                  labelText: 'Add tag',
+                  prefixIcon: Icon(Icons.label_outline),
+                ),
+                textInputAction: TextInputAction.done,
+                onSubmitted: _addTag,
+              ),
+            if (_tags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _tags
+                    .map((tag) => Chip(
+                          label: Text(tag),
+                          onDeleted: isOwner
+                              ? () => setState(() => _tags.remove(tag))
+                              : null,
+                        ))
+                    .toList(),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Due date
