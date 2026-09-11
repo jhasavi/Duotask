@@ -46,6 +46,47 @@ void main() {
       expect(taskMatchesSearch(task, 'grocer'), isTrue);
       expect(taskMatchesSearch(task, 'laundry'), isFalse);
     });
+
+    test('also matches against tags', () {
+      final task = Task(
+        id: '1',
+        title: 'Buy Groceries',
+        createdById: 'u1',
+        status: TaskStatus.unclaimed,
+        priority: TaskPriority.normal,
+        recurrence: TaskRecurrence.none,
+        createdAt: DateTime.now(),
+        tags: const ['home', 'urgent'],
+      );
+
+      expect(taskMatchesSearch(task, 'home'), isTrue);
+      expect(taskMatchesSearch(task, 'work'), isFalse);
+    });
+  });
+
+  group('taskMatchesTag', () {
+    final task = Task(
+      id: '1',
+      title: 'Task',
+      createdById: 'u1',
+      status: TaskStatus.unclaimed,
+      priority: TaskPriority.normal,
+      recurrence: TaskRecurrence.none,
+      createdAt: DateTime.now(),
+      tags: const ['home'],
+    );
+
+    test('returns true when no tag filter is set', () {
+      expect(taskMatchesTag(task, null), isTrue);
+    });
+
+    test('returns true when task has the filtered tag', () {
+      expect(taskMatchesTag(task, 'home'), isTrue);
+    });
+
+    test('returns false when task lacks the filtered tag', () {
+      expect(taskMatchesTag(task, 'work'), isFalse);
+    });
   });
 
   group('taskMatchesTodayFilter', () {

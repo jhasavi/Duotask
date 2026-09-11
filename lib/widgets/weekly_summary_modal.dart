@@ -21,7 +21,7 @@ class WeeklySummaryModal extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     final lastShownWeek = prefs.getString('weekly_summary_last_shown');
     final currentWeek = _getCurrentWeekKey();
-    
+
     return lastShownWeek != currentWeek;
   }
 
@@ -56,10 +56,10 @@ class WeeklySummaryModal extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.celebration,
                 size: 48,
                 color: AppTheme.primaryColor,
@@ -90,15 +90,15 @@ class WeeklySummaryModal extends StatelessWidget {
               partnerCompletedCount,
               Colors.purple,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Divider
             Container(
               height: 1,
-              color: AppTheme.textSecondary.withOpacity(0.2),
+              color: AppTheme.textSecondary.withValues(alpha: 0.2),
             ),
-            
+
             const SizedBox(height: 24),
 
             // Total
@@ -156,7 +156,7 @@ class WeeklySummaryModal extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Center(

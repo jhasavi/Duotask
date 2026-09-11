@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   TaskVisibility? _visibilityFilter; // null=All, personal, group
   bool _showTodayOnly = false;
   String _searchQuery = '';
+  String? _tagFilter;
   int _lastNudgeCount = 0;
   NudgeService? _nudgeService;
 
@@ -130,11 +131,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (now.hour < 9) return; // Only show after 9am
 
     final shouldShow = await WeeklySummaryModal.shouldShow();
-    if (!shouldShow) return;
+    if (!shouldShow || !mounted) return;
 
     final taskService = context.read<TaskService>();
     final authService = context.read<AuthService>();
-    
+
     // Get weekly completion counts
     final counts = await taskService.getWeeklyCompletions(
       userId,
@@ -159,13 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleTaskTap(Task task) async {
-    await HapticHelper.mediumImpact();
-
+    // Captured before the first await; this widget may be disposed after one.
     final authService = context.read<AuthService>();
     final taskService = context.read<TaskService>();
+    final messenger = ScaffoldMessenger.of(context);
     final userId = authService.currentUser?.id;
 
     if (userId == null) return;
+
+    await HapticHelper.mediumImpact();
 
     final previousStatus = task.status;
     final success = await taskService.cycleTaskStatus(task, userId);
@@ -173,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     if (!success && taskService.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(taskService.errorMessage!)),
       );
       return;
@@ -183,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _confettiController.play();
       await HapticHelper.success();
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: const Text(AppConstants.successTaskCompleted),
           duration: const Duration(seconds: 4),
@@ -261,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String? _getClaimerInitials(Task task, String? currentUserId, String? partnerName) {
+  String? _getClaimerInitials(
+      Task task, String? currentUserId, String? partnerName) {
     if (task.claimedById == null || task.status != TaskStatus.claimed) {
       return null;
     }
@@ -288,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
     filtered = filtered
         .where((t) => taskMatchesSearch(t, _searchQuery))
         .where((t) => taskMatchesTodayFilter(t, _showTodayOnly))
+        .where((t) => taskMatchesTag(t, _tagFilter))
         .toList();
 
     return sortTasksForDisplay(filtered);
@@ -306,15 +311,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final input = _taskInputController.text.trim();
     if (input.isEmpty) return;
 
-    // Light haptic feedback for task creation
-    await HapticHelper.lightImpact();
-
     final authService = context.read<AuthService>();
     final taskService = context.read<TaskService>();
     final pairingService = context.read<PairingService>();
-    
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
+
+    // Light haptic feedback for task creation
+    await HapticHelper.lightImpact();
+    if (!mounted) return;
 
     // Parse natural language input
     final parsed = taskService.parseNaturalInput(input);
@@ -322,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Determine visibility - if paired and no filter, create as personal
     TaskVisibility visibility = TaskVisibility.personal;
     String? pairId;
-    
+
     if (pairingService.isPaired && pairingService.currentPairing != null) {
       // If user has set a visibility filter, default to that for new tasks
       visibility = _visibilityFilter ?? TaskVisibility.personal;
@@ -345,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _taskInputController.clear();
       // Success haptic
       await HapticHelper.lightImpact();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -368,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pairingService = context.read<PairingService>();
     final authService = context.read<AuthService>();
     final taskService = context.read<TaskService>();
-    
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
 
@@ -376,16 +382,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
+    // Resolved from the screen's context, not the dialog's, so they stay valid
+    // after the dialog is popped.
+    final preferencesService = context.read<PreferencesService>();
+    final messenger = ScaffoldMessenger.of(context);
+
     await showDialog(
       context: context,
-      builder: (context) => TaskCreationDialog(
+      builder: (dialogContext) => TaskCreationDialog(
         isPaired: pairingService.isPaired,
         pairId: pairingService.currentPairing?.id,
-        defaultVisibility: context.read<PreferencesService>().defaultTaskVisibility,
-        onCreateTask: (title, visibility, {priority = TaskPriority.normal, recurrence = TaskRecurrence.none}) async {
+        defaultVisibility: preferencesService.defaultTaskVisibility,
+        onCreateTask: (title, visibility,
+            {priority = TaskPriority.normal,
+            recurrence = TaskRecurrence.none,
+            recurrenceEndDate,
+            tags = const []}) async {
           if (visibility == TaskVisibility.group) {
             final confirmed = await showDialog<bool>(
-              context: context,
+              context: dialogContext,
               builder: (ctx) => AlertDialog(
                 title: const Text('Create Group Task?'),
                 content: const Text(
@@ -406,14 +421,13 @@ class _HomeScreenState extends State<HomeScreen> {
             if (confirmed != true) return;
           }
 
-          await context.read<PreferencesService>().setDefaultTaskVisibility(
-                visibility.name,
-              );
+          await preferencesService.setDefaultTaskVisibility(visibility.name);
           // Parse natural language input
           final parsed = taskService.parseNaturalInput(title);
 
           String? pairId;
-          if (visibility == TaskVisibility.group && pairingService.currentPairing != null) {
+          if (visibility == TaskVisibility.group &&
+              pairingService.currentPairing != null) {
             pairId = pairingService.currentPairing!.id;
           }
 
@@ -422,26 +436,26 @@ class _HomeScreenState extends State<HomeScreen> {
             userId: userId,
             priority: priority, // Use dialog selection, not parsed
             recurrence: recurrence,
+            recurrenceEndDate: recurrenceEndDate,
             dueDate: parsed['dueDate'] as DateTime?,
             assignedToId: pairingService.partner?.id,
             visibility: visibility,
             pairId: pairId,
+            tags: tags,
           );
 
           if (task != null) {
             await HapticHelper.success();
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    visibility == TaskVisibility.group
-                        ? 'Group task created!'
-                        : AppConstants.successTaskCreated,
-                  ),
-                  duration: const Duration(seconds: 1),
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  visibility == TaskVisibility.group
+                      ? 'Group task created!'
+                      : AppConstants.successTaskCreated,
                 ),
-              );
-            }
+                duration: const Duration(seconds: 1),
+              ),
+            );
           } else {
             await HapticHelper.error();
           }
@@ -523,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          
+
           // Settings
           IconButton(
             icon: const Icon(Icons.settings),
@@ -544,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // Offline banner
               const OfflineBanner(),
-              
+
               // Pairing prompt banner (if not paired)
               Consumer<PairingService>(
                 builder: (context, pairingService, child) {
@@ -555,20 +569,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryColor.withOpacity(0.1),
-                            AppTheme.secondaryColor.withOpacity(0.1),
+                            AppTheme.primaryColor.withValues(alpha: 0.1),
+                            AppTheme.secondaryColor.withValues(alpha: 0.1),
                           ],
                         ),
                         border: Border(
                           bottom: BorderSide(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.people,
                             color: AppTheme.primaryColor,
                             size: 32,
@@ -580,7 +594,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   '👥 Pair up to start sharing tasks!',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
                                 ),
@@ -688,6 +705,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
+              // Tag filter chips (only shown once there are tagged tasks)
+              Consumer<TaskService>(
+                builder: (context, taskService, child) {
+                  final allTags = taskService.tasks
+                      .expand((t) => t.tags)
+                      .toSet()
+                      .toList()
+                    ..sort();
+                  if (allTags.isEmpty) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SizedBox(
+                      height: 32,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: allTags
+                            .map((tag) => Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(tag),
+                                    selected: _tagFilter == tag,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        _tagFilter = selected ? tag : null;
+                                      });
+                                    },
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               const SizedBox(height: 8),
 
               // Tab selector
@@ -698,7 +752,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SegmentedButton<int>(
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all(
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                         visualDensity: VisualDensity.standard,
                       ),
@@ -710,7 +765,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         ButtonSegment(
                           value: 1,
-                          label: Text(pairingService.isPaired ? 'Paired' : 'Shared'),
+                          label: Text(
+                              pairingService.isPaired ? 'Paired' : 'Shared'),
                           icon: const Icon(Icons.people),
                         ),
                       ],
@@ -751,7 +807,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: filteredTasks.isEmpty
                                 ? ListView(
-                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
                                     children: [
                                       SizedBox(
                                         height:

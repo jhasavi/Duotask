@@ -53,6 +53,16 @@ app.*.map.json
 .env.local
 .env.production
 
+# Secrets must never be committed inside the web build, even though
+# /build/web/ is un-ignored above for Vercel. These were previously
+# committed and served publicly at https://<domain>/assets/.env.
+# Do not remove these lines, and never `git add -f` an env file.
+build/web/assets/.env
+build/web/assets/.env.*
+build/web/.env
+build/web/.env.*
+build/web/.vercel/
+
 # Firebase
 google-services.json
 GoogleService-Info.plist
@@ -64,3 +74,6 @@ discord-bot/node_modules/
 .vercel/
 discord-bot/bot.log
 .env*.local
+
+# Supabase CLI scratch state
+supabase/.temp/

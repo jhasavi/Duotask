@@ -7,8 +7,11 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 - **[User Guide](USER_GUIDE.md)** - Complete user documentation, getting started, and troubleshooting
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Development setup, project structure, and contribution guidelines
 - **[Architecture](ARCHITECTURE.md)** - System architecture, database schema, and technical design
-- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - v1.2 improvements and next steps
-- **[Project Status](PROJECT_STATUS.md)** - Current state and pending manual steps
+- **[Project Status](PROJECT_STATUS.md)** - Current state and what blocks release
+- **[Security](SECURITY.md)** - Credential handling and automated guards
+- **[Release Process](docs/RELEASE.md)** - How deployments work
+- **[Testing Guide](TESTING_GUIDE.md)** - The hermetic and integration suites
+- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - Shipped work and next steps
 
 ## 🎯 Features
 
@@ -139,17 +142,17 @@ See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for complete setup instructions
 
 ## 🚢 Deployment
 
-### Web (Vercel)
+Merging to `main` builds from that commit, applies migrations, deploys, and
+smoke-tests the result. See **[docs/RELEASE.md](docs/RELEASE.md)**.
+
+To build locally:
 
 ```bash
-# Build Flutter web
-flutter build web --release
-
-# Deploy to Vercel
-npx vercel deploy --prod
+scripts/build_web.sh
 ```
 
-**Production URL**: https://duotask-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app
+Never run a bare `flutter build web` for anything you intend to publish — it
+can bundle `.env` into the served assets. See **[SECURITY.md](SECURITY.md)**.
 
 ### Mobile
 
@@ -158,22 +161,22 @@ See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#deployment)** for iOS and Android 
 ## 🧪 Testing
 
 ```bash
-# Run unit tests
-flutter test
-
-# Run with coverage
-flutter test --coverage
+flutter test                     # hermetic suite, no backend
+flutter test --tags integration  # live-backend suite, needs a test project
 ```
 
-See **[PAIRING_TEST_GUIDE.md](PAIRING_TEST_GUIDE.md)** for pairing functionality tests.
+See **[TESTING_GUIDE.md](TESTING_GUIDE.md)**. The pairing flow that used to
+require two humans and two browsers is now covered by automated tests.
 
 ## 🔮 Roadmap
 
-### Version 1.2 (Current — June 2026)
+### Version 1.2 (Current — August 2026)
 - ✅ Nudge system UI
 - ✅ Email preferences
 - ✅ Task search, today filter, undo
-- ✅ CI/CD pipeline
+- ✅ CI/CD pipeline with automated deploy and post-deploy smoke test
+- ✅ Automated pairing and sign-up integration tests
+- ✅ Secret scanning; config injected at build time rather than bundled
 - ✅ Production documentation
 
 ### Version 1.3 (Q3 2026)
@@ -196,18 +199,10 @@ Contributions are welcome! See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🚀 Deployment
+## 📱 Mobile builds
 
-### Vercel (Web)
-DuoTask is configured for automatic deployment on Vercel.
-
-1. Connect your GitHub repository to Vercel
-2. Vercel will automatically build and deploy on pushes to main
-3. The web app will be available at your Vercel domain
-
-### Mobile Apps
-- **Android**: Build APK with `flutter build apk --release`
-- **iOS**: Build IPA with `flutter build ios --release` (requires Apple Developer account)
+- **Android**: `flutter build apk --release`
+- **iOS**: `flutter build ios --release` (requires an Apple Developer account)
 
 ## 📞 Support
 

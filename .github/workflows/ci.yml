@@ -1,4 +1,8 @@
-name: CI/CD Pipeline
+name: CI
+
+# Verification that runs on every change. Nothing here needs a human, and
+# nothing here touches production data — the checks that talk to a real
+# backend live in integration.yml and run against a dedicated test project.
 
 on:
   push:
@@ -6,26 +10,86 @@ on:
   pull_request:
     branches: [main]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  verify:
+    name: Analyze, test, build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze project source
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      # The tree is at zero analyzer issues, so everything is fatal — that is
+      # the cheapest moment to lock it in. Do not loosen this: the previous
+      # --no-fatal-warnings setting hid a security bug (an unused
+      # currentPasswordController, which was the visible symptom of a
+      # password-change flow that never verified the old password).
+      - name: Analyze
+        run: flutter analyze
 
-      - name: Run tests
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Run hermetic tests
         run: flutter test
 
-      - name: Build Web
-        run: flutter build web --release
+      # Build with placeholder config: this job only proves the app compiles.
+      # The real, credentialed build happens in deploy.yml.
+      - name: Build web
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=https://ci.example.supabase.co \
+            --dart-define=SUPABASE_ANON_KEY=ci-placeholder-key
+
+      - name: Verify no secrets in bundle
+        run: scripts/verify_bundle.sh
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Guards the specific mistake that put a Resend key and a Discord bot
+      # token on the public internet: an env file committed inside build/web.
+      - name: Reject committed env files
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '^\.env\.example$'; then
+            echo "::error::Committed env file detected. Secrets must never be tracked."
+            exit 1
+          fi
+          echo "OK: no tracked env files besides .env.example"
+
+      - name: Reject secret-shaped strings in tracked files
+        run: |
+          set +e
+          FOUND=0
+          # Resend API keys
+          git grep -nE 're_[A-Za-z0-9]{8}_[A-Za-z0-9]{20,}' -- . ':!*.lock' && FOUND=1
+          # Supabase service_role JWTs (base64 of "service_role" in the payload).
+          # Excludes the files that legitimately contain this pattern as a
+          # literal string to scan *for* (this workflow and the bundle/smoke
+          # scripts), so the scanner doesn't flag itself.
+          git grep -nE 'InNlcnZpY2Vfcm9sZSI' -- . ':!*.lock' \
+            ':!.github/workflows/ci.yml' \
+            ':!scripts/smoke_test.sh' \
+            ':!scripts/verify_bundle.sh' && FOUND=1
+          # Discord bot tokens
+          git grep -nE 'M[A-Za-z0-9]{23,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}' -- . ':!*.lock' ':!*SETUP.md' && FOUND=1
+          if [ "$FOUND" = "1" ]; then
+            echo "::error::Secret-shaped string found in tracked files."
+            exit 1
+          fi
+          echo "OK: no secret-shaped strings found"

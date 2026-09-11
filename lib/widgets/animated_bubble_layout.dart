@@ -60,27 +60,27 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
 
   void _initializeBubblePositions() {
     _bubblePositions.clear();
-    
+
     for (int i = 0; i < widget.tasks.length; i++) {
       bool positionFound = false;
       int attempts = 0;
       const maxAttempts = 50;
-      
+
       while (!positionFound && attempts < maxAttempts) {
         final newPosition = BubblePosition(
           dx: _random.nextDouble(),
           dy: _random.nextDouble(),
           rotation: _random.nextDouble() * 0.2 - 0.1,
         );
-        
+
         // Check if this position overlaps with existing bubbles
         bool overlaps = false;
         for (var existingPos in _bubblePositions) {
           final distance = sqrt(
             pow(newPosition.dx - existingPos.dx, 2) +
-            pow(newPosition.dy - existingPos.dy, 2)
+                pow(newPosition.dy - existingPos.dy, 2),
           );
-          
+
           // Minimum distance threshold (adjust based on bubble sizes)
           // 0.2 means bubbles need ~20% of container width/height apart
           if (distance < 0.25) {
@@ -88,22 +88,24 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
             break;
           }
         }
-        
+
         if (!overlaps) {
           _bubblePositions.add(newPosition);
           positionFound = true;
         }
-        
+
         attempts++;
       }
-      
+
       // If no position found after max attempts, place it anyway
       if (!positionFound) {
-        _bubblePositions.add(BubblePosition(
-          dx: _random.nextDouble(),
-          dy: _random.nextDouble(),
-          rotation: _random.nextDouble() * 0.2 - 0.1,
-        ));
+        _bubblePositions.add(
+          BubblePosition(
+            dx: _random.nextDouble(),
+            dy: _random.nextDouble(),
+            rotation: _random.nextDouble() * 0.2 - 0.1,
+          ),
+        );
       }
     }
   }
@@ -131,7 +133,7 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
                 (index) {
                   final task = widget.tasks[index];
                   final position = _bubblePositions[index];
-                  
+
                   // Calculate bubble size based on priority
                   double bubbleSize = 120;
                   if (task.priority == TaskPriority.urgent) {
@@ -146,12 +148,12 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
                   final padding = bubbleSize / 2 + 16;
                   final maxX = constraints.maxWidth - bubbleSize;
                   final maxY = constraints.maxHeight - bubbleSize;
-                  
+
                   final x = padding + (maxX - padding * 2) * position.dx;
                   final y = padding + (maxY - padding * 2) * position.dy;
 
                   // Animate entry
-                  final curve = Curves.easeOutBack;
+                  const curve = Curves.easeOutBack;
                   final animation = CurvedAnimation(
                     parent: _controller,
                     curve: Interval(
@@ -177,8 +179,10 @@ class _AnimatedBubbleLayoutState extends State<AnimatedBubbleLayout>
                             height: bubbleSize,
                             child: TaskBubble(
                               task: task,
-                              isCreatedByPartner: widget.isCreatedByPartner(task),
-                              claimerInitials: widget.getClaimerInitials?.call(task),
+                              isCreatedByPartner:
+                                  widget.isCreatedByPartner(task),
+                              claimerInitials:
+                                  widget.getClaimerInitials?.call(task),
                               onTap: () => widget.onTaskTap(task),
                               onLongPress: () => widget.onTaskLongPress(task),
                             ),

@@ -23,7 +23,7 @@ void main() {
   group('TaskService Tests', () {
     test('parseNaturalInput should extract time from @6pm', () {
       final result = taskService.parseNaturalInput('Grocery @6pm');
-      
+
       expect(result['title'], 'Grocery');
       expect(result['dueDate'], isNotNull);
       expect(result['priority'], TaskPriority.normal);
@@ -31,14 +31,14 @@ void main() {
 
     test('parseNaturalInput should detect urgent tasks', () {
       final result = taskService.parseNaturalInput('Urgent: Fix bug');
-      
+
       expect(result['title'], contains('Fix bug'));
       expect(result['priority'], TaskPriority.urgent);
     });
 
     test('parseNaturalInput should handle tomorrow keyword', () {
       final result = taskService.parseNaturalInput('Call mom tomorrow');
-      
+
       expect(result['title'], contains('Call mom'));
       expect(result['dueDate'], isNotNull);
       final dueDate = result['dueDate'] as DateTime;
@@ -48,7 +48,7 @@ void main() {
 
     test('parseNaturalInput should handle tonight keyword', () {
       final result = taskService.parseNaturalInput('Clean kitchen tonight');
-      
+
       expect(result['title'], contains('Clean kitchen'));
       expect(result['dueDate'], isNotNull);
       final dueDate = result['dueDate'] as DateTime;

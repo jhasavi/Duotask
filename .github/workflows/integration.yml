@@ -1,0 +1,55 @@
+name: Integration tests
+
+# Tests that talk to a real Supabase project. They create and delete real auth
+# users, so they run against a DEDICATED TEST PROJECT — never production.
+#
+# Required repository secrets:
+#   SUPABASE_TEST_URL
+#   SUPABASE_TEST_ANON_KEY
+#   SUPABASE_TEST_SERVICE_ROLE_KEY
+#
+# These replace the manual checklists that used to live in PAIRING_TEST_GUIDE.md
+# and PROJECT_STATUS.md ("pair two users and verify bidirectional visibility").
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly, to catch drift between the app and the live schema.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Live-backend integration tests
+    runs-on: ubuntu-latest
+    # Forked PRs cannot read secrets; skip rather than fail confusingly.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check credentials are configured
+        env:
+          URL: ${{ secrets.SUPABASE_TEST_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::error::SUPABASE_TEST_URL is not set. Add the test-project secrets described at the top of this workflow."
+            exit 1
+          fi
+
+      - name: Run integration tests
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: flutter test --tags integration --reporter expanded

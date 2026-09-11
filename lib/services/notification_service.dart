@@ -22,7 +22,8 @@ class NotificationService extends ChangeNotifier {
       tz.initializeTimeZones();
 
       // Android initialization settings
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
       // iOS initialization settings
       final iosSettings = DarwinInitializationSettings(
@@ -70,22 +71,25 @@ class NotificationService extends ChangeNotifier {
     try {
       // Request Android 13+ notification permissions
       if (defaultTargetPlatform == TargetPlatform.android) {
-        final androidPlugin = _notifications
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-        
-        _permissionGranted = await androidPlugin?.requestNotificationsPermission() ?? false;
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
+
+        _permissionGranted =
+            await androidPlugin?.requestNotificationsPermission() ?? false;
       }
 
       // Request iOS permissions
       if (defaultTargetPlatform == TargetPlatform.iOS) {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-        
+        final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+
         _permissionGranted = await iosPlugin?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        ) ?? false;
+              alert: true,
+              badge: true,
+              sound: true,
+            ) ??
+            false;
       }
 
       notifyListeners();
@@ -103,7 +107,7 @@ class NotificationService extends ChangeNotifier {
     try {
       // Schedule notification 1 hour before due date
       final reminderTime = task.dueDate!.subtract(const Duration(hours: 1));
-      
+
       // Don't schedule if reminder time is in the past
       if (reminderTime.isBefore(DateTime.now())) return;
 
@@ -155,7 +159,8 @@ class NotificationService extends ChangeNotifier {
     }
   }
 
-  Future<void> showTaskCompletedNotification(Task task, String partnerName) async {
+  Future<void> showTaskCompletedNotification(
+      Task task, String partnerName) async {
     if (!_isInitialized || !_permissionGranted) return;
 
     try {
@@ -191,7 +196,8 @@ class NotificationService extends ChangeNotifier {
     }
   }
 
-  Future<void> showTaskClaimedNotification(Task task, String partnerName) async {
+  Future<void> showTaskClaimedNotification(
+      Task task, String partnerName) async {
     if (!_isInitialized || !_permissionGranted) return;
 
     try {

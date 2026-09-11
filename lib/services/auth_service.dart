@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import 'dart:io';
 import '../config/app_config.dart';
@@ -12,6 +11,15 @@ class AuthService extends ChangeNotifier {
   AppUser? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
+
+  // The auth-state listener calls _loadCurrentUser() in the background on
+  // every session change, and signIn/signUp ALSO call it explicitly right
+  // after establishing a session — so on sign-up, two concurrent calls used
+  // to both see "no profile row yet" and both try to INSERT the same primary
+  // key. The loser got a duplicate-key error, which the catch-all treated as
+  // fatal and signed the brand-new user back out with no message shown. This
+  // future dedupes concurrent calls so only one actually runs at a time.
+  Future<void>? _loadUserFuture;
 
   AuthService(this._supabase) {
     _initAuthListener();
@@ -31,9 +39,9 @@ class AuthService extends ChangeNotifier {
           print('   User: ${data.session?.user.email}');
         }
       }
-      
+
       final session = data.session;
-      
+
       if (session != null) {
         if (kDebugMode) {
           print('🔐 [AuthListener] Session found → loading user...');
@@ -70,7 +78,22 @@ class AuthService extends ChangeNotifier {
     await _loadCurrentUser();
   }
 
-  Future<void> _loadCurrentUser() async {
+  Future<void> _loadCurrentUser() {
+    // Reuse the in-flight call instead of starting a second one — see the
+    // comment on _loadUserFuture for why this matters.
+    final existing = _loadUserFuture;
+    if (existing != null) return existing;
+    final future = _loadCurrentUserOnce();
+    _loadUserFuture = future;
+    future.whenComplete(() {
+      if (identical(_loadUserFuture, future)) {
+        _loadUserFuture = null;
+      }
+    });
+    return future;
+  }
+
+  Future<void> _loadCurrentUserOnce() async {
     try {
       if (kDebugMode) {
         print('🔐 Loading current user...');
@@ -91,11 +114,8 @@ class AuthService extends ChangeNotifier {
       }
 
       // Try to get user profile
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      final response =
+          await _supabase.from('users').select().eq('id', userId).maybeSingle();
 
       if (response != null) {
         if (kDebugMode) {
@@ -111,7 +131,7 @@ class AuthService extends ChangeNotifier {
         if (kDebugMode) {
           print('🔐 User profile not found, creating...');
         }
-        
+
         final displayName = authUser.userMetadata?['display_name'] as String? ??
             authUser.email?.split('@').first ??
             'User';
@@ -119,28 +139,36 @@ class AuthService extends ChangeNotifier {
         // Generate pairing code
         final pairingCode = _generatePairingCode();
 
-        await _supabase.from('users').insert({
-          'id': userId,
-          'email': authUser.email,
-          'display_name': displayName,
-          'pairing_code': pairingCode,
-        });
+        // Upsert + ignoreDuplicates instead of insert: defense in depth
+        // alongside the _loadUserFuture guard above. If some other path
+        // (a stale listener callback, a second tab, a future refactor)
+        // still manages to race this, the loser now silently becomes a
+        // no-op instead of throwing a duplicate-key error that used to
+        // get caught below and sign the brand-new user back out.
+        await _supabase.from('users').upsert(
+          {
+            'id': userId,
+            'email': authUser.email,
+            'display_name': displayName,
+            'pairing_code': pairingCode,
+          },
+          onConflict: 'id',
+          ignoreDuplicates: true,
+        );
 
         if (kDebugMode) {
           print('🔐 User profile created with pairing code: $pairingCode');
         }
 
         // Load the newly created user
-        final newResponse = await _supabase
-            .from('users')
-            .select()
-            .eq('id', userId)
-            .single();
+        final newResponse =
+            await _supabase.from('users').select().eq('id', userId).single();
 
         _currentUser = AppUser.fromJson(newResponse);
         notifyListeners();
         if (kDebugMode) {
-          print('🔐 ✅ User created and authenticated! isAuthenticated=$isAuthenticated');
+          print(
+              '🔐 ✅ User created and authenticated! isAuthenticated=$isAuthenticated');
         }
       }
     } catch (e) {
@@ -173,7 +201,7 @@ class AuthService extends ChangeNotifier {
     try {
       final trimmedEmail = email.trim().toLowerCase();
       final trimmedPassword = password.trim();
-      
+
       if (kDebugMode) {
         print('🔐 Signing in with email: $trimmedEmail');
       }
@@ -194,12 +222,13 @@ class AuthService extends ChangeNotifier {
         }
         // Explicitly load the user and ensure it completes before returning
         await _loadCurrentUser();
-        
+
         // Give the UI a moment to rebuild
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         if (kDebugMode) {
-          print('🔐 ✅ Sign in complete! isAuthenticated=$isAuthenticated, currentUser=${_currentUser?.email}');
+          print(
+              '🔐 ✅ Sign in complete! isAuthenticated=$isAuthenticated, currentUser=${_currentUser?.email}');
         }
         _setLoading(false);
         return true;
@@ -237,36 +266,36 @@ class AuthService extends ChangeNotifier {
       final trimmedEmail = email.trim().toLowerCase();
       final trimmedPassword = password.trim();
       final trimmedDisplayName = displayName.trim();
-      
+
       if (trimmedEmail.isEmpty) {
         _setError('Email is required');
         _setLoading(false);
         return false;
       }
-      
+
       // Basic email validation
       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(trimmedEmail)) {
         _setError('Invalid email format. Please enter a valid email address.');
         _setLoading(false);
         return false;
       }
-      
+
       if (trimmedPassword.isEmpty || trimmedPassword.length < 6) {
         _setError('Password must be at least 6 characters long');
         _setLoading(false);
         return false;
       }
-      
+
       if (trimmedDisplayName.isEmpty) {
         _setError('Display name is required');
         _setLoading(false);
         return false;
       }
-      
+
       if (kDebugMode) {
         print('Signing up with email: $trimmedEmail');
       }
-      
+
       final response = await _supabase.auth.signUp(
         email: trimmedEmail,
         password: trimmedPassword,
@@ -308,7 +337,8 @@ class AuthService extends ChangeNotifier {
         // Fall through to friendly message
       }
 
-      _setError('Account created. You can sign in now or check your email if confirmation is enabled.');
+      _setError(
+          'Account created. You can sign in now or check your email if confirmation is enabled.');
       _setLoading(false);
       return false;
     } on SocketException {
@@ -351,7 +381,7 @@ class AuthService extends ChangeNotifier {
           redirectTo: callbackUrl,
           authScreenLaunchMode: LaunchMode.platformDefault,
         );
-        
+
         // For web, we don't wait for completion here
         // The callback will handle the session
         _setLoading(false);
@@ -363,7 +393,8 @@ class AuthService extends ChangeNotifier {
         final androidClientId = AppConfig.googleAndroidClientId;
 
         if (webClientId.isEmpty) {
-          _setError('Google Web Client ID is missing. Set GOOGLE_WEB_CLIENT_ID in .env');
+          _setError(
+              'Google Web Client ID is missing. Set GOOGLE_WEB_CLIENT_ID in .env');
           _setLoading(false);
           return false;
         }
@@ -464,7 +495,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       if (kDebugMode) print('Signing out...');
-      
+
       // Sign out from Google if needed
       if (!kIsWeb) {
         try {
@@ -479,11 +510,11 @@ class AuthService extends ChangeNotifier {
 
       await _supabase.auth.signOut();
       _currentUser = null;
-      
+
       if (kDebugMode) print('Sign out complete');
-      
+
       _setLoading(false);
-      
+
       // Ensure listeners are notified after loading is false
       notifyListeners();
     } on SocketException {
@@ -567,9 +598,46 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> updatePassword(String newPassword) async {
+  /// Changes the signed-in user's password.
+  ///
+  /// [currentPassword] is verified first by re-authenticating. Supabase's
+  /// `updateUser` only requires a valid session, so without this check anyone
+  /// with access to an already-signed-in device could set a new password and
+  /// take over the account permanently. Callers must supply it.
+  Future<bool> updatePassword(
+    String newPassword, {
+    required String currentPassword,
+  }) async {
     _setLoading(true);
     _clearError();
+
+    final email = _currentUser?.email ?? _supabase.auth.currentUser?.email;
+    if (email == null) {
+      _setError('You must be signed in to change your password.');
+      _setLoading(false);
+      return false;
+    }
+
+    try {
+      // Re-authenticate. Throws AuthException on a wrong current password.
+      await _supabase.auth.signInWithPassword(
+        email: email,
+        password: currentPassword,
+      );
+    } on SocketException {
+      _setError('No internet connection. Please check your network.');
+      _setLoading(false);
+      return false;
+    } on AuthException {
+      _setError('Current password is incorrect.');
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('Could not verify your current password. Please try again.');
+      if (kDebugMode) print('Reauth error: $e');
+      _setLoading(false);
+      return false;
+    }
 
     try {
       await _supabase.auth.updateUser(
@@ -612,7 +680,9 @@ class AuthService extends ChangeNotifier {
       case '500':
         return 'Server error. Please try again later.';
       default:
-        return e.message.isNotEmpty ? e.message : 'Authentication failed. Please try again.';
+        return e.message.isNotEmpty
+            ? e.message
+            : 'Authentication failed. Please try again.';
     }
   }
 

@@ -78,28 +78,24 @@ class TaskService extends ChangeNotifier {
 
     switch (eventType) {
       case PostgresChangeEvent.insert:
-        if (newRecord != null) {
-          final task = Task.fromJson(newRecord);
-          _tasks.insert(0, task);
-          notifyListeners();
-        }
+        final inserted = Task.fromJson(newRecord);
+        _tasks.insert(0, inserted);
+        notifyListeners();
         break;
       case PostgresChangeEvent.update:
-        if (newRecord != null) {
+        {
           final task = Task.fromJson(newRecord);
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
             final oldTask = _tasks[index];
             _tasks[index] = task;
-            
+
             // Check if partner claimed or completed the task
-            if (_notificationService != null && 
-                _currentUserId != null && 
-                task.createdById == _currentUserId &&
-                oldRecord != null) {
-              
+            if (_notificationService != null &&
+                _currentUserId != null &&
+                task.createdById == _currentUserId) {
               // Partner claimed task
-              if (oldTask.status == TaskStatus.unclaimed && 
+              if (oldTask.status == TaskStatus.unclaimed &&
                   task.status == TaskStatus.claimed &&
                   task.claimedById != _currentUserId) {
                 // Get partner name from task or use default
@@ -108,9 +104,9 @@ class TaskService extends ChangeNotifier {
                   'Your partner',
                 );
               }
-              
+
               // Partner completed task
-              if (oldTask.status != TaskStatus.completed && 
+              if (oldTask.status != TaskStatus.completed &&
                   task.status == TaskStatus.completed &&
                   task.claimedById != _currentUserId) {
                 await _notificationService!.showTaskCompletedNotification(
@@ -119,13 +115,15 @@ class TaskService extends ChangeNotifier {
                 );
               }
             }
-            
+
             notifyListeners();
           }
         }
         break;
       case PostgresChangeEvent.delete:
-        if (oldRecord != null) {
+        // On delete the payload carries only the primary key, and is empty
+        // when the table has no replica identity configured.
+        if (oldRecord.isNotEmpty) {
           _tasks.removeWhere((t) => t.id == oldRecord['id']);
           notifyListeners();
         }
@@ -142,10 +140,12 @@ class TaskService extends ChangeNotifier {
     String? assignedToId,
     TaskPriority priority = TaskPriority.normal,
     TaskRecurrence recurrence = TaskRecurrence.none,
+    DateTime? recurrenceEndDate,
     DateTime? dueDate,
     bool isPersonal = false,
     TaskVisibility visibility = TaskVisibility.personal,
     String? pairId,
+    List<String> tags = const [],
   }) async {
     _setLoading(true);
     _clearError();
@@ -163,23 +163,25 @@ class TaskService extends ChangeNotifier {
         'status': TaskStatus.unclaimed.name,
         'priority': priority.name,
         'recurrence': recurrence.name,
+        'recurrence_end_date': recurrenceEndDate?.toIso8601String(),
         'due_date': dueDate?.toIso8601String(),
         'created_at': now.toIso8601String(),
         'is_personal': isPersonal, // Kept for backward compatibility
         'visibility': visibility.name,
         'pair_id': pairId,
+        'tags': tags,
       };
 
       final response =
           await _supabase.from('tasks').insert(taskData).select().single();
 
       final task = Task.fromJson(response);
-      
+
       // Schedule notification if task has a due date
       if (task.dueDate != null && _notificationService != null) {
         await _notificationService!.scheduleTaskReminder(task);
       }
-      
+
       _setLoading(false);
       return task;
     } on SocketException {
@@ -316,41 +318,43 @@ class TaskService extends ChangeNotifier {
 
     try {
       // Use RPC function for atomic status transition (prevents race conditions)
-      final response = await _supabase.rpc('cycle_task_status', params: {
-        'task_uuid': task.id,
-        'user_uuid': userId,
-      }).select().single();
+      final response = await _supabase
+          .rpc(
+            'cycle_task_status',
+            params: {
+              'task_uuid': task.id,
+              'user_uuid': userId,
+            },
+          )
+          .select()
+          .single();
 
-      if (response != null) {
-        // Update local task list
-        final index = _tasks.indexWhere((t) => t.id == task.id);
-        if (index != -1) {
-          final updatedTask = Task.fromJson({
-            ...task.toJson(),
-            'status': response['status'],
-            'claimed_by_id': response['claimed_by_id'],
-            'claimed_at': response['claimed_at'],
-            'completed_at': response['completed_at'],
-            'updated_at': response['updated_at'],
-          });
-          
-          _tasks[index] = updatedTask;
-          
-          // Create recurring task if completed and has recurrence
-          if (updatedTask.status == TaskStatus.completed &&
-              task.recurrence != TaskRecurrence.none) {
-            await createRecurringTask(task);
-          }
-          
-          notifyListeners();
+      // `.single()` either returns a row or throws, so reaching this point
+      // means the transition succeeded.
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        final updatedTask = Task.fromJson({
+          ...task.toJson(),
+          'status': response['status'],
+          'claimed_by_id': response['claimed_by_id'],
+          'claimed_at': response['claimed_at'],
+          'completed_at': response['completed_at'],
+          'updated_at': response['updated_at'],
+        });
+
+        _tasks[index] = updatedTask;
+
+        // Create recurring task if completed and has recurrence
+        if (updatedTask.status == TaskStatus.completed &&
+            task.recurrence != TaskRecurrence.none) {
+          await createRecurringTask(task);
         }
-        
-        _setLoading(false);
-        return true;
+
+        notifyListeners();
       }
-      
+
       _setLoading(false);
-      return false;
+      return true;
     } on SocketException {
       _setError('No internet connection. Cannot update task.');
       _setLoading(false);
@@ -438,9 +442,23 @@ class TaskService extends ChangeNotifier {
         case TaskRecurrence.weekly:
           newDueDate = originalTask.dueDate!.add(const Duration(days: 7));
           break;
+        case TaskRecurrence.monthly:
+          newDueDate = _addMonths(originalTask.dueDate!, 1);
+          break;
+        case TaskRecurrence.yearly:
+          newDueDate = _addMonths(originalTask.dueDate!, 12);
+          break;
         case TaskRecurrence.none:
           break;
       }
+    }
+
+    // Stop recurring once the next occurrence would fall on or after the
+    // configured end date.
+    if (originalTask.recurrenceEndDate != null &&
+        newDueDate != null &&
+        !newDueDate.isBefore(originalTask.recurrenceEndDate!)) {
+      return null;
     }
 
     return await createTask(
@@ -450,8 +468,30 @@ class TaskService extends ChangeNotifier {
       assignedToId: originalTask.assignedToId,
       priority: originalTask.priority,
       recurrence: originalTask.recurrence,
+      recurrenceEndDate: originalTask.recurrenceEndDate,
       dueDate: newDueDate,
       isPersonal: originalTask.isPersonal,
+      visibility: originalTask.visibility,
+      pairId: originalTask.pairId,
+      tags: originalTask.tags,
+    );
+  }
+
+  /// Adds calendar months to [date], clamping the day when the target month
+  /// is shorter (e.g. Jan 31 + 1 month -> Feb 28/29, not Mar 3).
+  DateTime _addMonths(DateTime date, int months) {
+    final totalMonths = date.month - 1 + months;
+    final year = date.year + totalMonths ~/ 12;
+    final month = totalMonths % 12 + 1;
+    final daysInTargetMonth = DateTime(year, month + 1, 0).day;
+    final day = date.day > daysInTargetMonth ? daysInTargetMonth : date.day;
+    return DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
     );
   }
 
@@ -468,11 +508,14 @@ class TaskService extends ChangeNotifier {
         input.toLowerCase().contains('asap') ||
         input.toLowerCase().contains('!')) {
       result['priority'] = TaskPriority.urgent;
-      result['title'] = input.replaceAll(RegExp(r'urgent|asap|!', caseSensitive: false), '').trim();
+      result['title'] = input
+          .replaceAll(RegExp(r'urgent|asap|!', caseSensitive: false), '')
+          .trim();
     }
 
     // Parse time patterns
-    final timePattern = RegExp(r'@(\d{1,2}):?(\d{2})?\s*(am|pm)?', caseSensitive: false);
+    final timePattern =
+        RegExp(r'@(\d{1,2}):?(\d{2})?\s*(am|pm)?', caseSensitive: false);
     final match = timePattern.firstMatch(input);
 
     if (match != null) {
@@ -504,12 +547,17 @@ class TaskService extends ChangeNotifier {
     // Parse relative time (tomorrow, tonight, etc.)
     if (input.toLowerCase().contains('tomorrow')) {
       final tomorrow = DateTime.now().add(const Duration(days: 1));
-      result['dueDate'] = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
-      result['title'] = input.replaceAll(RegExp(r'tomorrow', caseSensitive: false), '').trim();
+      result['dueDate'] =
+          DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+      result['title'] = input
+          .replaceAll(RegExp(r'tomorrow', caseSensitive: false), '')
+          .trim();
     } else if (input.toLowerCase().contains('tonight')) {
       final tonight = DateTime.now();
-      result['dueDate'] = DateTime(tonight.year, tonight.month, tonight.day, 20, 0);
-      result['title'] = input.replaceAll(RegExp(r'tonight', caseSensitive: false), '').trim();
+      result['dueDate'] =
+          DateTime(tonight.year, tonight.month, tonight.day, 20, 0);
+      result['title'] =
+          input.replaceAll(RegExp(r'tonight', caseSensitive: false), '').trim();
     }
 
     return result;
