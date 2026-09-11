@@ -78,8 +78,14 @@ jobs:
           FOUND=0
           # Resend API keys
           git grep -nE 're_[A-Za-z0-9]{8}_[A-Za-z0-9]{20,}' -- . ':!*.lock' && FOUND=1
-          # Supabase service_role JWTs (base64 of "service_role" in the payload)
-          git grep -nE 'InNlcnZpY2Vfcm9sZSI' -- . ':!*.lock' && FOUND=1
+          # Supabase service_role JWTs (base64 of "service_role" in the payload).
+          # Excludes the files that legitimately contain this pattern as a
+          # literal string to scan *for* (this workflow and the bundle/smoke
+          # scripts), so the scanner doesn't flag itself.
+          git grep -nE 'InNlcnZpY2Vfcm9sZSI' -- . ':!*.lock' \
+            ':!.github/workflows/ci.yml' \
+            ':!scripts/smoke_test.sh' \
+            ':!scripts/verify_bundle.sh' && FOUND=1
           # Discord bot tokens
           git grep -nE 'M[A-Za-z0-9]{23,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}' -- . ':!*.lock' ':!*SETUP.md' && FOUND=1
           if [ "$FOUND" = "1" ]; then

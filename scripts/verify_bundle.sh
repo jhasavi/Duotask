@@ -25,8 +25,11 @@ fail() {
   failed=1
 }
 
-# 1. No env files of any kind.
+# 1. No env files of any kind, except .env.example (a template with no real
+#    values — it's what caused the original incident together with the real
+#    .env, but by itself carries no secret).
 while IFS= read -r f; do
+  [[ "$(basename "$f")" == ".env.example" ]] && continue
   fail "env file present in bundle: $f"
 done < <(find "$BUNDLE" -name '.env' -o -name '.env.*' -o -name '*.env')
 
