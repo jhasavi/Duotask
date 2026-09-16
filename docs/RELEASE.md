@@ -9,10 +9,23 @@ and no manual test checklist.
 ```
 .github/workflows/ci.yml           analyze (fatal on warnings) → hermetic tests → build → bundle secret scan
 .github/workflows/integration.yml  live-backend tests against the TEST project
-.github/workflows/deploy.yml       supabase db push → build with --dart-define → verify bundle → vercel deploy → smoke test
+.github/workflows/deploy.yml       preflight secret check → supabase db push → build with --dart-define → verify bundle → vercel deploy → smoke test
 ```
 
 A failure at any stage stops the release.
+
+`deploy.yml` starts with a **preflight** job that checks every secret it needs
+and reports all of the missing ones at once, before any build runs. If you see
+a "Deploy secrets missing" error, the job summary lists exactly which ones and
+where to add them — the setup below is all it wants.
+
+Note the two workflows behave differently when their secrets are absent, on
+purpose:
+
+| Workflow | Secrets missing | Why |
+|---|---|---|
+| `integration.yml` | Warns and **skips** (green) | A missing test project is a setup gap, not a code defect. The warning states the flows are unverified. |
+| `deploy.yml` | **Fails** (red) | A deploy that cannot run means merged code is not reaching users. That should be loud — it is how a five-week-stale bundle went unnoticed. |
 
 ## One-time setup
 
