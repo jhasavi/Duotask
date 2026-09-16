@@ -78,6 +78,12 @@ current-password controller it never rendered or verified.
 
 ## Release verification
 
+`scripts/smoke_test.sh` exits `0` when the deployment is clean, `1` when a
+check fails, and `2` when the deployment could not be inspected at all — for
+example a Vercel preview behind Deployment Protection, which answers every
+request with an SSO redirect. That third state exists because the secret
+probes would otherwise report PASS without having looked at anything.
+
 ```bash
 scripts/verify_bundle.sh          # no secrets in build/web
 scripts/smoke_test.sh <url>       # deployed app loads, leaks nothing

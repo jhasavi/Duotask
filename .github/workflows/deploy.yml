@@ -26,9 +26,72 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Checks every secret this workflow needs, before doing any work.
+  #
+  # Without this the first missing secret surfaced as `supabase link
+  # --project-ref ""` followed by "Access token not provided" — which names
+  # neither the secret nor where to set it. Worse, the Vercel secrets were not
+  # validated until after a three-minute Flutter build, so a missing deploy
+  # token cost a full build to discover. This reports EVERY missing secret at
+  # once, in seconds.
+  #
+  # This job deliberately FAILS rather than skipping: unlike the integration
+  # suite, a deploy that cannot run is a real problem — it means merged code is
+  # not reaching users, which is exactly how a five-week-stale bundle went
+  # unnoticed in production.
+  preflight:
+    name: Check deploy secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required secrets are set
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          WEB_REDIRECT_URL: ${{ secrets.WEB_REDIRECT_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          missing=()
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD \
+                      SUPABASE_URL SUPABASE_ANON_KEY \
+                      VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            [ -z "${!name}" ] && missing+=("$name")
+          done
+
+          # Not fatal: these only affect OAuth redirects and Google sign-in.
+          for name in WEB_REDIRECT_URL GOOGLE_WEB_CLIENT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::warning title=Optional secret unset::$name is not set; the build will use an empty value."
+            fi
+          done
+
+          if [ ${#missing[@]} -ne 0 ]; then
+            {
+              echo "## Deploy cannot run"
+              echo
+              echo "These repository secrets are not set:"
+              echo
+              for name in "${missing[@]}"; do echo "- \`$name\`"; done
+              echo
+              echo "Add them under **Settings → Secrets and variables → Actions**."
+              echo "Each one is described in [docs/RELEASE.md](docs/RELEASE.md#one-time-setup)."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "::error title=Deploy secrets missing::Not set: ${missing[*]}. Add them under Settings > Secrets and variables > Actions; see docs/RELEASE.md#one-time-setup."
+            exit 1
+          fi
+
+          echo "All required deploy secrets are present."
+
   migrate:
     name: Apply database migrations
     runs-on: ubuntu-latest
+    needs: preflight
     steps:
       - uses: actions/checkout@v4
 
@@ -40,9 +103,13 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
-          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
-          # Fails loudly if local migrations and the live schema have diverged.
+          set -euo pipefail
+          supabase link --project-ref "$PROJECT_REF"
+          # Surfaces divergence between local migrations and the live schema.
+          # The live database is known to have applied migrations that exist in
+          # no local file, so read this output rather than skimming past it.
           supabase migration list
           supabase db push
 
