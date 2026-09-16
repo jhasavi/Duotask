@@ -1,15 +1,16 @@
 # DuoTask — Project Status
 
-*Last updated: August 14, 2026*
+*Last updated: September 16, 2026*
 
 ## Current version: 1.2.0
 
 | | |
 |---|---|
-| Branch | `main` (ahead of `origin/main` — **not yet pushed**) |
-| Hermetic tests | 76 passing |
+| Branch | `main`, synced with `origin/main` |
+| Hermetic tests | 80 passing |
 | Integration tests | 5 written, **not yet executed** (need a test project) |
 | Static analysis | **0 issues** (was 169) |
+| Merge gates | PR required; `Analyze, test, build` + `Secret scan` must pass |
 | Production deploy | Current build, **leak closed** (verified 2026-09-16) |
 
 ---
@@ -56,9 +57,20 @@ history.
 `deploy.yml` and `integration.yml` are written but inert until their secrets
 exist. See [docs/RELEASE.md](docs/RELEASE.md#one-time-setup).
 
-- [ ] Add deploy secrets (Vercel + Supabase)
-- [ ] Create a dedicated Supabase **test** project and add its secrets
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` are already set. The deploy preflight
+names the rest on every failed run — as of 2026-09-16, six remain:
+
+- [ ] `SUPABASE_ACCESS_TOKEN`
+- [ ] `SUPABASE_PROJECT_REF`
+- [ ] `SUPABASE_DB_PASSWORD`
+- [ ] `VERCEL_TOKEN`
+- [ ] `VERCEL_ORG_ID`
+- [ ] `VERCEL_PROJECT_ID`
+- [ ] Create a dedicated Supabase **test** project and add its three secrets
 - [ ] Confirm one green CI deploy, then stop committing `build/web`
+
+`WEB_REDIRECT_URL` and `GOOGLE_WEB_CLIENT_ID` are optional; the preflight
+warns but does not fail when they are unset.
 
 ---
 

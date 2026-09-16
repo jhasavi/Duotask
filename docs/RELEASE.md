@@ -27,6 +27,40 @@ purpose:
 | `integration.yml` | Warns and **skips** (green) | A missing test project is a setup gap, not a code defect. The warning states the flows are unverified. |
 | `deploy.yml` | **Fails** (red) | A deploy that cannot run means merged code is not reaching users. That should be loud — it is how a five-week-stale bundle went unnoticed. |
 
+## Merge gates on `main`
+
+Branch protection enforces these. They are the automated substitute for the
+review that a single-maintainer repository can never get.
+
+| Rule | Setting | Why |
+|---|---|---|
+| Pull request required | yes, **0 approvals** | `main` cannot be pushed to directly. The approval count is 0 because the sole collaborator is also always the author, and GitHub forbids self-approval — a non-zero count is a gate nobody can ever satisfy, not a safety measure. |
+| Required status checks | `Analyze, test, build`, `Secret scan` | The real gate. Analysis (fatal on everything), 80 hermetic tests, the web build, and the tracked-file secret scan must all pass before anything reaches `main`. |
+| Strict status checks | on | A branch must be up to date with `main` before merging, so a PR cannot be merged having been tested against a stale base. |
+| Admins included | on | The rules apply to the owner too; there is no override button. |
+| Force pushes / deletions | blocked | History on `main` cannot be rewritten or removed. |
+
+Two checks are deliberately **not** required:
+
+- **`Live-backend integration tests`** — it currently passes by skipping,
+  because the test project does not exist. Requiring a check that is green
+  without having run anything would be a gate in name only. Add it once the
+  `SUPABASE_TEST_*` secrets are configured.
+- **`Check deploy secrets` / `Apply database migrations` / `Build and deploy
+  web`** — these run *after* a merge, on `main`. Requiring them would
+  deadlock: they cannot pass until the deploy secrets exist, and no PR could
+  merge in the meantime.
+
+To require the integration suite later, once the test project is live:
+
+```bash
+gh api -X PATCH repos/<owner>/<repo>/branches/main/protection/required_status_checks \
+  -F strict=true \
+  -f 'contexts[]=Analyze, test, build' \
+  -f 'contexts[]=Secret scan' \
+  -f 'contexts[]=Live-backend integration tests'
+```
+
 ## One-time setup
 
 This is the only part that still needs a human, and it has **not been done
