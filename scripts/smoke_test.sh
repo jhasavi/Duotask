@@ -20,6 +20,50 @@ fail() { echo "  FAIL  $1" >&2; failed=1; }
 
 echo "Smoke testing $BASE_URL"
 
+# 0. Reachability gate.
+#
+# If the deployment sits behind an auth wall (Vercel deployment protection
+# answers 302 to vercel.com/sso-api, or 401/403), EVERY later check becomes
+# vacuous: the secret probes "pass" only because nothing is served, not
+# because nothing is exposed. Reporting those as PASS is worse than useless —
+# it is a clean bill of health for a deployment that was never inspected.
+# Refuse to run rather than emit false confidence.
+probe_code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/" || echo 000)"
+probe_redirect="$(curl -s -o /dev/null -w '%{redirect_url}' "$BASE_URL/" || true)"
+
+case "$probe_code" in
+  401|403)
+    echo "  UNVERIFIABLE  deployment requires authentication (HTTP $probe_code)" >&2
+    ;;
+  30[0-9])
+    if [[ "$probe_redirect" == *"/sso"* || "$probe_redirect" == *"sso-api"* ]]; then
+      echo "  UNVERIFIABLE  deployment is behind access protection (HTTP $probe_code -> ${probe_redirect%%\?*})" >&2
+    else
+      probe_code=""   # An ordinary redirect; let the real checks run.
+    fi
+    ;;
+  *)
+    probe_code=""
+    ;;
+esac
+
+if [[ -n "$probe_code" ]]; then
+  cat >&2 <<'MSG'
+
+Cannot verify this deployment: it is not publicly readable, so the secret
+probes below would pass without inspecting anything.
+
+To check a protected Vercel deployment, either disable Deployment Protection
+for it, or use a bypass token:
+
+  curl -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" ...
+
+Run this against the public production URL instead to verify the real thing.
+MSG
+  echo "SMOKE TEST INCONCLUSIVE — nothing was verified" >&2
+  exit 2
+fi
+
 # 1. The app shell loads.
 code="$(curl -fsS -o /tmp/smoke_index -w '%{http_code}' "$BASE_URL/" || echo 000)"
 if [[ "$code" == "200" ]] && grep -qi 'flutter' /tmp/smoke_index; then

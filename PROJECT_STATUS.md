@@ -10,7 +10,7 @@
 | Hermetic tests | 76 passing |
 | Integration tests | 5 written, **not yet executed** (need a test project) |
 | Static analysis | **0 issues** (was 169) |
-| Production deploy | **Stale and leaking — see below** |
+| Production deploy | Current build, **leak closed** (verified 2026-09-16) |
 
 ---
 
@@ -35,14 +35,21 @@ in git history.
 Step-by-step: **[docs/CREDENTIAL_ROTATION.md](docs/CREDENTIAL_ROTATION.md)**.
 Background: [SECURITY.md](SECURITY.md).
 
-### 2. Redeploy — *the sign-up fix has never reached users*
+### 2. ~~Redeploy~~ — *done, verified 2026-09-16*
 
-Production still serves a bundle built 2026-06-25. The sign-up race fix landed
-2026-07-31. Every new user has been hitting the bug we believed was fixed.
+Production now serves the current build. Verified against
+`https://duotask.namasteneedham.com`:
 
-- [ ] Deploy the current `build/web` (rebuilt, secret-free)
-- [ ] Confirm with `scripts/smoke_test.sh <url>` — it currently **fails**
-      against production because `/assets/.env` is still live
+- `main.dart.js` is **byte-identical** to the local `build/web` output
+  (sha256 `bc853891a8…`), so the sign-up race fix and the v1.3 work are live
+- `/assets/.env` no longer exists — the path returns the SPA shell via the
+  catch-all rewrite, with no env-style keys in the body
+- No Resend key or `service_role` JWT anywhere in the served bundle
+- `scripts/smoke_test.sh https://duotask.namasteneedham.com` **passes**
+
+The active exposure is closed. Rotation (item 1) is still required: those
+credentials were public for roughly two and a half months and remain in git
+history.
 
 ### 3. Configure CI secrets — *unblocks everything automated*
 
