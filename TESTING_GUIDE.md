@@ -4,7 +4,7 @@
 
 | Suite | Command | Backend | Runs in CI |
 |---|---|---|---|
-| Hermetic (unit + widget + model) | `flutter test` | None | Every push and PR |
+| Hermetic (unit + widget + model) | `flutter test --exclude-tags integration` | None | Every push and PR |
 | Integration | `flutter test --tags integration` | Real Supabase **test** project | Push to `main`, nightly, manual |
 
 `flutter test` must never touch a network backend. If you add a test that
@@ -17,11 +17,19 @@ needs one, tag it `integration`.
 ## Running the hermetic suite
 
 ```bash
-flutter test
+flutter test --exclude-tags integration
 ```
 
-76 tests, no configuration required. Integration tests self-skip with an
-explanatory message when credentials are absent.
+80 tests, no configuration required. A bare `flutter test` is also safe: the
+integration tests self-skip when credentials are absent. Use the explicit
+`--exclude-tags` form in CI and scripts so the boundary does not depend on
+whether a developer happens to have credentials exported.
+
+> Exclusion is **not** configured as a tag-level `skip:` in `dart_test.yaml`.
+> It was, and that skip applied even when the tag was explicitly selected with
+> `--tags integration` — so the live-backend job reported "All tests skipped"
+> and would have passed without ever running a single test. Keep exclusion on
+> the command line.
 
 ## Running the integration suite
 

@@ -161,8 +161,8 @@ See **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#deployment)** for iOS and Android 
 ## 🧪 Testing
 
 ```bash
-flutter test                     # hermetic suite, no backend
-flutter test --tags integration  # live-backend suite, needs a test project
+flutter test --exclude-tags integration   # hermetic suite, no backend
+flutter test --tags integration           # live-backend suite, needs a test project
 ```
 
 See **[TESTING_GUIDE.md](TESTING_GUIDE.md)**. The pairing flow that used to

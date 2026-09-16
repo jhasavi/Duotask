@@ -283,8 +283,8 @@ Consumer<TaskService>(
 ### Unit Tests
 
 ```bash
-# Run all tests
-flutter test
+# Run the hermetic suite
+flutter test --exclude-tags integration
 
 # Run specific test file
 flutter test test/services/auth_service_test.dart

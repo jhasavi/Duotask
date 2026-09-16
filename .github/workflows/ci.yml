@@ -40,8 +40,12 @@ jobs:
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
 
+      # --exclude-tags is explicit rather than relying on config: a tag-level
+      # `skip:` in dart_test.yaml used to do this, but it also suppressed the
+      # suite when it was explicitly selected with --tags, so the live-backend
+      # job silently reported "All tests skipped" instead of running anything.
       - name: Run hermetic tests
-        run: flutter test
+        run: flutter test --exclude-tags integration
 
       # Build with placeholder config: this job only proves the app compiles.
       # The real, credentialed build happens in deploy.yml.
