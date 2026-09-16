@@ -33,11 +33,11 @@ class _PairingScreenState extends State<PairingScreen> {
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
     final userId = authService.currentUser?.id;
-    
+
     if (userId == null) return;
 
     final partners = await pairingService.getPastPartners(userId);
-    
+
     if (mounted) {
       setState(() {
         _pastPartners = partners;
@@ -47,11 +47,11 @@ class _PairingScreenState extends State<PairingScreen> {
 
   Future<void> _loadExistingPairingCode() async {
     setState(() => _isLoadingCode = true);
-    
+
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
     final userId = authService.currentUser?.id;
-    
+
     if (userId == null) {
       setState(() => _isLoadingCode = false);
       return;
@@ -59,7 +59,7 @@ class _PairingScreenState extends State<PairingScreen> {
 
     // Check if there's an existing pending pairing code for this user
     final code = await pairingService.getMyPendingPairingCode(userId);
-    
+
     if (mounted) {
       setState(() {
         _myPairingCode = code;
@@ -75,32 +75,34 @@ class _PairingScreenState extends State<PairingScreen> {
   }
 
   Future<void> _generatePairingCode() async {
-    await HapticHelper.lightImpact();
-    
+    // Resolve everything that needs a BuildContext before the first await;
+    // after one, this widget may already be gone.
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
-    
+    final messenger = ScaffoldMessenger.of(context);
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
 
+    await HapticHelper.lightImpact();
+
     final code = await pairingService.createPairingCode(userId);
-    
+
     if (code != null) {
       await HapticHelper.lightImpact();
       // Reload user data to get updated pairing code
       await authService.refreshUser();
+      if (!mounted) return;
       setState(() {
         _myPairingCode = code;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pairing code generated: $code')),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text('Pairing code generated: $code')),
+      );
     } else {
       await HapticHelper.error();
-      if (mounted && pairingService.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (pairingService.errorMessage != null) {
+        messenger.showSnackBar(
           SnackBar(content: Text(pairingService.errorMessage!)),
         );
       }
@@ -111,30 +113,31 @@ class _PairingScreenState extends State<PairingScreen> {
     final code = _pairingCodeController.text.trim().toUpperCase();
     if (code.isEmpty) return;
 
-    await HapticHelper.mediumImpact();
-
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
-    
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
 
-    final success = await pairingService.acceptPairingCode(userId, code);
+    await HapticHelper.mediumImpact();
 
-    if (mounted) {
-      if (success) {
-        await HapticHelper.success();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully paired!')),
+    final success = await pairingService.acceptPairingCode(userId, code);
+    if (!mounted) return;
+
+    if (success) {
+      await HapticHelper.success();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Successfully paired!')),
+      );
+      navigator.pop();
+    } else {
+      await HapticHelper.error();
+      if (pairingService.errorMessage != null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(pairingService.errorMessage!)),
         );
-        Navigator.pop(context);
-      } else {
-        await HapticHelper.error();
-        if (pairingService.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(pairingService.errorMessage!)),
-          );
-        }
       }
     }
   }
@@ -144,7 +147,8 @@ class _PairingScreenState extends State<PairingScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unpair Confirmation'),
-        content: const Text('Are you sure you want to unpair? This will remove the connection between you and your partner.'),
+        content: const Text(
+            'Are you sure you want to unpair? This will remove the connection between you and your partner.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -165,24 +169,26 @@ class _PairingScreenState extends State<PairingScreen> {
 
     if (confirmed != true) return;
 
+    if (!mounted) return;
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
-    
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
 
     final success = await pairingService.unpair(userId);
+    if (!mounted) return;
 
-    if (mounted) {
-      if (success) {
-        await HapticHelper.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unpairing successful')),
-        );
-        Navigator.pop(context);
-      } else {
-        await HapticHelper.error();
-      }
+    if (success) {
+      await HapticHelper.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Unpairing successful')),
+      );
+      navigator.pop();
+    } else {
+      await HapticHelper.error();
     }
   }
 
@@ -225,7 +231,7 @@ class _PairingScreenState extends State<PairingScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),
@@ -233,14 +239,15 @@ class _PairingScreenState extends State<PairingScreen> {
               ),
               child: CircleAvatar(
                 radius: 70,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                 backgroundImage: pairingService.partner!.avatarUrl != null
                     ? NetworkImage(pairingService.partner!.avatarUrl!)
                     : null,
                 child: pairingService.partner!.avatarUrl == null
                     ? Text(
-                        pairingService.partner!.displayName?[0].toUpperCase() ?? 'P',
-                        style: TextStyle(
+                        pairingService.partner!.displayName?[0].toUpperCase() ??
+                            'P',
+                        style: const TextStyle(
                           fontSize: 56,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.primaryColor,
@@ -250,15 +257,15 @@ class _PairingScreenState extends State<PairingScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Success icon
-            Icon(
+            const Icon(
               Icons.check_circle,
               size: 48,
               color: Colors.green,
             ),
             const SizedBox(height: 16),
-            
+
             Text(
               'Connected with',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -280,7 +287,7 @@ class _PairingScreenState extends State<PairingScreen> {
                   ),
             ),
             const SizedBox(height: 48),
-            
+
             // Unpair button
             OutlinedButton.icon(
               onPressed: _unpair,
@@ -288,8 +295,9 @@ class _PairingScreenState extends State<PairingScreen> {
               label: const Text('Unpair'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.urgentColor,
-                side: BorderSide(color: AppTheme.urgentColor),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                side: const BorderSide(color: AppTheme.urgentColor),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
           ],
@@ -325,7 +333,7 @@ class _PairingScreenState extends State<PairingScreen> {
 
             // Option 1: Share your code
             _buildShareCodeCard(),
-            
+
             const SizedBox(height: 32),
 
             // Divider with OR
@@ -333,7 +341,7 @@ class _PairingScreenState extends State<PairingScreen> {
               children: [
                 Expanded(
                   child: Divider(
-                    color: AppTheme.textSecondary.withOpacity(0.3),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
                     thickness: 1,
                   ),
                 ),
@@ -349,18 +357,18 @@ class _PairingScreenState extends State<PairingScreen> {
                 ),
                 Expanded(
                   child: Divider(
-                    color: AppTheme.textSecondary.withOpacity(0.3),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
                     thickness: 1,
                   ),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 32),
 
             // Option 2: Enter partner's code
             _buildEnterCodeCard(),
-            
+
             // Past partners section
             if (_pastPartners != null && _pastPartners!.isNotEmpty) ...[
               const SizedBox(height: 40),
@@ -406,14 +414,14 @@ class _PairingScreenState extends State<PairingScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           radius: 24,
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
           backgroundImage: partner.avatarUrl != null
               ? NetworkImage(partner.avatarUrl!)
               : null,
           child: partner.avatarUrl == null
               ? Text(
                   partner.displayName?[0].toUpperCase() ?? 'P',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primaryColor,
@@ -439,30 +447,31 @@ class _PairingScreenState extends State<PairingScreen> {
   }
 
   Future<void> _repairWithUser(String partnerId) async {
-    await HapticHelper.mediumImpact();
-    
     final authService = context.read<AuthService>();
     final pairingService = context.read<PairingService>();
-    
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     final userId = authService.currentUser?.id;
     if (userId == null) return;
 
-    final success = await pairingService.repairWithUser(userId, partnerId);
+    await HapticHelper.mediumImpact();
 
-    if (mounted) {
-      if (success) {
-        await HapticHelper.success();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully re-paired!')),
+    final success = await pairingService.repairWithUser(userId, partnerId);
+    if (!mounted) return;
+
+    if (success) {
+      await HapticHelper.success();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Successfully re-paired!')),
+      );
+      navigator.pop();
+    } else {
+      await HapticHelper.error();
+      if (pairingService.errorMessage != null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(pairingService.errorMessage!)),
         );
-        Navigator.pop(context);
-      } else {
-        await HapticHelper.error();
-        if (pairingService.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(pairingService.errorMessage!)),
-          );
-        }
       }
     }
   }
@@ -473,7 +482,7 @@ class _PairingScreenState extends State<PairingScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: AppTheme.primaryColor.withOpacity(0.3),
+          color: AppTheme.primaryColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -485,17 +494,17 @@ class _PairingScreenState extends State<PairingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.qr_code_2_rounded,
                 size: 48,
                 color: AppTheme.primaryColor,
               ),
             ),
             const SizedBox(height: 20),
-            
+
             Text(
               'Share Your Code',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -515,12 +524,13 @@ class _PairingScreenState extends State<PairingScreen> {
             // Pairing code display
             if (_myPairingCode != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryColor.withOpacity(0.1),
-                      AppTheme.secondaryColor.withOpacity(0.1),
+                      AppTheme.primaryColor.withValues(alpha: 0.1),
+                      AppTheme.secondaryColor.withValues(alpha: 0.1),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -545,7 +555,10 @@ class _PairingScreenState extends State<PairingScreen> {
                       children: [
                         Text(
                           _myPairingCode!,
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .displaySmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 6,
                                 color: AppTheme.primaryColor,
@@ -554,7 +567,8 @@ class _PairingScreenState extends State<PairingScreen> {
                         ),
                         const SizedBox(width: 12),
                         IconButton(
-                          icon: Icon(Icons.content_copy_rounded, color: AppTheme.primaryColor),
+                          icon: const Icon(Icons.content_copy_rounded,
+                              color: AppTheme.primaryColor),
                           tooltip: 'Copy code',
                           onPressed: () async {
                             await Clipboard.setData(
@@ -564,9 +578,10 @@ class _PairingScreenState extends State<PairingScreen> {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Row(
+                                  content: const Row(
                                     children: [
-                                      Icon(Icons.check_circle, color: Colors.white),
+                                      Icon(Icons.check_circle,
+                                          color: Colors.white),
                                       SizedBox(width: 12),
                                       Text('Code copied to clipboard!'),
                                     ],
@@ -607,10 +622,15 @@ class _PairingScreenState extends State<PairingScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _generatePairingCode,
-                icon: Icon(_myPairingCode == null ? Icons.add_circle_outline : Icons.refresh_rounded),
+                icon: Icon(_myPairingCode == null
+                    ? Icons.add_circle_outline
+                    : Icons.refresh_rounded),
                 label: Text(
-                  _myPairingCode == null ? 'Generate Code' : 'Generate New Code',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  _myPairingCode == null
+                      ? 'Generate Code'
+                      : 'Generate New Code',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -634,7 +654,7 @@ class _PairingScreenState extends State<PairingScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: AppTheme.secondaryColor.withOpacity(0.3),
+          color: AppTheme.secondaryColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -646,17 +666,17 @@ class _PairingScreenState extends State<PairingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryColor.withOpacity(0.1),
+                color: AppTheme.secondaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.link_rounded,
                 size: 48,
                 color: AppTheme.secondaryColor,
               ),
             ),
             const SizedBox(height: 20),
-            
+
             Text(
               'Enter Partner\'s Code',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -679,21 +699,24 @@ class _PairingScreenState extends State<PairingScreen> {
               decoration: InputDecoration(
                 labelText: 'Enter Code',
                 hintText: 'ABCD1234',
-                prefixIcon: Icon(Icons.password_rounded, color: AppTheme.secondaryColor),
+                prefixIcon: const Icon(Icons.password_rounded,
+                    color: AppTheme.secondaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.secondaryColor),
+                  borderSide: const BorderSide(color: AppTheme.secondaryColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.secondaryColor.withOpacity(0.5)),
+                  borderSide: BorderSide(
+                      color: AppTheme.secondaryColor.withValues(alpha: 0.5)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.secondaryColor, width: 2),
+                  borderSide: const BorderSide(
+                      color: AppTheme.secondaryColor, width: 2),
                 ),
                 filled: true,
-                fillColor: AppTheme.secondaryColor.withOpacity(0.05),
+                fillColor: AppTheme.secondaryColor.withValues(alpha: 0.05),
               ),
               textCapitalization: TextCapitalization.characters,
               textAlign: TextAlign.center,

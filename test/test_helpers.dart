@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 
 import 'package:duotask/models/task.dart';
 import 'package:duotask/models/user.dart';
@@ -128,8 +127,9 @@ class WidgetTestHelpers {
   /// Find text in widget tree (case-insensitive)
   static Finder findTextContaining(String text) {
     return find.byWidgetPredicate(
-      (widget) => widget is Text && 
-        widget.data?.toLowerCase().contains(text.toLowerCase()) == true,
+      (widget) =>
+          widget is Text &&
+          widget.data?.toLowerCase().contains(text.toLowerCase()) == true,
     );
   }
 

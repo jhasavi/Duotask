@@ -5,6 +5,57 @@ All notable changes to DuoTask will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-08-14
+
+Release-engineering and security work. No user-facing feature changes.
+
+### Security
+- **Removed a publicly-served `.env` from the web bundle.** `build/web/assets/.env`
+  was committed and, because Vercel served the committed `build/web` directly,
+  was readable by anyone at `https://<domain>/assets/.env`. It exposed a live
+  Resend API key and a Discord bot token. **The keys in git history must still
+  be rotated** — see [SECURITY.md](SECURITY.md).
+- Removed a hardcoded Supabase `service_role` JWT (full database bypass) from
+  `test/integration/signup_race_test.dart`; credentials now come from the
+  environment.
+- Untracked `build/web/.env.local` (Vercel OIDC token) and `build/web/.vercel/`.
+- **Password change now requires and verifies the current password.** The
+  dialog previously declared a current-password field it never rendered or
+  checked, so anyone with an open session could take an account over.
+- Cron migrations read credentials from Supabase Vault instead of inlining them.
+- Added `scripts/verify_bundle.sh`, a CI secret scan, and a post-deploy smoke
+  test so a secret cannot reach a bundle or a URL again without failing.
+
+### Fixed
+- **Production served a five-week-stale bundle.** Deployment meant building by
+  hand and committing `build/web`; the committed bundle predated the sign-up
+  race fix, so the fix never reached users. Deploys now build from the commit
+  being deployed.
+- `flutter test` connected to the **production** Supabase project and created
+  and deleted real auth users on every run. Suites are now separated.
+- Local migrations and the live database had diverged: `on_auth_user_created`
+  existed only in `schema.sql`. It is now a baseline migration.
+- Removed dead error-handling branches in `task_service` and `pairing_service`
+  that could never execute against the current Supabase SDK.
+
+### Added
+- `.github/workflows/deploy.yml` — migrations → build → verify → deploy → smoke test
+- `.github/workflows/integration.yml` — live-backend tests against a test project
+- `scripts/build_web.sh` — the only supported release build
+- `scripts/smoke_test.sh` — post-deploy verification
+- Four automated pairing tests replacing the manual two-user checklist
+- `SECURITY.md` and `docs/RELEASE.md`
+
+### Changed
+- `flutter analyze` is fatal on warnings again (0 errors, 0 warnings, was 16).
+  The suppressed warnings were hiding the password-change security bug.
+- `withOpacity` migrated to `withValues` throughout
+- Removed `deploy.sh`, `quick_deploy.sh`, `test_and_deploy.sh`, `test.sh` and
+  the `run_migration` scripts — they ran a bare `flutter build web --release`,
+  which is how the `.env` reached production
+- Consolidated documentation; superseded documents moved to `docs/history/`
+- Untracked `supabase/.temp/`
+
 ## [1.2.0] - 2026-06-25
 
 ### Added

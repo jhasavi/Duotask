@@ -44,7 +44,7 @@ class NudgeInboxScreen extends StatelessWidget {
                   Icon(
                     Icons.notifications_none,
                     size: 64,
-                    color: AppTheme.textSecondary.withOpacity(0.5),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -73,11 +73,11 @@ class NudgeInboxScreen extends StatelessWidget {
               return Card(
                 color: nudge.read
                     ? null
-                    : AppTheme.primaryColor.withOpacity(0.05),
+                    : AppTheme.primaryColor.withValues(alpha: 0.05),
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: nudge.read
-                        ? AppTheme.textSecondary.withOpacity(0.2)
+                        ? AppTheme.textSecondary.withValues(alpha: 0.2)
                         : AppTheme.primaryColor,
                     child: Icon(
                       Icons.notifications_active,

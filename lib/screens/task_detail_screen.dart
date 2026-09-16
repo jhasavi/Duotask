@@ -23,9 +23,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   late Task _task;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tagController = TextEditingController();
   DateTime? _selectedDueDate;
   TaskPriority _selectedPriority = TaskPriority.normal;
   TaskRecurrence _selectedRecurrence = TaskRecurrence.none;
+  DateTime? _recurrenceEndDate;
+  late List<String> _tags;
 
   @override
   void initState() {
@@ -36,13 +39,41 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _selectedDueDate = _task.dueDate;
     _selectedPriority = _task.priority;
     _selectedRecurrence = _task.recurrence;
+    _recurrenceEndDate = _task.recurrenceEndDate;
+    _tags = List.of(_task.tags);
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _tagController.dispose();
     super.dispose();
+  }
+
+  void _addTag(String raw) {
+    final tag = raw.trim();
+    if (tag.isEmpty || _tags.contains(tag)) {
+      _tagController.clear();
+      return;
+    }
+    setState(() {
+      _tags.add(tag);
+      _tagController.clear();
+    });
+  }
+
+  Future<void> _pickRecurrenceEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _recurrenceEndDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      setState(() => _recurrenceEndDate = picked);
+    }
   }
 
   Future<void> _selectDueDate() async {
@@ -54,6 +85,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
 
     if (date != null) {
+      if (!mounted) return;
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDueDate ?? DateTime.now()),
@@ -90,6 +122,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       dueDate: _selectedDueDate,
       priority: _selectedPriority,
       recurrence: _selectedRecurrence,
+      recurrenceEndDate: _selectedRecurrence == TaskRecurrence.none
+          ? null
+          : _recurrenceEndDate,
+      clearRecurrenceEndDate: _selectedRecurrence == TaskRecurrence.none,
+      tags: _tags,
     );
 
     final success = await taskService.updateTask(updatedTask);
@@ -137,26 +174,28 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     final taskService = context.read<TaskService>();
-    final success = await taskService.deleteTask(_task.id);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
-    if (mounted) {
-      if (success) {
-        await HapticHelper.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Task deleted')),
-        );
-        Navigator.pop(context);
-      } else {
-        await HapticHelper.error();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(taskService.errorMessage ?? 'Failed to delete task'),
-          ),
-        );
-      }
+    final success = await taskService.deleteTask(_task.id);
+    if (!mounted) return;
+
+    if (success) {
+      await HapticHelper.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Task deleted')),
+      );
+      navigator.pop();
+    } else {
+      await HapticHelper.error();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(taskService.errorMessage ?? 'Failed to delete task'),
+        ),
+      );
     }
   }
 
@@ -222,7 +261,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
             // Priority
             DropdownButtonFormField<TaskPriority>(
-              value: _selectedPriority,
+              initialValue: _selectedPriority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
                 prefixIcon: Icon(Icons.flag),
@@ -259,7 +298,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
             // Recurrence
             DropdownButtonFormField<TaskRecurrence>(
-              value: _selectedRecurrence,
+              initialValue: _selectedRecurrence,
               decoration: const InputDecoration(
                 labelText: 'Recurrence',
                 prefixIcon: Icon(Icons.repeat),
@@ -275,11 +314,74 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       if (value != null) {
                         setState(() {
                           _selectedRecurrence = value;
+                          if (value == TaskRecurrence.none) {
+                            _recurrenceEndDate = null;
+                          }
                         });
                       }
                     }
                   : null,
             ),
+            if (_selectedRecurrence != TaskRecurrence.none)
+              ListTile(
+                leading: const Icon(Icons.event_busy),
+                title: Text(
+                  _recurrenceEndDate != null
+                      ? DateFormat('MMM d, y').format(_recurrenceEndDate!)
+                      : 'No end date',
+                ),
+                subtitle: const Text('Recurrence ends'),
+                trailing: isOwner
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_recurrenceEndDate != null)
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () =>
+                                  setState(() => _recurrenceEndDate = null),
+                            ),
+                          IconButton(
+                            icon: Icon(
+                              _recurrenceEndDate != null
+                                  ? Icons.edit
+                                  : Icons.add,
+                            ),
+                            onPressed: _pickRecurrenceEndDate,
+                          ),
+                        ],
+                      )
+                    : null,
+                contentPadding: EdgeInsets.zero,
+              ),
+            const SizedBox(height: 16),
+
+            // Tags
+            if (isOwner)
+              TextField(
+                controller: _tagController,
+                decoration: const InputDecoration(
+                  labelText: 'Add tag',
+                  prefixIcon: Icon(Icons.label_outline),
+                ),
+                textInputAction: TextInputAction.done,
+                onSubmitted: _addTag,
+              ),
+            if (_tags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _tags
+                    .map((tag) => Chip(
+                          label: Text(tag),
+                          onDeleted: isOwner
+                              ? () => setState(() => _tags.remove(tag))
+                              : null,
+                        ))
+                    .toList(),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Due date
@@ -337,12 +439,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     const Divider(),
                     _InfoRow(
                       label: 'Created',
-                      value: DateFormat('MMM d, y h:mm a').format(_task.createdAt),
+                      value:
+                          DateFormat('MMM d, y h:mm a').format(_task.createdAt),
                     ),
                     if (_task.updatedAt != null)
                       _InfoRow(
                         label: 'Updated',
-                        value: DateFormat('MMM d, y h:mm a').format(_task.updatedAt!),
+                        value: DateFormat('MMM d, y h:mm a')
+                            .format(_task.updatedAt!),
                       ),
                     _InfoRow(
                       label: 'Type',
@@ -390,7 +494,7 @@ class _StatusBadge extends StatelessWidget {
         status.displayName,
         style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       side: BorderSide(color: color, width: 1),
     );
   }

@@ -1,0 +1,92 @@
+name: Deploy
+
+# Builds and publishes the web app from source on every push to main.
+#
+# WHY THIS EXISTS: deployment used to mean running `flutter build web` by hand
+# and committing build/web, with Vercel serving those committed files
+# (buildCommand: null). That decoupled the deployed app from the source: the
+# sign-up race fix landed on 2026-07-31 but the bundle in git was built
+# 2026-06-25, so the fix never reached a single user for five weeks. Building
+# in CI from the commit being deployed makes that failure mode impossible.
+#
+# Required repository secrets:
+#   SUPABASE_URL, SUPABASE_ANON_KEY   - client config, injected via --dart-define
+#   WEB_REDIRECT_URL                  - OAuth redirect target
+#   GOOGLE_WEB_CLIENT_ID              - Google sign-in
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+#   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD - migrations
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply database migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          # Fails loudly if local migrations and the live schema have diverged.
+          supabase migration list
+          supabase db push
+
+  deploy:
+    name: Build and deploy web
+    runs-on: ubuntu-latest
+    needs: migrate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          WEB_REDIRECT_URL: ${{ secrets.WEB_REDIRECT_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: scripts/build_web.sh
+
+      - name: Verify no secrets in bundle
+        run: scripts/verify_bundle.sh
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install --global vercel@latest
+          vercel deploy build/web \
+            --prod \
+            --yes \
+            --token "$VERCEL_TOKEN" \
+            > deployment-url.txt
+          echo "DEPLOYMENT_URL=$(cat deployment-url.txt)" >> "$GITHUB_ENV"
+
+      - name: Post-deploy smoke test
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
+        run: scripts/smoke_test.sh "$DEPLOYMENT_URL"

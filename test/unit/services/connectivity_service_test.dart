@@ -9,10 +9,8 @@ class MockConnectivity extends Mock implements Connectivity {}
 
 void main() {
   late ConnectivityService connectivityService;
-  late MockConnectivity mockConnectivity;
 
   setUp(() {
-    mockConnectivity = MockConnectivity();
     // Note: ConnectivityService uses Connectivity() internally
     // These tests focus on the service's API and state management
     connectivityService = ConnectivityService();
@@ -71,7 +69,7 @@ void main() {
       connectivityService.addListener(() {
         notified = true;
       });
-      
+
       // Trigger notification
       connectivityService.notifyListeners();
       expect(notified, true);
@@ -80,15 +78,15 @@ void main() {
     test('multiple listeners can be added', () {
       var notified1 = false;
       var notified2 = false;
-      
+
       connectivityService.addListener(() {
         notified1 = true;
       });
-      
+
       connectivityService.addListener(() {
         notified2 = true;
       });
-      
+
       connectivityService.notifyListeners();
       expect(notified1, true);
       expect(notified2, true);
@@ -108,7 +106,7 @@ void main() {
     test('multiple dispose calls throw error (expected behavior)', () {
       final service = ConnectivityService();
       service.dispose();
-      
+
       // Second dispose should throw
       expect(() => service.dispose(), throwsA(isA<AssertionError>()));
     });
@@ -117,12 +115,12 @@ void main() {
   group('ConnectivityService - Edge Cases', () {
     test('handles rapid state changes gracefully', () {
       final service = ConnectivityService();
-      
+
       // Simulate rapid changes
       for (var i = 0; i < 10; i++) {
         service.notifyListeners();
       }
-      
+
       // Should complete without errors
       expect(service, isNotNull);
     });
@@ -130,10 +128,10 @@ void main() {
     test('handles listener removal', () {
       final service = ConnectivityService();
       void listener() {}
-      
+
       service.addListener(listener);
       service.removeListener(listener);
-      
+
       // Should complete without errors
       expect(service, isNotNull);
     });

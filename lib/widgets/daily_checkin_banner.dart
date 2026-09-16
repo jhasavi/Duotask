@@ -33,7 +33,7 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
     final prefs = await SharedPreferences.getInstance();
     final hiddenDate = prefs.getString('daily_banner_hidden_date');
     final today = DateTime.now().toIso8601String().split('T')[0];
-    
+
     if (hiddenDate == today) {
       setState(() => _isHidden = true);
     } else {
@@ -67,19 +67,18 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
             .where((t) => t.visibility == TaskVisibility.group)
             .toList();
 
-        final unclaimedCount = groupTasks
-            .where((t) => t.status == TaskStatus.unclaimed)
-            .length;
+        final unclaimedCount =
+            groupTasks.where((t) => t.status == TaskStatus.unclaimed).length;
 
-        final claimedCount = groupTasks
-            .where((t) => t.status == TaskStatus.claimed)
-            .length;
+        final claimedCount =
+            groupTasks.where((t) => t.status == TaskStatus.claimed).length;
 
         // Get top 3 most urgent/nearest-due tasks
         final activeTasks = groupTasks
-            .where((t) => 
-              t.status == TaskStatus.unclaimed || 
-              t.status == TaskStatus.claimed
+            .where(
+              (t) =>
+                  t.status == TaskStatus.unclaimed ||
+                  t.status == TaskStatus.claimed,
             )
             .toList();
 
@@ -109,15 +108,15 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primaryColor.withOpacity(0.1),
-                AppTheme.primaryColor.withOpacity(0.05),
+                AppTheme.primaryColor.withValues(alpha: 0.1),
+                AppTheme.primaryColor.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppTheme.primaryColor.withOpacity(0.2),
+              color: AppTheme.primaryColor.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -127,7 +126,7 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
               // Header
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.today,
                     color: AppTheme.primaryColor,
                     size: 24,
@@ -172,31 +171,33 @@ class _DailyCheckInBannerState extends State<DailyCheckInBanner> {
               const SizedBox(height: 16),
 
               // Top tasks preview
-              ...topTasks.map((task) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          task.priority == TaskPriority.urgent
-                              ? Icons.priority_high
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: task.priority == TaskPriority.urgent
-                              ? AppTheme.urgentColor
-                              : AppTheme.textSecondary,
+              ...topTasks.map(
+                (task) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        task.priority == TaskPriority.urgent
+                            ? Icons.priority_high
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: task.priority == TaskPriority.urgent
+                            ? AppTheme.urgentColor
+                            : AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            task.title,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 16),
 
@@ -244,10 +245,10 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

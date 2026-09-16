@@ -14,7 +14,10 @@ linter:
     - prefer_const_declarations
     - unnecessary_null_in_if_null_operators
     - avoid_web_libraries_in_flutter
-    - require_trailing_commas
+    # require_trailing_commas is deliberately NOT enabled: it contradicts the
+    # current `dart format`, which manages trailing commas itself. Running both
+    # makes them fight — format removes a comma, the lint demands it back.
+    # `dart format` is the authority on formatting; CI enforces it.
 
 analyzer:
   exclude:

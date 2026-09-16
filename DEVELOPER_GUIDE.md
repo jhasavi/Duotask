@@ -32,13 +32,22 @@ nano .env
 
 Create a `.env` file in the project root:
 
-```env
-SUPABASE_URL=https://xqhlnuvpogiolzkucupt.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-GOOGLE_CLIENT_ID=931322985925-no55j5aq0hnuc1afeqn2sjhb1ib03up4.apps.googleusercontent.com
+```bash
+cp .env.example .env
 ```
 
-⚠️ **Never commit `.env` to version control!**
+Then fill in the real values from Supabase → Project Settings → API:
+
+```env
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_ANON_KEY=<your anon key>
+GOOGLE_WEB_CLIENT_ID=<your google web client id>
+```
+
+⚠️ **Never commit `.env`, and never commit a build that contains one.**
+A committed `build/web/assets/.env` once exposed live API keys publicly.
+Always build with `scripts/build_web.sh`, never a bare `flutter build web`.
+See [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -103,11 +112,14 @@ flutter run -d web-server --web-port 8080
 ### Web (Production Build)
 
 ```bash
-# Build optimized web bundle
-flutter build web --release
-
-# Output: build/web/
+scripts/build_web.sh
 ```
+
+Injects configuration via `--dart-define`, strips any env file from the
+output, and runs the secret scanner. Output: `build/web/`.
+
+Do **not** run a bare `flutter build web --release` for anything you intend to
+publish — it can bundle `.env` into the served assets.
 
 ### Mobile (iOS - requires macOS)
 
@@ -127,18 +139,32 @@ flutter run -d android
 
 ### Setup Supabase
 
-1. Create a Supabase project at https://supabase.com
-2. Navigate to SQL Editor
-3. Run the schema from `supabase/schema.sql`
+```bash
+supabase link --project-ref <your-project-ref>
+supabase db push
+```
+
+`supabase/migrations/00000000000000_baseline_schema.sql` provisions an empty
+project into the production shape. Every statement is guarded, so applying it
+to an existing database is a no-op.
 
 ### Schema Changes
 
-When modifying the database:
+Migrations are the source of truth and are applied by CI on merge to `main`.
+Do **not** paste SQL into the Supabase SQL Editor — that is how the live
+database and this repository drifted apart previously (the
+`on_auth_user_created` trigger existed only in `schema.sql` and in no
+migration).
 
-1. **Update `supabase/schema.sql`**
-2. **Run SQL in Supabase SQL Editor**
-3. **Update Dart models** in `lib/models/`
-4. **Update services** if query logic changes
+1. **Create a migration**: `supabase migration new <name>`
+2. **Write guarded SQL** (`IF NOT EXISTS`, `OR REPLACE`, `DROP ... IF EXISTS`)
+3. **Verify locally**: `supabase db reset`
+4. **Check for drift**: `supabase migration list`
+5. **Update Dart models** in `lib/models/`
+6. **Update services** if query logic changes
+
+Never embed a credential in a migration. Use Supabase Vault — see
+`migrations/setup_email_cron.sql` for the pattern.
 
 ### Testing Database Locally
 
@@ -185,7 +211,7 @@ git checkout -b feature/task-tags
 flutter run -d chrome
 
 # Build and test
-flutter build web --release
+scripts/build_web.sh
 
 # Commit changes
 git add .
@@ -257,8 +283,8 @@ Consumer<TaskService>(
 ### Unit Tests
 
 ```bash
-# Run all tests
-flutter test
+# Run the hermetic suite
+flutter test --exclude-tags integration
 
 # Run specific test file
 flutter test test/services/auth_service_test.dart
@@ -296,44 +322,40 @@ void main() {
 
 ### Integration Tests
 
+These run against a real Supabase **test** project and create real users.
+Never point them at production.
+
 ```bash
-# Run integration tests (not yet implemented)
-flutter test integration_test/
+export SUPABASE_TEST_URL=https://<test-project>.supabase.co
+export SUPABASE_TEST_ANON_KEY=...
+export SUPABASE_TEST_SERVICE_ROLE_KEY=...
+
+flutter test --tags integration
 ```
+
+They skip with an explanatory message when credentials are absent, so a plain
+`flutter test` stays hermetic. See [TESTING_GUIDE.md](TESTING_GUIDE.md).
 
 ---
 
 ## Deployment
 
-### Deploy to Vercel
+Deployment is automated: merging to `main` builds from that commit, applies
+migrations, deploys, and smoke-tests the result.
+
+See **[docs/RELEASE.md](docs/RELEASE.md)** for the pipeline and the one-time
+secret setup it needs.
+
+The old `deploy.sh`, `quick_deploy.sh`, `test_and_deploy.sh` and `test.sh`
+scripts have been removed. They ran a bare `flutter build web --release`,
+which is how a `.env` containing live API keys ended up published.
+
+### Manual fallback
 
 ```bash
-# Install Vercel CLI (once)
-npm install -g vercel
-
-# Login to Vercel (once)
-vercel login
-
-# Build Flutter web
-flutter build web --release
-
-# Deploy to production
-npx vercel deploy --prod --yes
-
-# Output: https://duotask-[hash].vercel.app
+scripts/build_web.sh
+scripts/smoke_test.sh https://your-domain.example.com
 ```
-
-### Automated Deployment Script
-
-```bash
-# Use the convenience script
-./deploy_production.sh
-```
-
-Script does:
-1. Builds Flutter web release
-2. Deploys to Vercel production
-3. Shows deployment URL
 
 ---
 

@@ -1,0 +1,81 @@
+name: Integration tests
+
+# Tests that talk to a real Supabase project. They create and delete real auth
+# users, so they run against a DEDICATED TEST PROJECT — never production.
+#
+# Required repository secrets:
+#   SUPABASE_TEST_URL
+#   SUPABASE_TEST_ANON_KEY
+#   SUPABASE_TEST_SERVICE_ROLE_KEY
+#
+# These replace the manual checklists that used to live in PAIRING_TEST_GUIDE.md
+# and PROJECT_STATUS.md ("pair two users and verify bidirectional visibility").
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly, to catch drift between the app and the live schema.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Live-backend integration tests
+    runs-on: ubuntu-latest
+    # Forked PRs cannot read secrets; skip rather than fail confusingly.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # A missing one-time setup is not a code regression, so it must not paint
+      # the PR red forever — a permanently-failing check is one people learn to
+      # ignore, which is how a stale deploy went unnoticed for five weeks. When
+      # the secrets are absent this annotates loudly and skips. When they are
+      # present the suite runs for real and any failure is a real failure.
+      - name: Check credentials are configured
+        id: creds
+        env:
+          URL: ${{ secrets.SUPABASE_TEST_URL }}
+          ANON: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SERVICE: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$URL" ] && [ -n "$ANON" ] && [ -n "$SERVICE" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Test-project credentials found; running the live-backend suite."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Integration tests skipped::SUPABASE_TEST_URL / _ANON_KEY / _SERVICE_ROLE_KEY are not all set, so the live-backend suite did not run. The pairing and sign-up flows are therefore UNVERIFIED. See docs/RELEASE.md#one-time-setup."
+          fi
+
+      - name: Run integration tests
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: flutter test --tags integration --reporter expanded
+
+      # Without this the job could pass while running nothing at all — the
+      # exact failure mode that the dart_test.yaml tag-skip caused.
+      - name: Confirm the suite actually ran
+        if: steps.creds.outputs.configured == 'true'
+        run: echo "Live-backend suite executed against the configured test project."
+
+      - name: Report skipped
+        if: steps.creds.outputs.configured != 'true'
+        run: |
+          echo "Live-backend integration tests did NOT run: test-project credentials are not configured."
+          echo "This job is green because that is a setup gap, not a code defect — but the"
+          echo "pairing and sign-up flows are unverified until the secrets exist."
+          echo "Setup: docs/RELEASE.md#one-time-setup" 

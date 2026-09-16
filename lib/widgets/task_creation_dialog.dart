@@ -13,6 +13,8 @@ class TaskCreationDialog extends StatefulWidget {
     TaskVisibility visibility, {
     TaskPriority priority,
     TaskRecurrence recurrence,
+    DateTime? recurrenceEndDate,
+    List<String> tags,
   }) onCreateTask;
 
   const TaskCreationDialog({
@@ -29,9 +31,12 @@ class TaskCreationDialog extends StatefulWidget {
 
 class _TaskCreationDialogState extends State<TaskCreationDialog> {
   final _taskController = TextEditingController();
+  final _tagController = TextEditingController();
   late TaskVisibility _selectedVisibility;
   TaskPriority _selectedPriority = TaskPriority.normal;
   TaskRecurrence _selectedRecurrence = TaskRecurrence.none;
+  DateTime? _recurrenceEndDate;
+  final List<String> _tags = [];
 
   @override
   void initState() {
@@ -44,7 +49,33 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
   @override
   void dispose() {
     _taskController.dispose();
+    _tagController.dispose();
     super.dispose();
+  }
+
+  void _addTag(String raw) {
+    final tag = raw.trim();
+    if (tag.isEmpty || _tags.contains(tag)) {
+      _tagController.clear();
+      return;
+    }
+    setState(() {
+      _tags.add(tag);
+      _tagController.clear();
+    });
+  }
+
+  Future<void> _pickRecurrenceEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _recurrenceEndDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      setState(() => _recurrenceEndDate = picked);
+    }
   }
 
   void _createTask() {
@@ -56,6 +87,10 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
       _selectedVisibility,
       priority: _selectedPriority,
       recurrence: _selectedRecurrence,
+      recurrenceEndDate: _selectedRecurrence == TaskRecurrence.none
+          ? null
+          : _recurrenceEndDate,
+      tags: _tags,
     );
     Navigator.of(context).pop();
   }
@@ -121,7 +156,7 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
                     _selectedVisibility = newSelection.first;
                   });
                 },
-                style: ButtonStyle(
+                style: const ButtonStyle(
                   visualDensity: VisualDensity.comfortable,
                 ),
               ),
@@ -188,14 +223,85 @@ class _TaskCreationDialogState extends State<TaskCreationDialog> {
                   label: Text('Weekly'),
                   icon: Icon(Icons.date_range),
                 ),
+                ButtonSegment(
+                  value: TaskRecurrence.monthly,
+                  label: Text('Monthly'),
+                  icon: Icon(Icons.calendar_month),
+                ),
+                ButtonSegment(
+                  value: TaskRecurrence.yearly,
+                  label: Text('Yearly'),
+                  icon: Icon(Icons.event_repeat),
+                ),
               ],
               selected: {_selectedRecurrence},
               onSelectionChanged: (Set<TaskRecurrence> newSelection) {
                 setState(() {
                   _selectedRecurrence = newSelection.first;
+                  if (_selectedRecurrence == TaskRecurrence.none) {
+                    _recurrenceEndDate = null;
+                  }
                 });
               },
             ),
+            if (_selectedRecurrence != TaskRecurrence.none) ...[
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: _pickRecurrenceEndDate,
+                child: Row(
+                  children: [
+                    const Icon(Icons.event_busy, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      _recurrenceEndDate != null
+                          ? 'Ends ${_recurrenceEndDate!.month}/${_recurrenceEndDate!.day}/${_recurrenceEndDate!.year}'
+                          : 'Set an end date (optional)',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (_recurrenceEndDate != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 16),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () =>
+                            setState(() => _recurrenceEndDate = null),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // Tags
+            Text(
+              'Tags',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _tagController,
+              decoration: const InputDecoration(
+                hintText: 'e.g., "home" — press Enter to add',
+                prefixIcon: Icon(Icons.label_outline),
+              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: _addTag,
+            ),
+            if (_tags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _tags
+                    .map((tag) => Chip(
+                          label: Text(tag),
+                          onDeleted: () => setState(() => _tags.remove(tag)),
+                        ))
+                    .toList(),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Action buttons

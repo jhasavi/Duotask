@@ -26,21 +26,21 @@ void main() {
 
     test('setThemeMode persists across service restarts', () async {
       await preferencesService.setThemeMode(ThemeMode.light);
-      
+
       // Create new instance
       final newService = PreferencesService();
       await newService.initialize();
-      
+
       expect(newService.themeMode, ThemeMode.light);
     });
 
     test('getThemeModeDisplayName returns correct name', () async {
       await preferencesService.setThemeMode(ThemeMode.light);
       expect(preferencesService.getThemeModeDisplayName(), 'Light');
-      
+
       await preferencesService.setThemeMode(ThemeMode.dark);
       expect(preferencesService.getThemeModeDisplayName(), 'Dark');
-      
+
       await preferencesService.setThemeMode(ThemeMode.system);
       expect(preferencesService.getThemeModeDisplayName(), 'System');
     });
@@ -58,11 +58,11 @@ void main() {
 
     test('setDailySummaryEnabled persists across service restarts', () async {
       await preferencesService.setDailySummaryEnabled(false);
-      
+
       // Create new instance
       final newService = PreferencesService();
       await newService.initialize();
-      
+
       expect(newService.dailySummaryEnabled, false);
     });
   });
@@ -79,21 +79,21 @@ void main() {
 
     test('setLanguageCode persists across service restarts', () async {
       await preferencesService.setLanguageCode('fr');
-      
+
       // Create new instance
       final newService = PreferencesService();
       await newService.initialize();
-      
+
       expect(newService.languageCode, 'fr');
     });
 
     test('getLanguageDisplayName returns correct names', () async {
       await preferencesService.setLanguageCode('en');
       expect(preferencesService.getLanguageDisplayName(), 'English');
-      
+
       await preferencesService.setLanguageCode('es');
       expect(preferencesService.getLanguageDisplayName(), 'Español');
-      
+
       await preferencesService.setLanguageCode('fr');
       expect(preferencesService.getLanguageDisplayName(), 'Français');
     });

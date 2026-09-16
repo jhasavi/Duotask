@@ -44,14 +44,14 @@ class PairingService extends ChangeNotifier {
 
         if (partnerId != null && !seenPartnerIds.contains(partnerId)) {
           seenPartnerIds.add(partnerId);
-          
+
           try {
             final userResponse = await _supabase
                 .from('users')
                 .select()
                 .eq('id', partnerId)
                 .single();
-            
+
             pastPartners.add(AppUser.fromJson(userResponse));
           } catch (e) {
             if (kDebugMode) print('Error loading past partner: $e');
@@ -119,7 +119,7 @@ class PairingService extends ChangeNotifier {
           .order('accepted_at', ascending: false)
           .limit(1);
 
-      if (response != null && (response as List).isNotEmpty) {
+      if ((response as List).isNotEmpty) {
         _currentPairing = Pairing.fromJson(response.first);
         await _loadPartner(userId);
       } else {
@@ -153,11 +153,8 @@ class PairingService extends ChangeNotifier {
 
       if (partnerId == null) return;
 
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('id', partnerId)
-          .single();
+      final response =
+          await _supabase.from('users').select().eq('id', partnerId).single();
 
       _partner = AppUser.fromJson(response);
       notifyListeners();
@@ -190,12 +187,10 @@ class PairingService extends ChangeNotifier {
 
     if (eventType == PostgresChangeEvent.update ||
         eventType == PostgresChangeEvent.insert) {
-      if (newRecord != null) {
-        final pairing = Pairing.fromJson(newRecord);
-        if (pairing.isActive) {
-          _currentPairing = pairing;
-          _loadPartner(userId);
-        }
+      final pairing = Pairing.fromJson(newRecord);
+      if (pairing.isActive) {
+        _currentPairing = pairing;
+        _loadPartner(userId);
       }
     } else if (eventType == PostgresChangeEvent.delete) {
       _currentPairing = null;
@@ -288,7 +283,7 @@ class PairingService extends ChangeNotifier {
 
     try {
       if (kDebugMode) print('Accepting pairing code: $pairingCode');
-      
+
       // Find the pairing request
       final response = await _supabase
           .from('pairings')

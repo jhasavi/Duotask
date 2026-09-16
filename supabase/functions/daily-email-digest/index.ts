@@ -159,24 +159,60 @@ function buildEmailHtml(data: EmailData, tasks: TasksData): string {
   `
 }
 
+// Returns the wall-clock date+hour for `instant` as observed in `timeZone`,
+// e.g. { date: "2026-08-28", hour: 8 }. Used to decide whether "now" falls in
+// a user's preferred send hour and whether they've already been sent today.
+function localDateAndHour(instant: Date, timeZone: string): { date: string; hour: number } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(instant)
+
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? ''
+  const hour = get('hour') === '24' ? 0 : parseInt(get('hour'), 10)
+  return { date: `${get('year')}-${get('month')}-${get('day')}`, hour }
+}
+
 serve(async (req) => {
   try {
     // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Get all users with email enabled
+    // Get all users with email enabled, along with their preferred local send time
     const { data: preferences, error: prefsError } = await supabase
       .from('email_preferences')
-      .select('user_id')
+      .select('user_id, email_time, timezone, last_email_sent_at')
       .eq('daily_email_enabled', true)
 
     if (prefsError) throw prefsError
+
+    const now = new Date()
+
+    // Only send to users whose local email_time hour matches this run's UTC
+    // hour in their timezone, and who haven't already been sent today
+    // (in their own local date) — this cron now fires every hour.
+    const dueNow = (preferences || []).filter(pref => {
+      const { date: localDate, hour: localHour } = localDateAndHour(now, pref.timezone || 'UTC')
+      const targetHour = parseInt((pref.email_time || '08:00:00').split(':')[0], 10)
+      if (localHour !== targetHour) return false
+
+      if (pref.last_email_sent_at) {
+        const lastSentLocalDate = localDateAndHour(new Date(pref.last_email_sent_at), pref.timezone || 'UTC').date
+        if (lastSentLocalDate === localDate) return false
+      }
+
+      return true
+    })
 
     let emailsSent = 0
     let emailsFailed = 0
 
     // Send emails to each user
-    for (const pref of preferences || []) {
+    for (const pref of dueNow) {
       try {
         // Get email data for user
         const { data: emailDataResult, error: emailDataError } = await supabase
@@ -239,7 +275,7 @@ serve(async (req) => {
         success: true,
         emails_sent: emailsSent,
         emails_failed: emailsFailed,
-        total_users: (preferences || []).length,
+        total_users: dueNow.length,
       }),
       {
         headers: { 'Content-Type': 'application/json' },

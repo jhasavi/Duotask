@@ -5,7 +5,7 @@ import 'dart:async';
 class ConnectivityService extends ChangeNotifier {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult>? _subscription;
-  
+
   bool _isOnline = true;
   bool _hasCheckedInitial = false;
 

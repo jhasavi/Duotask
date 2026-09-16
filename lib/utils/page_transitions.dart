@@ -59,7 +59,7 @@ class ScaleFadeRoute extends PageRouteBuilder {
             var scaleTween = Tween(begin: 0.9, end: 1.0).chain(
               CurveTween(curve: curve),
             );
-            
+
             var fadeTween = Tween(begin: 0.0, end: 1.0).chain(
               CurveTween(curve: curve),
             );

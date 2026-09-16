@@ -6,29 +6,29 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF6366F1); // Indigo
   static const Color secondaryColor = Color(0xFFEC4899); // Pink
   static const Color accentColor = Color(0xFF8B5CF6); // Purple
-  
+
   // Task Status Colors
   static const Color unclaimedPersonalColor = Color(0xFFFB923C); // Light Orange
   static const Color unclaimedPartnerColor = Color(0xFFF97316); // Dark Orange
   static const Color claimedColor = Color(0xFF3B82F6); // Blue
   static const Color completedColor = Color(0xFF10B981); // Green
   static const Color urgentColor = Color(0xFFEF4444); // Red
-  
+
   // Neutral Colors
   static const Color backgroundColor = Color(0xFFF8FAFC);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
-  
+
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color textTertiary = Color(0xFF94A3B8);
-  
+
   // Dark Theme Colors
   static const Color darkBackgroundColor = Color(0xFF0F172A);
   static const Color darkSurfaceColor = Color(0xFF1E293B);
   static const Color darkCardColor = Color(0xFF334155);
-  
+
   // Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
@@ -152,7 +152,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: urgentColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: darkSurfaceColor,
@@ -178,7 +179,8 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: darkBackgroundColor,
       cardColor: darkCardColor,
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+      textTheme:
+          GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
         displayLarge: GoogleFonts.inter(
           fontSize: 32,
           fontWeight: FontWeight.bold,
@@ -249,7 +251,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -261,7 +264,9 @@ class AppTheme {
   }) {
     switch (status.toLowerCase()) {
       case 'unclaimed':
-        return isCreatedByPartner ? unclaimedPartnerColor : unclaimedPersonalColor;
+        return isCreatedByPartner
+            ? unclaimedPartnerColor
+            : unclaimedPersonalColor;
       case 'claimed':
         return claimedColor;
       case 'completed':
