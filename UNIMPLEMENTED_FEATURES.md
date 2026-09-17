@@ -10,10 +10,14 @@ Shipped work has been removed from this list. See
 
 ## Features
 
-### Push Notifications (Mobile)
-- Firebase Cloud Messaging setup
-- iOS APNs certificates
-- Android FCM configuration
+### Push Notifications (Mobile) — code done, needs a real Firebase project
+Nudges now trigger a push via FCM (device_tokens table, send-nudge-push edge
+function, client-side wiring in NotificationService) — but `lib/firebase_options.dart`
+is a placeholder, so nothing is actually delivered yet. See
+[docs/PUSH_NOTIFICATIONS_SETUP.md](docs/PUSH_NOTIFICATIONS_SETUP.md) for the
+one-time manual setup (create a Firebase project, `flutterfire configure`,
+upload an APNs key, set the `FIREBASE_SERVICE_ACCOUNT` function secret).
+Web is not covered — mobile only for this first pass.
 
 ### Offline Mode
 - Queue task changes locally
@@ -62,4 +66,6 @@ CI deploy has run green, untrack it — see
 3. **Supabase Vault secrets** — `project_url` and `anon_key`, for the daily
    email cron job.
 4. **Resend API key** — for the daily digest edge function.
-5. **Firebase** — for mobile push notifications.
+5. **Firebase project + APNs key + service account** — for mobile push
+   notifications. See
+   [docs/PUSH_NOTIFICATIONS_SETUP.md](docs/PUSH_NOTIFICATIONS_SETUP.md).

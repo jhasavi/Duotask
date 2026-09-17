@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'config/app_config.dart';
 import 'config/theme.dart';
+import 'firebase_options.dart';
 import 'services/auth_service.dart';
 import 'services/task_service.dart';
 import 'services/pairing_service.dart';
@@ -37,6 +41,33 @@ Future<void> _loadEnvironment() async {
   dotenv.testLoad(fileInput: '');
 }
 
+/// Handles a push notification that arrives while the app is backgrounded or
+/// terminated. Runs in a separate isolate, so it can't touch any state set up
+/// in `main()` — Android/iOS already display the notification from the FCM
+/// payload's `notification` block automatically; this only exists so the
+/// plugin has a registered handler (required by firebase_messaging even when
+/// there's nothing extra to do).
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+
+/// Initializes Firebase for push notifications. Best-effort and non-fatal:
+/// [DefaultFirebaseOptions] is a placeholder until `flutterfire configure` is
+/// run with a real project (see docs/PUSH_NOTIFICATIONS_SETUP.md), so this is
+/// expected to fail in most environments today — nudges still work via the
+/// existing in-app Realtime subscription either way.
+Future<void> _initializeFirebaseMessaging() async {
+  if (kIsWeb) return; // Push notifications are mobile-only for now.
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    if (kDebugMode) {
+      print('Firebase init skipped (push notifications unavailable): $e');
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -48,6 +79,8 @@ void main() async {
     runApp(const _ConfigErrorApp());
     return;
   }
+
+  await _initializeFirebaseMessaging();
 
   // Initialize Supabase
   await Supabase.initialize(

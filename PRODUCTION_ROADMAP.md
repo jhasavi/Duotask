@@ -71,9 +71,14 @@ Three things still need a human. See
 | 36 | Task tags — add, remove, search, and filter by tag | ✅ |
 | 37 | Monthly/yearly recurrence, plus an optional recurrence end date | ✅ |
 
-## Next phase (v1.4)
+## v1.4 feature work (in progress)
 
-- Push notifications (FCM) — needs Firebase setup and APNs certificates
+| # | Improvement | Status |
+|---|-------------|--------|
+| 38 | Push notifications for nudges (FCM v1 API, device_tokens table, send-nudge-push edge function, client wiring) | Code done — needs a real Firebase project. See [docs/PUSH_NOTIFICATIONS_SETUP.md](docs/PUSH_NOTIFICATIONS_SETUP.md) |
+
+## Next phase
+
 - Offline task queue with sync
 - Analytics dashboard
 - Multi-partner (team) support
