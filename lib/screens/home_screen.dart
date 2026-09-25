@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/task_service.dart';
 import '../services/pairing_service.dart';
 import '../services/nudge_service.dart';
 import '../services/email_preferences_service.dart';
+import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
 import '../models/task.dart';
 import '../widgets/offline_banner.dart';
@@ -71,6 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final pairingService = context.read<PairingService>();
     final nudgeService = context.read<NudgeService>();
     final emailPrefs = context.read<EmailPreferencesService>();
+    final notificationService = context.read<NotificationService>();
+    final supabase = context.read<SupabaseClient>();
 
     final userId = authService.currentUser?.id;
     if (userId != null) {
@@ -79,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
         pairingService.checkPairingStatus(userId),
         nudgeService.loadNudges(userId),
         emailPrefs.loadPreferences(userId),
+        notificationService.registerForPushNotifications(supabase, userId),
       ]);
 
       _lastNudgeCount = nudgeService.unreadCount;
