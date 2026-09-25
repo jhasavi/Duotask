@@ -71,11 +71,19 @@ Three things still need a human. See
 | 36 | Task tags — add, remove, search, and filter by tag | ✅ |
 | 37 | Monthly/yearly recurrence, plus an optional recurrence end date | ✅ |
 
-## v1.4 feature work (in progress)
+## App store readiness (in progress)
 
 | # | Improvement | Status |
 |---|-------------|--------|
 | 38 | Push notifications for nudges (FCM v1 API, device_tokens table, send-nudge-push edge function, client wiring) | Code done — needs a real Firebase project. See [docs/PUSH_NOTIFICATIONS_SETUP.md](docs/PUSH_NOTIFICATIONS_SETUP.md) |
+| 39 | Real app icon on Android/iOS (was the default Flutter logo) + the web favicon/PWA icons, which didn't exist at all | ✅ |
+| 40 | Real app identifier — `com.namasteneedham.duotask`, off the `com.example.duotask` Flutter placeholder, on every platform | ✅ |
+| 41 | Fixed the Android build — it couldn't compile at all (missing core library desugaring for `flutter_local_notifications`, and `speech_to_text` using a retired Flutter embedding API; removed the latter, unused anywhere in `lib/`) | ✅ |
+
+Still needed before a real store submission: a release signing config
+(the release build type currently signs with the **debug** keystore —
+fine for local testing, not acceptable for Play Store), and an actual
+device/simulator run to eyeball the mobile UI once Xcode is set up.
 
 ## Next phase
 
