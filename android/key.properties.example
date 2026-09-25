@@ -1,0 +1,10 @@
+# Copy this file to android/key.properties (gitignored, never commit the
+# real one) and fill in real values. See docs/RELEASE_SIGNING_SETUP.md for
+# how to generate the keystore itself.
+storePassword=<the keystore password you chose when generating it>
+keyPassword=<the key password you chose — often the same as storePassword>
+keyAlias=upload
+# Path is resolved relative to android/app/, since that's where build.gradle.kts
+# reads it from. If the keystore file lives in android/ (next to this file),
+# use ../release-keystore.jks. An absolute path also works.
+storeFile=../release-keystore.jks

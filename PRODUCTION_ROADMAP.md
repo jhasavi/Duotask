@@ -79,11 +79,12 @@ Three things still need a human. See
 | 39 | Real app icon on Android/iOS (was the default Flutter logo) + the web favicon/PWA icons, which didn't exist at all | ✅ |
 | 40 | Real app identifier — `com.namasteneedham.duotask`, off the `com.example.duotask` Flutter placeholder, on every platform | ✅ |
 | 41 | Fixed the Android build — it couldn't compile at all (missing core library desugaring for `flutter_local_notifications`, and `speech_to_text` using a retired Flutter embedding API; removed the latter, unused anywhere in `lib/`) | ✅ |
+| 42 | Release signing config — `build.gradle.kts` now uses a real keystore the moment `android/key.properties` exists, falling back to debug signing (with a loud warning) until then | Code done — needs you to generate the actual keystore. See [docs/RELEASE_SIGNING_SETUP.md](docs/RELEASE_SIGNING_SETUP.md) |
 
-Still needed before a real store submission: a release signing config
-(the release build type currently signs with the **debug** keystore —
-fine for local testing, not acceptable for Play Store), and an actual
-device/simulator run to eyeball the mobile UI once Xcode is set up.
+Still needed before a real store submission: actually generating the
+release keystore (doc above — deliberately a manual step, since losing
+that credential is unrecoverable), and an actual device/simulator run to
+eyeball the mobile UI once Xcode is set up.
 
 ## Next phase
 

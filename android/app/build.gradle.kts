@@ -1,8 +1,30 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Release signing. android/key.properties is gitignored and not committed —
+// see android/key.properties.example and docs/RELEASE_SIGNING_SETUP.md for
+// how to generate the actual keystore. Falls back to debug signing with a
+// loud warning when it's absent, so `flutter run --release` still works for
+// local testing without it — but that fallback must never reach an actual
+// Play Store upload, which is why it's a printed warning, not silent.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+} else {
+    logger.warn(
+        "⚠️  android/key.properties not found — release builds will be signed " +
+            "with the DEBUG key. This is fine for local testing, but such a build " +
+            "must never be uploaded to the Play Store. See " +
+            "docs/RELEASE_SIGNING_SETUP.md to generate a real release keystore."
+    )
 }
 
 android {
@@ -33,11 +55,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

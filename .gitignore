@@ -48,6 +48,15 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Release signing — the real keystore and its passwords must never be
+# committed. See android/key.properties.example and
+# docs/RELEASE_SIGNING_SETUP.md.
+/android/key.properties
+/android/*.jks
+/android/*.keystore
+/android/app/*.jks
+/android/app/*.keystore
+
 # Environment files
 .env
 .env.local
