@@ -41,11 +41,9 @@ dependencies:
   
   # Natural Language Processing (for task input)
   timeago: ^3.6.0
-  
-  # Speech to Text
-  speech_to_text: ^6.6.0
+
   permission_handler: ^11.2.0
-  
+
   # Calendar
   table_calendar: ^3.0.9
   # device_calendar: ^4.3.3  # Commented out - will be added in future update
