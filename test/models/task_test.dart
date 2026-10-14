@@ -93,5 +93,23 @@ void main() {
 
       expect(overdueTask.isOverdue, true);
     });
+
+    test('copyWith(clearCompletedAt: true) clears completedAt', () {
+      final task = Task(
+        id: '1',
+        title: 'Done',
+        createdById: 'user1',
+        status: TaskStatus.completed,
+        priority: TaskPriority.normal,
+        recurrence: TaskRecurrence.none,
+        createdAt: DateTime.now(),
+        completedAt: DateTime.now(),
+        isPersonal: false,
+      );
+
+      expect(task.copyWith(completedAt: null).completedAt, isNotNull,
+          reason: 'a null argument means "keep the existing value"');
+      expect(task.copyWith(clearCompletedAt: true).completedAt, isNull);
+    });
   });
 }

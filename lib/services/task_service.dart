@@ -14,9 +14,17 @@ class TaskService extends ChangeNotifier {
   RealtimeChannel? _taskChannel;
   String? _currentUserId;
 
+  /// Maps a completed recurring task's id to the id of the next occurrence
+  /// that completing it auto-created, so an Undo can remove that occurrence.
+  final Map<String, String> _spawnedOccurrences = {};
+
   TaskService(this._supabase, [this._notificationService]);
 
   List<Task> get tasks => _tasks;
+
+  /// Seeds the local task list without a network load (tests only).
+  @visibleForTesting
+  set tasksForTesting(List<Task> tasks) => _tasks = List.of(tasks);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -347,7 +355,8 @@ class TaskService extends ChangeNotifier {
         // Create recurring task if completed and has recurrence
         if (updatedTask.status == TaskStatus.completed &&
             task.recurrence != TaskRecurrence.none) {
-          await createRecurringTask(task);
+          final next = await createRecurringTask(task);
+          if (next != null) _spawnedOccurrences[task.id] = next.id;
         }
 
         notifyListeners();
@@ -377,27 +386,43 @@ class TaskService extends ChangeNotifier {
     }
   }
 
+  /// Undoes a completion made by [cycleTaskStatus]: moves the task back to
+  /// claimed, clears its completion time, and deletes the next occurrence that
+  /// completing a recurring task auto-created.
+  ///
+  /// [task] may be the pre-completion snapshot (as the Undo snackbar holds);
+  /// the current local state is looked up by id.
   Future<bool> revertCompletion(Task task) async {
-    if (task.status != TaskStatus.completed) return false;
+    final index = _tasks.indexWhere((t) => t.id == task.id);
+    final current = index != -1 ? _tasks[index] : task;
+    if (current.status != TaskStatus.completed) return false;
 
     _clearError();
 
     try {
+      final now = DateTime.now();
       await _supabase.from('tasks').update({
         'status': TaskStatus.claimed.name,
         'completed_at': null,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': now.toIso8601String(),
       }).eq('id', task.id);
 
-      final index = _tasks.indexWhere((t) => t.id == task.id);
-      if (index != -1) {
-        _tasks[index] = task.copyWith(
-          status: TaskStatus.claimed,
-          completedAt: null,
-          updatedAt: DateTime.now(),
-        );
-        notifyListeners();
+      final spawnedId = _spawnedOccurrences.remove(task.id);
+      if (spawnedId != null) {
+        await _supabase.from('tasks').delete().eq('id', spawnedId);
+        _tasks.removeWhere((t) => t.id == spawnedId);
+        await _notificationService?.cancelTaskReminder(spawnedId);
       }
+
+      final currentIndex = _tasks.indexWhere((t) => t.id == task.id);
+      if (currentIndex != -1) {
+        _tasks[currentIndex] = current.copyWith(
+          status: TaskStatus.claimed,
+          clearCompletedAt: true,
+          updatedAt: now,
+        );
+      }
+      notifyListeners();
 
       return true;
     } catch (e) {
