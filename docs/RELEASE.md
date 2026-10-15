@@ -92,8 +92,11 @@ supabase link --project-ref <test-project-ref>
 supabase db push
 ```
 
-The baseline migration provisions it into the same shape as production. Then
-add these secrets:
+The baseline migration provisions it into the same shape as production.
+(The baseline only runs on an empty database. On production, which was
+provisioned by hand, mark it applied once instead, before the first deploy:
+`supabase migration repair --status applied 00000000000000`. See
+docs/MONETIZATION.md §5.) Then add these secrets:
 
 | Secret |
 |---|

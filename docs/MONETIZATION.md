@@ -69,8 +69,7 @@ first; repeat in live mode for production.
       ```
       The baseline used to fail on an empty database (`tasks` referenced
       `pairings` before it was created). That's fixed: `pairings` is now
-      created first, and the resulting schema is identical, so production,
-      where the baseline is already recorded as applied, is unaffected. The
+      created first, and the resulting schema is identical. The
       full chain was verified on 2026-10-15 against an empty local Postgres 14
       with stubbed `auth`/`vault`/`cron`/`net`: all 13 migrations apply with
       the secrets set; without them, only the two cron migrations fail.
@@ -139,6 +138,21 @@ first; repeat in live mode for production.
       secrets). Without them the upgrade button reads "Premium is coming soon."
 - [ ] Review `assets/docs/privacy_policy.md` (updated for usage events and
       Stripe) and add refund/cancellation terms to `terms_of_service.md`.
+- [ ] Mark the baseline as applied on production **before** the first push.
+      Production was provisioned by hand and CI's `db push` has never run
+      there, so its migration history probably lacks `00000000000000`:
+      ```bash
+      supabase link --project-ref <production-ref>
+      supabase migration list        # check what the remote already records
+      supabase migration repair --status applied 00000000000000
+      ```
+      Without this, `db push` stops at the baseline's guard ("Baseline schema
+      already present"). The guard is there because re-running the baseline on
+      a migrated database would silently revert the RPC hardening and re-grant
+      `anon` access to `billing_customers` and other locked-down tables.
+      `migration list` may also show other hand-applied migrations missing
+      from the remote; repair those the same way once you've confirmed they're
+      really in the live schema.
 - [ ] Push `main`. `deploy.yml` applies the three pending migrations and
       deploys the web build. Watch the `supabase migration list` output in the
       *Apply database migrations* step.

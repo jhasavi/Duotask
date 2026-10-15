@@ -10,15 +10,33 @@
 -- the same shape as production, which is what makes an automated test project
 -- — and therefore automated integration testing — possible.
 --
--- Statements are guarded (IF NOT EXISTS / OR REPLACE / DROP ... IF EXISTS) so
--- applying this to an already-provisioned database is a no-op.
+-- This file is for EMPTY databases only. Re-running it on a database that
+-- has later migrations is not a no-op: CREATE OR REPLACE / DROP POLICY /
+-- GRANT ALL silently revert the hardened RPCs and re-grant anon and
+-- authenticated full access to tables that later migrations locked down
+-- (billing_customers, device_tokens, nudges, email_preferences). So it stops
+-- with an error if public.users already exists.
+--
+-- Production was provisioned by hand and CI's `db push` has never run there,
+-- so its migration history likely does not record this file. Before the first
+-- `db push` to production, mark it as applied (the guard below enforces this):
+--
+--   supabase migration repair --status applied 00000000000000
 --
 -- 2026-10-15: the pairings table is now created before tasks. Previously
 -- tasks.pair_id referenced pairings(id) before pairings existed, so this file
 -- failed on an empty database. The change is schema-neutral: pairings has no
 -- dependency on tasks, tasks' columns and their order are unchanged, and the
--- FK keeps its default name (tasks_pair_id_fkey). Production already records
--- this migration as applied, so it is not re-run there.
+-- FK keeps its default name (tasks_pair_id_fkey); verified by diffing pg_dump
+-- output against the previous version.
+
+DO $$
+BEGIN
+  IF to_regclass('public.users') IS NOT NULL THEN
+    RAISE EXCEPTION 'Baseline schema already present; this migration only provisions empty databases.'
+      USING HINT = 'Mark it applied instead: supabase migration repair --status applied 00000000000000';
+  END IF;
+END $$;
 
 -- DuoTask Database Schema
 -- Execute this in your Supabase SQL Editor
@@ -341,10 +359,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Enable realtime for all tables
-ALTER PUBLICATION supabase_realtime ADD TABLE users;
-ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE pairings;
+-- Enable realtime for all tables (skipping any already in the publication, since
+-- ADD TABLE errors on a table that's already a member)
+DO $$
+DECLARE
+  t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['users', 'tasks', 'pairings'] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = t
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', t);
+    END IF;
+  END LOOP;
+END $$;
 
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
