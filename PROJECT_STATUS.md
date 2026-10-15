@@ -143,6 +143,7 @@ backlog.
 | [README.md](README.md) | Overview and quick start |
 | [SECURITY.md](SECURITY.md) | Credential handling, guards, incident record |
 | [docs/RELEASE.md](docs/RELEASE.md) | How releases work; one-time setup |
+| [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) | **Start here:** ordered next steps and monetization plan |
 | [docs/MONETIZATION.md](docs/MONETIZATION.md) | Premium (Stripe, web) go-live; usage analytics queries |
 | [TESTING_GUIDE.md](TESTING_GUIDE.md) | The two test suites |
 | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Local setup and structure |
