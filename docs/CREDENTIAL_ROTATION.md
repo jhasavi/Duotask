@@ -4,12 +4,41 @@ Four credentials were exposed and must be replaced. They are out of the
 working tree but remain in git history, so **removing them changed nothing —
 rotation is the only fix.**
 
-Good news: every consumer already reads its credential from the environment,
-so rotating requires no code changes. You are updating configuration in four
-dashboards.
+*Status as of 2026-10-15: none of the four has been rotated. The public
+`/assets/.env` leak itself is closed (verified 2026-09-16).*
 
-Work top to bottom. Each section says what to revoke, where the new value
-goes, and how to confirm it worked.
+## Do-it-now checklist (≈45 minutes, in this order)
+
+The order matters: revoke the most dangerous credential first, and do the
+Supabase rotation last because it is the only one with user-visible side
+effects (it changes the anon key, and the web app must be rebuilt with it).
+
+1. [ ] **Look for misuse first** (5 min) — §0 below. Screenshot anything odd.
+2. [ ] **Resend** (5 min) — delete key `re_jR6ucccW_…`, create a
+       *Sending access* key, then:
+       `supabase secrets set RESEND_API_KEY=<new> --project-ref <ref>` — §1
+3. [ ] **Discord** (2 min) — Developer Portal → DuoTask → Bot → *Reset Token*.
+       The bot isn't deployed anywhere; if you don't plan to run it, delete
+       the application instead — §2
+4. [ ] **Vercel** (3 min) — https://vercel.com/account/tokens → delete every
+       token older than today → create one scoped to DuoTask → GitHub secret
+       `VERCEL_TOKEN` — §4
+5. [ ] **Supabase service_role** (15 min) — rotate, then update **every**
+       place the anon key lives (GitHub secret `SUPABASE_ANON_KEY`, Vault
+       secret `anon_key`, your local `.env`) and redeploy the web app — §3
+6. [ ] **Verify** (5 min) — trigger the digest and a nudge, sign in on the
+       web app, run `scripts/smoke_test.sh https://duotask.namasteneedham.com`
+7. [ ] Tick the boxes in [PROJECT_STATUS.md](../PROJECT_STATUS.md) and the
+       checklist at the bottom of this file.
+
+> **Before you push anything:** `main` has local commits that are not on
+> GitHub yet, starting with `338dac9` (adds
+> `supabase/migrations/20261014000001_harden_rpc_permissions.sql`) and the
+> monetization work after it, which adds three more migrations.
+> `deploy.yml` runs `supabase db push` against **production** on every push
+> to `main`, so pushing applies all of them immediately. Rotate first, apply
+> the migrations to a staging project
+> ([MONETIZATION.md](MONETIZATION.md#go-live)), then push.
 
 ---
 
@@ -97,32 +126,49 @@ This one bypasses **all** row-level security — it can read and write every
 row in every table, and create or delete any user. It was committed in
 `test/integration/signup_race_test.dart` on a pushed branch.
 
-**Revoke and replace**
+**Know this before you start:** the legacy `anon` and `service_role` keys
+are both JWTs signed with the project's JWT secret. There is no way to
+invalidate *only* the leaked `service_role` key — whichever route you take,
+the **anon key changes too**, and existing user sessions may be signed out
+once. That is acceptable at DuoTask's size; just do it in one sitting.
 
-1. Supabase Dashboard → Project Settings → **API Keys**
-2. Locate the `service_role` secret → **Rotate** (or in newer projects,
-   revoke the legacy key and issue a new secret key)
-3. Copy the new value
+**Revoke and replace** (pick one route; check the dashboard wording, which
+Supabase has been changing)
 
-> Rotating JWT-based keys may briefly interrupt clients using the old key.
-> Nothing in the Flutter app uses `service_role` — only CI and edge functions
-> do — so user-facing impact should be none.
+- *Route A, simplest:* Dashboard → Project Settings → **JWT Keys** (older
+  projects: *API → JWT Settings*) → **Generate a new JWT secret / rotate**.
+  Both legacy keys are reissued; copy the new `anon` key.
+- *Route B, Supabase's newer model:* Project Settings → **API Keys** → create
+  a *publishable* key and a *secret* key, switch every consumer listed below
+  to them, then **disable the legacy JWT-based keys**. More work, but future
+  secret-key leaks can be revoked individually.
 
-**Where it goes**
+**Where the new values go**
 
-- GitHub → repository → Settings → Secrets and variables → Actions →
-  `SUPABASE_TEST_SERVICE_ROLE_KEY` (use your **test** project's key here, not
-  production's)
-- Anywhere else you kept a copy — remove those copies rather than updating them
+- [ ] GitHub → Settings → Secrets and variables → Actions → `SUPABASE_ANON_KEY`
+- [ ] Supabase Vault secret `anon_key` (read by the email-digest cron job and
+      the nudge-push trigger) — SQL editor:
+      `select vault.update_secret((select id from vault.secrets where name = 'anon_key'), '<new anon key>');`
+- [ ] Your local `.env` (`SUPABASE_ANON_KEY=`)
+- [ ] `SUPABASE_TEST_SERVICE_ROLE_KEY` in GitHub secrets — use your **test**
+      project's key, never production's
+- [ ] Edge functions read `SUPABASE_SERVICE_ROLE_KEY` from the platform,
+      which injects the current value — nothing to set, but redeploy them
+      once so no warm instance holds the old value:
+      `supabase functions deploy daily-email-digest send-nudge-push --project-ref <ref>`
+      (and `stripe-webhook` once it exists)
+- [ ] Rebuild and redeploy the web app so it ships the new anon key
+      (`deploy.yml` → *Run workflow*, or `scripts/build_web.sh` + Vercel)
+- [ ] Delete any other copy of the old keys (notes, password managers,
+      shell history) rather than updating it
 
 **Verify**
 
-Once the test project exists, the `integration.yml` workflow run is the check.
-
-**Also rotate the anon key?** Not necessary. The anon key is a public,
-client-side credential by design — it ships in the web bundle and is protected
-by row-level security, not secrecy. Rotating it forces a rebuild for no
-security benefit.
+- Sign in on https://duotask.namasteneedham.com (a stale anon key shows up as
+  401s on every request)
+- Send yourself a nudge → push arrives (exercises Vault `anon_key`)
+- `supabase functions invoke daily-email-digest --project-ref <ref>` → 200
+- Once the test project exists, a green `integration.yml` run
 
 ---
 
@@ -148,17 +194,11 @@ The first successful `deploy.yml` run.
 
 ---
 
-## 5. Confirm the leak is closed
+## 5. Confirm the leak is closed — *done 2026-09-16*
 
-The exposed file is still being served right now. After you deploy the
-rebuilt bundle:
-
-```bash
-scripts/smoke_test.sh https://duotask.namasteneedham.com
-```
-
-It currently **fails** on `/assets/.env`. It must pass before you consider
-this closed.
+Production now serves a bundle with no `/assets/.env`, and
+`scripts/smoke_test.sh https://duotask.namasteneedham.com` passes. Re-run it
+after the redeploy in §3 as a regression check.
 
 ---
 
@@ -186,7 +226,7 @@ nothing, because copies may already exist.
 - [ ] Reviewed Resend, Supabase auth, and Discord logs for misuse
 - [ ] Resend key deleted and replaced; digest send verified
 - [ ] Discord token reset (or application deleted)
-- [ ] Supabase `service_role` key rotated
 - [ ] Vercel token rotated
-- [ ] Rebuilt bundle deployed
-- [ ] `scripts/smoke_test.sh` passes against production
+- [ ] Supabase JWT keys rotated; new anon key in GitHub secrets, Vault and `.env`
+- [ ] Edge functions redeployed; web app rebuilt and redeployed with the new anon key
+- [x] `scripts/smoke_test.sh` passes against production (2026-09-16; re-run after the redeploy)

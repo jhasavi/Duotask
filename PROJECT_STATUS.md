@@ -1,12 +1,12 @@
 # DuoTask — Project Status
 
-*Last updated: September 16, 2026*
+*Last updated: October 15, 2026*
 
 ## Current version: 1.2.0
 
 | | |
 |---|---|
-| Branch | `main`, synced with `origin/main` |
+| Branch | `main`, **ahead of `origin/main`** — unpushed: `338dac9` (RPC hardening migration) and the monetization work. Pushing runs `supabase db push` on production. |
 | Hermetic tests | 80 passing |
 | Integration tests | 5 written, **not yet executed** (need a test project) |
 | Static analysis | **0 issues** (was 169) |
@@ -27,13 +27,18 @@ A Resend API key and a Discord bot token were served publicly at
 hardcoded in a pushed test file. They are out of the working tree but remain
 in git history.
 
-- [ ] Rotate `RESEND_API_KEY`
-- [ ] Reset the Discord bot token
-- [ ] Rotate the Supabase `service_role` key
-- [ ] Rotate the Vercel token
-- [ ] Check Resend and Supabase auth logs for unauthorized use
+Still **not rotated** as of 2026-10-15. Do these in order (~45 min):
 
-Step-by-step: **[docs/CREDENTIAL_ROTATION.md](docs/CREDENTIAL_ROTATION.md)**.
+- [ ] Check Resend, Supabase auth and Discord audit logs for unauthorized use
+- [ ] Rotate `RESEND_API_KEY` (delete old key first, then `supabase secrets set`)
+- [ ] Reset the Discord bot token (or delete the unused application)
+- [ ] Rotate the Vercel token → GitHub secret `VERCEL_TOKEN`
+- [ ] Rotate the Supabase JWT keys. **This also changes the anon key**: update
+      GitHub `SUPABASE_ANON_KEY`, Vault `anon_key` and `.env`, redeploy edge
+      functions, then rebuild and redeploy the web app
+
+Step-by-step with exact commands:
+**[docs/CREDENTIAL_ROTATION.md](docs/CREDENTIAL_ROTATION.md)**.
 Background: [SECURITY.md](SECURITY.md).
 
 ### 2. ~~Redeploy~~ — *done, verified 2026-09-16*
@@ -138,6 +143,7 @@ backlog.
 | [README.md](README.md) | Overview and quick start |
 | [SECURITY.md](SECURITY.md) | Credential handling, guards, incident record |
 | [docs/RELEASE.md](docs/RELEASE.md) | How releases work; one-time setup |
+| [docs/MONETIZATION.md](docs/MONETIZATION.md) | Premium (Stripe, web) go-live; usage analytics queries |
 | [TESTING_GUIDE.md](TESTING_GUIDE.md) | The two test suites |
 | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Local setup and structure |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design and schema |
