@@ -5,6 +5,30 @@ All notable changes to DuoTask will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-10-15 — Premium (web) and usage analytics
+
+Not deployed. See [docs/MONETIZATION.md](docs/MONETIZATION.md) for go-live.
+
+### Added
+- **DuoTask Premium (web).** `users.is_premium` / `premium_until`, set only by
+  the new `stripe-webhook` Edge Function (Stripe signature verified). A guard
+  trigger rejects client writes to those columns. One subscription covers the
+  pair (`get_premium_status()` RPC). Checkout is a Stripe Payment Link
+  configured by `STRIPE_PAYMENT_LINK_URL`; "Manage subscription" uses
+  `STRIPE_CUSTOMER_PORTAL_URL`.
+- **Streaks & Stats screen** (Premium): current/best pair streak, last-7-day
+  bars, 30-day partner split. Free users see a paywall with an upgrade button.
+  Reachable from the home app bar and Settings → DuoTask Premium.
+- **Usage events** in a private `analytics.events` table, written by database
+  triggers: signup, pair_created, task_created, task_completed,
+  task_uncompleted, nudge_sent, premium_started, premium_ended. Backfilled from
+  existing rows.
+
+### Changed
+- Credential rotation runbook rewritten as an ordered checklist; corrected:
+  rotating the Supabase `service_role` key also changes the anon key.
+- Privacy policy: describes usage events and Stripe accurately.
+
 ## [Unreleased] - 2026-08-14
 
 Release-engineering and security work. No user-facing feature changes.

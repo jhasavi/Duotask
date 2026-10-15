@@ -46,6 +46,8 @@ flutter build web --release \
   --dart-define=GOOGLE_WEB_CLIENT_ID="${GOOGLE_WEB_CLIENT_ID:-}" \
   --dart-define=GOOGLE_IOS_CLIENT_ID="${GOOGLE_IOS_CLIENT_ID:-}" \
   --dart-define=GOOGLE_ANDROID_CLIENT_ID="${GOOGLE_ANDROID_CLIENT_ID:-}" \
+  --dart-define=STRIPE_PAYMENT_LINK_URL="${STRIPE_PAYMENT_LINK_URL:-}" \
+  --dart-define=STRIPE_CUSTOMER_PORTAL_URL="${STRIPE_CUSTOMER_PORTAL_URL:-}" \
   --dart-define=APP_NAME="${APP_NAME:-DuoTask}" \
   --dart-define=APP_VERSION="$APP_VERSION" \
   --dart-define=DEBUG_MODE=false

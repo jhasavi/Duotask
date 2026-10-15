@@ -134,6 +134,10 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           WEB_REDIRECT_URL: ${{ secrets.WEB_REDIRECT_URL }}
           GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          # Public URLs (repository *variables*, not secrets); unset hides
+          # the upgrade button rather than failing the build.
+          STRIPE_PAYMENT_LINK_URL: ${{ vars.STRIPE_PAYMENT_LINK_URL }}
+          STRIPE_CUSTOMER_PORTAL_URL: ${{ vars.STRIPE_CUSTOMER_PORTAL_URL }}
         run: scripts/build_web.sh
 
       - name: Verify no secrets in bundle

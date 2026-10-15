@@ -54,6 +54,7 @@ scan() {
 scan "Resend API key"    're_[A-Za-z0-9]{8}_[A-Za-z0-9]{20,}'
 scan "Discord bot token" 'M[A-Za-z0-9]{23,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}'
 scan "Vercel OIDC token" 'VERCEL_OIDC_TOKEN'
+scan "Stripe secret key"  '(sk|rk)_(live|test)_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}'
 
 # 4. service_role JWTs are base64 inside the token, so decode-scan separately.
 while IFS= read -r token_file; do

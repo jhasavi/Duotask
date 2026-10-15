@@ -92,6 +92,8 @@ jobs:
             ':!scripts/verify_bundle.sh' && FOUND=1
           # Discord bot tokens
           git grep -nE 'M[A-Za-z0-9]{23,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}' -- . ':!*.lock' ':!*SETUP.md' && FOUND=1
+          # Stripe secret/restricted keys and webhook signing secrets
+          git grep -nE '(sk|rk)_(live|test)_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}' -- . ':!*.lock' && FOUND=1
           if [ "$FOUND" = "1" ]; then
             echo "::error::Secret-shaped string found in tracked files."
             exit 1

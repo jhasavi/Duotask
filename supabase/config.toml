@@ -16,3 +16,8 @@ major_version = 15
 [studio]
 enabled = true
 port = 54323
+
+# Stripe calls this endpoint without a Supabase JWT; the function verifies
+# the Stripe-Signature header instead.
+[functions.stripe-webhook]
+verify_jwt = false

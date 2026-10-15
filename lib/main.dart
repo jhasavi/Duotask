@@ -18,6 +18,7 @@ import 'services/nudge_service.dart';
 import 'services/preferences_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/email_preferences_service.dart';
+import 'services/premium_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -171,6 +172,12 @@ class DuoTaskApp extends StatelessWidget {
 
         ChangeNotifierProvider<NudgeService>(
           create: (context) => NudgeService(
+            context.read<SupabaseClient>(),
+          ),
+        ),
+
+        ChangeNotifierProvider<PremiumService>(
+          create: (context) => PremiumService.supabase(
             context.read<SupabaseClient>(),
           ),
         ),

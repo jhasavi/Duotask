@@ -6,10 +6,13 @@ import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
 import '../services/pairing_service.dart';
 import '../services/email_preferences_service.dart';
+import '../services/premium_service.dart';
+import '../widgets/premium_widgets.dart';
 import '../config/app_config.dart';
 import '../config/theme.dart';
 import 'auth_screen.dart';
 import 'pairing_screen.dart';
+import 'stats_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final userId = context.read<AuthService>().currentUser?.id;
       if (userId != null) {
         context.read<EmailPreferencesService>().loadPreferences(userId);
+        context.read<PremiumService>().refresh();
       }
     });
   }
@@ -73,6 +77,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+          const Divider(),
+
+          // Premium Section
+          const _SectionHeader(title: 'DuoTask Premium'),
+          Consumer<PremiumService>(
+            builder: (context, premium, _) {
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.local_fire_department),
+                    title: const Text('Streaks & Stats'),
+                    subtitle: Text(premiumStatusLabel(premium)),
+                    trailing: premium.isPremium
+                        ? null
+                        : const Icon(Icons.lock_outline, size: 18),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const StatsScreen()),
+                    ),
+                  ),
+                  if (!premium.isPremium && premium.canUpgrade)
+                    ListTile(
+                      key: const Key('settings_upgrade_tile'),
+                      leading: const Icon(
+                        Icons.workspace_premium,
+                        color: AppTheme.primaryColor,
+                      ),
+                      title: const Text('Upgrade to Premium'),
+                      subtitle:
+                          const Text('One subscription covers both of you'),
+                      onTap: () => openPremiumCheckout(context),
+                    ),
+                  if (premium.isPremium &&
+                      !premium.status.viaPartner &&
+                      premium.canManage)
+                    ListTile(
+                      leading: const Icon(Icons.receipt_long),
+                      title: const Text('Manage subscription'),
+                      onTap: () => openPremiumPortal(context),
+                    ),
+                ],
+              );
+            },
+          ),
+
           const Divider(),
 
           // Notifications Section
@@ -555,9 +603,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed == true) {
       if (!mounted) return;
       final authService = context.read<AuthService>();
+      final premiumService = context.read<PremiumService>();
       final navigator = Navigator.of(context);
 
       await authService.signOut();
+      premiumService.reset();
 
       // Ensure navigation resets to the auth screen after sign out
       navigator.pushAndRemoveUntil(

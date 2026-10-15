@@ -52,6 +52,29 @@ class AppConfig {
       ? const String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID')
       : (dotenv.env['GOOGLE_ANDROID_CLIENT_ID'] ?? '');
 
+  // Premium (web, Stripe). Both are public URLs, not secrets: a Stripe
+  // Payment Link for the subscription, and the no-code customer portal
+  // login link for managing/cancelling it. Empty disables the button.
+  static String get stripePaymentLinkUrl => const String.fromEnvironment(
+            'STRIPE_PAYMENT_LINK_URL',
+            defaultValue: '',
+          ) !=
+          ''
+      ? const String.fromEnvironment('STRIPE_PAYMENT_LINK_URL')
+      : (dotenv.isInitialized
+          ? (dotenv.env['STRIPE_PAYMENT_LINK_URL'] ?? '')
+          : '');
+
+  static String get stripeCustomerPortalUrl => const String.fromEnvironment(
+            'STRIPE_CUSTOMER_PORTAL_URL',
+            defaultValue: '',
+          ) !=
+          ''
+      ? const String.fromEnvironment('STRIPE_CUSTOMER_PORTAL_URL')
+      : (dotenv.isInitialized
+          ? (dotenv.env['STRIPE_CUSTOMER_PORTAL_URL'] ?? '')
+          : '');
+
   // App
   static String get appName => const String.fromEnvironment(
             'APP_NAME',

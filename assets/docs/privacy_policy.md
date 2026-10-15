@@ -37,11 +37,13 @@ Welcome to DuoTask ("we," "our," or "us"). We respect your privacy and are commi
 - Browser type and version
 - App version
 
-**Analytics Data:**
-- Pages/screens viewed
-- Time spent in app
-- Feature usage statistics
-- Error logs and crash reports
+**Usage Events:**
+- When you sign up, pair with a partner, create or complete a task, send a
+  nudge, or start or end a Premium subscription, we record the event type,
+  your account ID and the time. We use this only to understand how DuoTask is
+  used. We do not record task titles, descriptions or nudge messages for
+  this purpose, we do not use third-party tracking or advertising SDKs, and
+  these records are deleted when you delete your account.
 
 ### 1.3 Third-Party Data
 
@@ -106,6 +108,12 @@ We share data with trusted third-party service providers:
 - Processes OAuth sign-in
 - Verifies identity
 - [Privacy Policy](https://policies.google.com/privacy)
+
+**Stripe (Payments, Premium only):**
+- Processes Premium subscription payments; your card details go directly to
+  Stripe and are never seen or stored by DuoTask
+- We store your Stripe customer and subscription IDs and subscription status
+- [Privacy Policy](https://stripe.com/privacy)
 
 **Firebase (Notifications):**
 - Delivers push notifications

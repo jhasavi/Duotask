@@ -28,8 +28,8 @@ Web is not covered — mobile only for this first pass.
 
 ### Task Analytics
 - Completion rate graphs
-- Streak tracking
-- Partner collaboration stats
+- ~~Streak tracking~~ — shipped as Premium (Streaks & Stats screen)
+- ~~Partner collaboration stats~~ — shipped as Premium (30-day split, 7-day bars)
 
 ### Multi-Partner Support
 - Teams beyond two people

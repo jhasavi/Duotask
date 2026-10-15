@@ -25,6 +25,7 @@ import '../utils/task_sort.dart';
 import 'pairing_screen.dart';
 import 'task_detail_screen.dart';
 import 'settings_screen.dart';
+import 'stats_screen.dart';
 import 'nudge_inbox_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -539,6 +540,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
+              );
+            },
+          ),
+
+          // Streaks & stats (Premium)
+          IconButton(
+            icon: const Icon(Icons.local_fire_department_outlined),
+            tooltip: 'Streaks & Stats',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StatsScreen(),
+                ),
               );
             },
           ),
