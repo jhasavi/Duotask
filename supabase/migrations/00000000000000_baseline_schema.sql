@@ -12,6 +12,13 @@
 --
 -- Statements are guarded (IF NOT EXISTS / OR REPLACE / DROP ... IF EXISTS) so
 -- applying this to an already-provisioned database is a no-op.
+--
+-- 2026-10-15: the pairings table is now created before tasks. Previously
+-- tasks.pair_id referenced pairings(id) before pairings existed, so this file
+-- failed on an empty database. The change is schema-neutral: pairings has no
+-- dependency on tasks, tasks' columns and their order are unchanged, and the
+-- FK keeps its default name (tasks_pair_id_fkey). Production already records
+-- this migration as applied, so it is not re-run there.
 
 -- DuoTask Database Schema
 -- Execute this in your Supabase SQL Editor
@@ -29,6 +36,18 @@ CREATE TABLE IF NOT EXISTS users (
   paired_with_id UUID REFERENCES users(id) ON DELETE SET NULL,
   paired_with_name TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Pairings table
+CREATE TABLE IF NOT EXISTS pairings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  pairing_code TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -50,18 +69,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   is_personal BOOLEAN DEFAULT FALSE,
   visibility TEXT NOT NULL DEFAULT 'personal' CHECK (visibility IN ('personal', 'group')),
   pair_id UUID REFERENCES pairings(id) ON DELETE SET NULL
-);
-
--- Pairings table
-CREATE TABLE IF NOT EXISTS pairings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  pairing_code TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'cancelled')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  accepted_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes for better query performance

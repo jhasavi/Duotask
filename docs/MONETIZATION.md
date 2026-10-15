@@ -48,18 +48,32 @@ first; repeat in live mode for production.
 
 - [ ] Create a project, e.g. `duotask-staging`. The same project can serve as
       the CI **test** project that PROJECT_STATUS.md asks for.
-- [ ] Add the Vault secrets the email/push migrations require (`project_url`,
-      `anon_key`); see the header of
-      `supabase/migrations/20250625000005_setup_email_cron.sql`.
+- [ ] **Before** `db push`, add the Vault secrets in the SQL editor (new
+      projects already have the `supabase_vault` extension):
+      ```sql
+      select vault.create_secret('https://<staging-ref>.supabase.co', 'project_url');
+      select vault.create_secret('<staging anon key>', 'anon_key');
+      ```
+      Which migrations depend on them:
+      - `20250625000005_setup_email_cron.sql` and
+        `20260828000002_email_cron_hourly.sql` **fail** without them (they
+        raise before scheduling the email cron job), and `db push` stops there.
+      - `20260917000001_device_tokens_and_nudge_push.sql` reads them at
+        runtime only; without them the nudge-push trigger skips the HTTP call.
+      - Every other migration, including the two Premium/analytics ones,
+        doesn't use Vault.
 - [ ] Apply the migrations:
       ```bash
       supabase link --project-ref <staging-ref>
       supabase db push
       ```
-      **Known issue:** `00000000000000_baseline_schema.sql` can't run on an
-      empty database. `tasks` references `pairings` before `pairings` is
-      created (found while testing this work against a local Postgres). Until
-      that's fixed, `db push` to a fresh project fails at the baseline.
+      The baseline used to fail on an empty database (`tasks` referenced
+      `pairings` before it was created). That's fixed: `pairings` is now
+      created first, and the resulting schema is identical, so production,
+      where the baseline is already recorded as applied, is unaffected. The
+      full chain was verified on 2026-10-15 against an empty local Postgres 14
+      with stubbed `auth`/`vault`/`cron`/`net`: all 13 migrations apply with
+      the secrets set; without them, only the two cron migrations fail.
 - [ ] Check the new objects exist: `select * from get_premium_status();` fails
       with "Not authenticated" in the SQL editor (expected), and
       `select count(*) from analytics.events;` returns the backfill.
