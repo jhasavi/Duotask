@@ -94,7 +94,18 @@ We use your information to:
 - Your display name and profile picture are visible to your partner
 - Pairing status and activity are shared
 
-### 3.2 With Service Providers
+### 3.2 Tasks You Send by Link
+- When you send a task by link, anyone who has the link can see that task's
+  title, notes, due date, priority and status, and your display name (unless
+  it is your email address, which is never shown)
+- They can say they'll do it, say they can't, or mark it done, without an
+  account. You see their response in the app
+- If you type their name, we store it with the link so we can show it to you
+- Links stop working after 30 days, or as soon as you turn them off
+- We don't send the message ourselves; you send it from your own phone or
+  email, so we never receive the recipient's phone number or email address
+
+### 3.3 With Service Providers
 
 We share data with trusted third-party service providers:
 
@@ -120,7 +131,7 @@ We share data with trusted third-party service providers:
 - Manages device tokens
 - [Privacy Policy](https://firebase.google.com/support/privacy)
 
-### 3.3 Legal Requirements
+### 3.4 Legal Requirements
 
 We may disclose your information if required by law or in response to:
 - Court orders or subpoenas
@@ -129,11 +140,11 @@ We may disclose your information if required by law or in response to:
 - Protection of our rights
 - Emergency situations
 
-### 3.4 Business Transfers
+### 3.5 Business Transfers
 
 In the event of a merger, acquisition, or sale of assets, your information may be transferred to the new entity.
 
-### 3.5 We Do NOT Sell Your Data
+### 3.6 We Do NOT Sell Your Data
 
 We do not sell, rent, or trade your personal information to third parties for marketing purposes.
 

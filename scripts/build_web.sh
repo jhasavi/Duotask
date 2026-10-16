@@ -48,9 +48,17 @@ flutter build web --release \
   --dart-define=GOOGLE_ANDROID_CLIENT_ID="${GOOGLE_ANDROID_CLIENT_ID:-}" \
   --dart-define=STRIPE_PAYMENT_LINK_URL="${STRIPE_PAYMENT_LINK_URL:-}" \
   --dart-define=STRIPE_CUSTOMER_PORTAL_URL="${STRIPE_CUSTOMER_PORTAL_URL:-}" \
+  --dart-define=PUBLIC_APP_URL="${PUBLIC_APP_URL:-}" \
   --dart-define=APP_NAME="${APP_NAME:-DuoTask}" \
   --dart-define=APP_VERSION="$APP_VERSION" \
   --dart-define=DEBUG_MODE=false
+
+# The share-link page (/t/<token>) is plain HTML outside the Flutter app, so
+# it gets the same public client config as a tiny script. Only the URL and
+# the anon key, both public by design.
+mkdir -p build/web/t
+printf 'window.DUOTASK_CONFIG = { supabaseUrl: "%s", anonKey: "%s" };\n' \
+  "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > build/web/t/config.js
 
 # Belt and braces: never ship an env file, whatever the asset config says.
 rm -f build/web/assets/.env build/web/assets/.env.example \

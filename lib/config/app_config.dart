@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -74,6 +75,20 @@ class AppConfig {
       : (dotenv.isInitialized
           ? (dotenv.env['STRIPE_CUSTOMER_PORTAL_URL'] ?? '')
           : '');
+
+  // Where share links point (`<url>/t/<token>`). On the web it's the origin
+  // the app is served from, so staging links point at staging; native builds
+  // use PUBLIC_APP_URL or the production domain.
+  static const _defaultPublicAppUrl = 'https://duotask.namasteneedham.com';
+
+  static String get publicAppUrl {
+    if (kIsWeb && Uri.base.hasAuthority) return Uri.base.origin;
+    const fromDefine = String.fromEnvironment('PUBLIC_APP_URL');
+    if (fromDefine.isNotEmpty) return fromDefine;
+    final fromEnv =
+        dotenv.isInitialized ? dotenv.env['PUBLIC_APP_URL'] ?? '' : '';
+    return fromEnv.isNotEmpty ? fromEnv : _defaultPublicAppUrl;
+  }
 
   // App
   static String get appName => const String.fromEnvironment(

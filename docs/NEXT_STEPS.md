@@ -21,7 +21,7 @@ runbooks are linked rather than repeated.*
 ## 🔴 Production is probably broken for some features right now
 
 `supabase migration list` against production (2026-10-15) shows that the
-remote history records **none** of the 13 local migrations. It does record
+remote history records **none** of the 13 local migrations (16 since 2026-10-16). It does record
 three migrations with no local file: `20250828152200`, `…152300`, `…152400`.
 
 A read-only schema dump of production's `public` schema showed:
@@ -78,9 +78,14 @@ error.
    `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). See
    [RELEASE.md](RELEASE.md#one-time-setup).
 5. **Create a staging Supabase project** (it doubles as the CI test project),
-   run `supabase db push` there and confirm all 13 migrations apply. This was
-   verified on a local Postgres on 2026-10-15; staging confirms it on real
-   Supabase.
+   run `supabase db push` there and confirm all 16 migrations apply. On
+   2026-10-16 the chain and the whole integration suite passed on a local
+   `supabase start` stack (Postgres 17). That run also found and fixed three
+   bugs a fresh project would have hit: sign-up failing, bubble taps failing
+   (`tasks.claimed_at` missing), and `cycle_task_status` letting outsiders
+   act on unassigned tasks. Staging confirms it on hosted Supabase. Point the
+   integration secrets at it too
+   ([TESTING_GUIDE.md](../TESTING_GUIDE.md#running-integration-tests-locally)).
 6. **Push `main`**, then watch the *Apply database migrations* step. It
    should apply `20260828000001` onwards, which also fixes tags, recurrence
    and timezone in production. Confirm the smoke test passes.
@@ -198,14 +203,80 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 All but paywall views come from `analytics.events`. Add a `paywall_viewed`
 event or use Vercel Analytics for that one.
 
+## Bigger growth bets (start only after Phase 0)
+
+*Added 2026-10-16.* Three larger ideas beyond the plan above, in priority
+order. None should start before Phase 0 is done: production is probably
+broken for tags, recurrence and timezone, and revenue is still $0. Build #1
+before any price test, because pricing doesn't matter until pairs form.
+
+### 1. Partner without an install (fixes the pairing bottleneck) ✅ built
+
+**Built 2026-10-16 as "Send to someone" share links; see
+[SHARE_LINKS.md](SHARE_LINKS.md).** It ships with the next push of `main`.
+
+Any personal task can go out as a link from the sender's own phone
+(WhatsApp, text, email, copy). The recipient answers on a lightweight page
+with no account. "Get DuoTask" then signs them up and pairs the two of you
+automatically.
+
+It differs from the idea as first written in two ways:
+- **No Twilio.** The sender's phone sends the message, so there are no SMS
+  costs or carrier registration, and the message comes from someone the
+  recipient trusts.
+- **No edge function.** Token-checked RPCs serve the page.
+
+Measure the funnel query in SHARE_LINKS.md, plus signups paired within 7
+days.
+
+### 2. Fairness and invisible work as the Premium story
+
+Couples rarely fight about tasks; they fight about fairness and the mental
+load of remembering everything. Make that the reason to pay:
+
+- **Who owns what:** each partner owns a whole area (kids' school, car,
+  bills), including noticing and planning, not just doing.
+- **Weekly balance report:** who did what, the effort involved, and who
+  carried the planning. Extends `lib/utils/pair_stats.dart`.
+- **10-minute weekly check-in** that rebalances the coming week.
+
+Positioning: *"the app that ends the 'I do everything' fight."* It also
+opens a B2B2C channel: couples therapists and premarital counselors who
+recommend it to clients, later with a simple counselor view. Use our own
+wording; "Fair Play" is someone else's brand.
+
+**Wild card that fits here:** an AI brain dump. Type, say or photograph
+something messy (a school flyer, a landlord letter), and Claude turns it
+into tasks, splits them by who usually does what, and suggests due dates.
+Treat it as a Premium feature, not the headline.
+
+### 3. Earn from tasks, not only subscriptions
+
+Household tasks show buying intent: groceries, "fix the faucet", "book a
+sitter", moving. Most free users will never subscribe; this earns from them
+anyway.
+
+- **"Outsource it"** on matching tasks, linking to Instacart, TaskRabbit,
+  Thumbtack, Care.com and similar through their affiliate or referral
+  programs. Check each program's terms before launch.
+- **Life-event packs:** moving, new baby and wedding planning task sets,
+  $4.99 each or included in Premium, with relevant affiliate links (movers,
+  insurance, registries).
+- **Gifting:** sell packs and a year of Premium as wedding and baby-shower
+  gifts. That brings in new couples at their most motivated moment.
+
+Measure clicks and affiliate revenue per active pair, and gift purchases
+that lead to a new pair.
+
 ## Phase 2 onwards: suggested sequence
 
 | When | Work |
 |---|---|
 | Week 1 | Phase 0 (security, migration reconciliation, CI green) |
 | Week 2 | Phase 1 (Premium live on web), Web Analytics, invite-link polish |
-| Weeks 3–4 | Reminders (Firebase push and email) as Premium; referral reward; landing page |
-| Month 2 | Advanced recurrence and templates; shared lists; lifecycle emails |
+| Weeks 3–4 | Watch the share-link funnel (bet #1, built); reminders (Firebase push and email) as Premium; referral reward; landing page |
+| Month 2 | Fairness features and balance report as the Premium story (bet #2); advanced recurrence and templates; lifecycle emails |
+| Month 2–3 | "Outsource it" affiliate links, life-event packs and gifting (bet #3); shared lists |
 | Month 2–3 | Android release (Play Store) with RevenueCat; then iOS |
 | Month 3+ | Review metrics: price test, attachments, calendar sync; family plan only if users ask |
 
