@@ -58,6 +58,32 @@ void main() {
       final dueDate = result['dueDate'] as DateTime;
       expect(dueDate.hour, 20);
     });
+
+    test('parseNaturalInput keeps every part when keywords are combined', () {
+      final result = taskService
+          .parseNaturalInput('Pick up dry cleaning tomorrow @6pm urgent');
+
+      expect(result['title'], 'Pick up dry cleaning');
+      expect(result['priority'], TaskPriority.urgent);
+      final dueDate = result['dueDate'] as DateTime;
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      expect(dueDate.day, tomorrow.day);
+      expect(dueDate.hour, 18);
+    });
+
+    test('parseNaturalInput only treats urgent as a whole word', () {
+      final result = taskService.parseNaturalInput('Read urgently needed memo');
+
+      expect(result['title'], 'Read urgently needed memo');
+      expect(result['priority'], TaskPriority.normal);
+    });
+
+    test('parseNaturalInput leaves plain text untouched', () {
+      final result = taskService.parseNaturalInput('Buy milk');
+
+      expect(result['title'], 'Buy milk');
+      expect(result['dueDate'], isNull);
+    });
   });
 
   group('TaskService undo of completion', () {

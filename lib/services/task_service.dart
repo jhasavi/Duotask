@@ -522,70 +522,72 @@ class TaskService extends ChangeNotifier {
 
   // Parse natural language task input
   Map<String, dynamic> parseNaturalInput(String input) {
-    final result = <String, dynamic>{
-      'title': input,
-      'priority': TaskPriority.normal,
-      'dueDate': null,
-    };
+    // Each keyword is stripped from one working copy, so combining them
+    // ("Call mom tomorrow @6pm urgent") keeps every part.
+    var title = input;
+    var priority = TaskPriority.normal;
+    DateTime? dueDate;
 
-    // Check for urgent indicator
-    if (input.toLowerCase().contains('urgent') ||
-        input.toLowerCase().contains('asap') ||
-        input.toLowerCase().contains('!')) {
-      result['priority'] = TaskPriority.urgent;
-      result['title'] = input
-          .replaceAll(RegExp(r'urgent|asap|!', caseSensitive: false), '')
-          .trim();
+    final urgentPattern = RegExp(r'\b(urgent|asap)\b|!', caseSensitive: false);
+    if (urgentPattern.hasMatch(title)) {
+      priority = TaskPriority.urgent;
+      title = title.replaceAll(urgentPattern, ' ');
     }
 
-    // Parse time patterns
-    final timePattern =
-        RegExp(r'@(\d{1,2}):?(\d{2})?\s*(am|pm)?', caseSensitive: false);
-    final match = timePattern.firstMatch(input);
-
-    if (match != null) {
-      try {
-        var hour = int.parse(match.group(1)!);
-        final minute = match.group(2) != null ? int.parse(match.group(2)!) : 0;
-        final ampm = match.group(3)?.toLowerCase();
-
-        if (ampm == 'pm' && hour < 12) hour += 12;
-        if (ampm == 'am' && hour == 12) hour = 0;
-
-        final now = DateTime.now();
-        var dueDate = DateTime(now.year, now.month, now.day, hour, minute);
-
-        // If time has passed today, set for tomorrow
-        if (dueDate.isBefore(now)) {
-          dueDate = dueDate.add(const Duration(days: 1));
-        }
-
-        result['dueDate'] = dueDate;
-        result['title'] = input.replaceAll(timePattern, '').trim();
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error parsing time: $e');
-        }
+    // An explicit clock time, like @6pm or @18:30
+    final timePattern = RegExp(
+      r'@(\d{1,2})(?::(\d{2}))?\s*(am|pm)?',
+      caseSensitive: false,
+    );
+    final timeMatch = timePattern.firstMatch(title);
+    int? hour;
+    var minute = 0;
+    if (timeMatch != null) {
+      hour = int.parse(timeMatch.group(1)!);
+      minute = int.tryParse(timeMatch.group(2) ?? '') ?? 0;
+      final ampm = timeMatch.group(3)?.toLowerCase();
+      if (ampm == 'pm' && hour < 12) hour += 12;
+      if (ampm == 'am' && hour == 12) hour = 0;
+      if (hour > 23 || minute > 59) {
+        hour = null; // not a real time: leave the text alone
+      } else {
+        title = title.replaceFirst(timePattern, ' ');
       }
     }
 
-    // Parse relative time (tomorrow, tonight, etc.)
-    if (input.toLowerCase().contains('tomorrow')) {
-      final tomorrow = DateTime.now().add(const Duration(days: 1));
-      result['dueDate'] =
-          DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
-      result['title'] = input
-          .replaceAll(RegExp(r'tomorrow', caseSensitive: false), '')
-          .trim();
-    } else if (input.toLowerCase().contains('tonight')) {
-      final tonight = DateTime.now();
-      result['dueDate'] =
-          DateTime(tonight.year, tonight.month, tonight.day, 20, 0);
-      result['title'] =
-          input.replaceAll(RegExp(r'tonight', caseSensitive: false), '').trim();
+    // A day word, with a clock time overriding its default hour
+    final now = DateTime.now();
+    final dayPattern = RegExp(r'\b(tomorrow|tonight)\b', caseSensitive: false);
+    final dayMatch = dayPattern.firstMatch(title);
+    if (dayMatch != null) {
+      final isTomorrow = dayMatch.group(1)!.toLowerCase() == 'tomorrow';
+      final day = isTomorrow ? now.add(const Duration(days: 1)) : now;
+      dueDate = DateTime(
+        day.year,
+        day.month,
+        day.day,
+        hour ?? (isTomorrow ? 9 : 20),
+        hour == null ? 0 : minute,
+      );
+      title = title.replaceAll(dayPattern, ' ');
+    } else if (hour != null) {
+      dueDate = DateTime(now.year, now.month, now.day, hour, minute);
+      // If the time has passed today, it means tomorrow
+      if (dueDate.isBefore(now)) {
+        dueDate = dueDate.add(const Duration(days: 1));
+      }
     }
 
-    return result;
+    title = title
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r'^[\s:,\-]+|[\s:,\-]+$'), '')
+        .trim();
+
+    return {
+      'title': title.isEmpty ? input.trim() : title,
+      'priority': priority,
+      'dueDate': dueDate,
+    };
   }
 
   /// Get weekly completion counts for user and partner
