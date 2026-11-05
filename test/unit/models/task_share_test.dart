@@ -31,7 +31,10 @@ void main() {
       expect(share.token, 'abcdefghijklmnopqrstuvwx');
       expect(share.response, ShareResponse.accepted);
       expect(share.openCount, 3);
-      expect(share.firstOpenedAt, DateTime.utc(2026, 10, 16, 13));
+      expect(
+        share.firstOpenedAt!.isAtSameMomentAs(DateTime.utc(2026, 10, 16, 13)),
+        isTrue,
+      );
       expect(share.isLive(now), isTrue);
       expect(share.hasActivity, isTrue);
     });

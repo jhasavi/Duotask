@@ -32,7 +32,7 @@ class Nudge {
       toUserId: json['to_user_id'] as String,
       message: json['message'] as String,
       read: json['read'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
     );
   }
 
@@ -45,7 +45,7 @@ class Nudge {
       'to_user_id': toUserId,
       'message': message,
       'read': read,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt.toUtc().toIso8601String(),
     };
   }
 }
@@ -149,7 +149,7 @@ class NudgeService extends ChangeNotifier {
         'from_user_id': fromUserId,
         'to_user_id': toUserId,
         'message': message,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       await _supabase.from('nudges').insert(nudgeData);

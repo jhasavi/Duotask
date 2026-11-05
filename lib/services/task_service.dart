@@ -171,9 +171,9 @@ class TaskService extends ChangeNotifier {
         'status': TaskStatus.unclaimed.name,
         'priority': priority.name,
         'recurrence': recurrence.name,
-        'recurrence_end_date': recurrenceEndDate?.toIso8601String(),
-        'due_date': dueDate?.toIso8601String(),
-        'created_at': now.toIso8601String(),
+        'recurrence_end_date': recurrenceEndDate?.toUtc().toIso8601String(),
+        'due_date': dueDate?.toUtc().toIso8601String(),
+        'created_at': now.toUtc().toIso8601String(),
         'is_personal': isPersonal, // Kept for backward compatibility
         'visibility': visibility.name,
         'pair_id': pairId,
@@ -241,7 +241,7 @@ class TaskService extends ChangeNotifier {
       await _supabase.from('tasks').update({
         'claimed_by_id': userId,
         'status': TaskStatus.claimed.name,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', taskId);
 
       _setLoading(false);
@@ -269,8 +269,8 @@ class TaskService extends ChangeNotifier {
     try {
       await _supabase.from('tasks').update({
         'status': TaskStatus.completed.name,
-        'completed_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', taskId);
 
       _setLoading(false);
@@ -299,7 +299,7 @@ class TaskService extends ChangeNotifier {
       await _supabase.from('tasks').update({
         'claimed_by_id': null,
         'status': TaskStatus.unclaimed.name,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', taskId);
 
       _setLoading(false);
@@ -404,7 +404,7 @@ class TaskService extends ChangeNotifier {
       await _supabase.from('tasks').update({
         'status': TaskStatus.claimed.name,
         'completed_at': null,
-        'updated_at': now.toIso8601String(),
+        'updated_at': now.toUtc().toIso8601String(),
       }).eq('id', task.id);
 
       final spawnedId = _spawnedOccurrences.remove(task.id);
@@ -607,8 +607,8 @@ class TaskService extends ChangeNotifier {
           .select('claimed_by_id')
           .eq('visibility', 'group')
           .eq('status', 'completed')
-          .gte('completed_at', startOfWeek.toIso8601String())
-          .lt('completed_at', endOfWeek.toIso8601String());
+          .gte('completed_at', startOfWeek.toUtc().toIso8601String())
+          .lt('completed_at', endOfWeek.toUtc().toIso8601String());
 
       int userCount = 0;
       int partnerCount = 0;

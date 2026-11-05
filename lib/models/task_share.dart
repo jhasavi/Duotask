@@ -50,8 +50,9 @@ class TaskShare {
   });
 
   factory TaskShare.fromJson(Map<String, dynamic> json) {
-    DateTime? date(String key) =>
-        json[key] == null ? null : DateTime.parse(json[key] as String);
+    DateTime? date(String key) => json[key] == null
+        ? null
+        : DateTime.parse(json[key] as String).toLocal();
 
     return TaskShare(
       id: json['id'] as String,
@@ -71,8 +72,7 @@ class TaskShare {
   }
 
   bool get isRevoked => revokedAt != null;
-  bool isExpired([DateTime? now]) =>
-      expiresAt.isBefore(now ?? DateTime.now());
+  bool isExpired([DateTime? now]) => expiresAt.isBefore(now ?? DateTime.now());
   bool isLive([DateTime? now]) => !isRevoked && !isExpired(now);
 
   /// Whether the recipient has done anything with the link yet.

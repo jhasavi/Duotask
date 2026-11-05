@@ -22,6 +22,34 @@ void main() {
       expect(task.priority, TaskPriority.normal);
     });
 
+    test('due date is sent as UTC and read back as the same local time', () {
+      // Postgres timestamptz reads an offset-less string as UTC, so a local
+      // 6pm sent without one came back as 6pm UTC (2pm in New York).
+      final dueLocal = DateTime(2026, 10, 31, 18);
+      final task = Task(
+        id: '1',
+        title: 'Pick up dry cleaning',
+        createdById: 'user1',
+        status: TaskStatus.unclaimed,
+        priority: TaskPriority.urgent,
+        recurrence: TaskRecurrence.none,
+        createdAt: DateTime.now(),
+        dueDate: dueLocal,
+        isPersonal: false,
+      );
+
+      final sent = task.toJson()['due_date'] as String;
+      expect(sent, endsWith('Z'));
+      expect(DateTime.parse(sent).isAtSameMomentAs(dueLocal), isTrue);
+
+      // What Postgres returns for that value.
+      final stored =
+          '${dueLocal.toUtc().toIso8601String().replaceAll('Z', '')}+00:00';
+      final readBack = Task.fromJson({...task.toJson(), 'due_date': stored});
+      expect(readBack.dueDate!.isUtc, isFalse);
+      expect(readBack.dueDate!.hour, 18);
+    });
+
     test('Task should serialize to JSON correctly', () {
       final now = DateTime.now();
       final task = Task(

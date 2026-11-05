@@ -76,7 +76,7 @@ class EmailPreferencesService extends ChangeNotifier {
       await _supabase.from('email_preferences').upsert({
         'user_id': userId,
         'daily_email_enabled': enabled,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       _dailyEmailEnabled = enabled;
@@ -104,7 +104,7 @@ class EmailPreferencesService extends ChangeNotifier {
       await _supabase.from('email_preferences').upsert({
         'user_id': userId,
         'timezone': timezone,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       _timezone = timezone;
