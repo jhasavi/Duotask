@@ -27,6 +27,11 @@
 
 BEGIN;
 
+-- The earlier zero-argument version has none of the guards below. Adding a
+-- parameter creates a second overload rather than replacing it, so drop the
+-- old one or it stays callable and bypasses both checks.
+DROP FUNCTION IF EXISTS public.delete_my_account();
+
 CREATE OR REPLACE FUNCTION public.delete_my_account(p_password TEXT DEFAULT NULL)
 RETURNS void
 LANGUAGE plpgsql
