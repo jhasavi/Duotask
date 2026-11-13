@@ -171,15 +171,39 @@ void main() {
       verify(mockAuth.signOut()).called(1);
     });
 
+    Future<bool> deleteFailingWith(Object error) {
+      when(
+        mockSupabase.rpc('delete_my_account', params: anyNamed('params')),
+      ).thenThrow(error);
+      return authService.deleteAccount(password: 'pw');
+    }
+
     test('deleteAccount reports failure and keeps the user signed in',
         () async {
-      when(mockSupabase.rpc('delete_my_account')).thenThrow(Exception('boom'));
-
-      final ok = await authService.deleteAccount();
+      final ok = await deleteFailingWith(Exception('boom'));
 
       expect(ok, false);
       expect(authService.errorMessage, contains('Could not delete'));
       verifyNever(mockAuth.signOut());
+    });
+
+    test('deleteAccount tells a subscriber to cancel first', () async {
+      final ok = await deleteFailingWith(
+        const PostgrestException(message: 'active_subscription', code: 'P0001'),
+      );
+
+      expect(ok, false);
+      expect(authService.errorMessage, contains('Manage subscription'));
+      verifyNever(mockAuth.signOut());
+    });
+
+    test('deleteAccount reports a wrong password', () async {
+      final ok = await deleteFailingWith(
+        const PostgrestException(message: 'wrong_password', code: '28000'),
+      );
+
+      expect(ok, false);
+      expect(authService.errorMessage, contains('incorrect'));
     });
 
     test('signOut handles errors gracefully', () async {

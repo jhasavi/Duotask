@@ -496,17 +496,7 @@ class AuthService extends ChangeNotifier {
     try {
       if (kDebugMode) print('Signing out...');
 
-      // Sign out from Google if needed
-      if (!kIsWeb) {
-        try {
-          final GoogleSignIn googleSignIn = GoogleSignIn();
-          await googleSignIn.signOut();
-        } catch (e) {
-          if (kDebugMode) {
-            print('Google sign out error: $e');
-          }
-        }
-      }
+      await _signOutOfGoogle();
 
       await _supabase.auth.signOut();
       _currentUser = null;
@@ -527,31 +517,47 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// Whether this account signs in with an email and password, in which case
+  /// deleting it requires the password. Google sign-in and magic-link-only
+  /// accounts have none.
+  bool get hasPasswordLogin =>
+      _supabase.auth.currentUser?.appMetadata['provider'] == 'email';
+
   /// Permanently deletes the signed-in user's account and all their data.
   ///
-  /// Calls the `delete_my_account` RPC, which removes the auth user and
-  /// cascades through every table. Returns true on success; on failure the
-  /// session is left untouched and [errorMessage] is set.
-  Future<bool> deleteAccount() async {
+  /// Calls the `delete_my_account` RPC, which checks the password (for
+  /// password accounts) and refuses while a subscription is live, then
+  /// removes the auth user and cascades through every table. Returns true on
+  /// success; on failure the session is left untouched and [errorMessage]
+  /// says why.
+  Future<bool> deleteAccount({String? password}) async {
     _setLoading(true);
     _clearError();
 
     try {
-      await _supabase.rpc('delete_my_account');
-
-      // The auth user is gone, so the server-side session is already
-      // invalid. signOut clears the local session and Google state.
-      try {
-        await _supabase.auth.signOut();
-      } catch (_) {
-        // Token is already revoked; local cleanup below is enough.
-      }
-      _currentUser = null;
-      _setLoading(false);
-      notifyListeners();
-      return true;
+      await _supabase.rpc(
+        'delete_my_account',
+        params: {'p_password': password},
+      );
     } on SocketException {
       _setError('No internet connection. Your account was not deleted.');
+      _setLoading(false);
+      return false;
+    } on PostgrestException catch (e) {
+      final message = e.message;
+      if (message.contains('active_subscription')) {
+        _setError(
+          'You have an active Premium subscription. Cancel it under '
+          'Manage subscription first, then delete your account.',
+        );
+      } else if (message.contains('wrong_password')) {
+        _setError('That password is incorrect.');
+      } else if (message.contains('password_required')) {
+        _setError('Enter your password to delete your account.');
+      } else {
+        if (kDebugMode) print('Delete account error: $e');
+        _setError('Could not delete your account. Please try again.');
+      }
       _setLoading(false);
       return false;
     } catch (e) {
@@ -559,6 +565,30 @@ class AuthService extends ChangeNotifier {
       _setError('Could not delete your account. Please try again.');
       _setLoading(false);
       return false;
+    }
+
+    // The auth user is gone, so the server-side session is already invalid.
+    // Clear the local session and any cached Google account too.
+    await _signOutOfGoogle();
+    try {
+      await _supabase.auth.signOut();
+    } catch (_) {
+      // Token is already revoked; local cleanup below is enough.
+    }
+    _currentUser = null;
+    _setLoading(false);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> _signOutOfGoogle() async {
+    if (kIsWeb) return;
+    try {
+      await GoogleSignIn().signOut();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Google sign out error: $e');
+      }
     }
   }
 

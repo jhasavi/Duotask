@@ -90,7 +90,7 @@ void main() {
         .select('id')
         .single();
 
-    await a.rpc('delete_my_account');
+    await a.rpc('delete_my_account', params: {'p_password': password});
 
     expect(
       await admin.from('users').select('id').eq('id', aId),
@@ -106,6 +106,47 @@ void main() {
         await admin.from('users').select().eq('id', bId).maybeSingle();
     expect(partner, isNotNull, reason: 'partner must survive');
     expect(partner!['paired_with_id'], isNull);
+  });
+
+  test('requires the password and rejects a wrong one', skip: skip, () async {
+    final (id, client) = await signedInUser('pw');
+
+    await expectLater(
+      client.rpc('delete_my_account'),
+      throwsA(
+        isA<PostgrestException>()
+            .having((e) => e.message, 'message', contains('password_required')),
+      ),
+    );
+    await expectLater(
+      client.rpc('delete_my_account', params: {'p_password': 'nope'}),
+      throwsA(
+        isA<PostgrestException>()
+            .having((e) => e.message, 'message', contains('wrong_password')),
+      ),
+    );
+    expect(await admin.from('users').select('id').eq('id', id), isNotEmpty,
+        reason: 'account must survive failed attempts');
+  });
+
+  test('refuses while a subscription is live', skip: skip, () async {
+    final (id, client) = await signedInUser('sub');
+    await admin.from('users').update({
+      'is_premium': true,
+      'premium_until': DateTime.now()
+          .add(const Duration(days: 20))
+          .toUtc()
+          .toIso8601String(),
+    }).eq('id', id);
+
+    await expectLater(
+      client.rpc('delete_my_account', params: {'p_password': password}),
+      throwsA(
+        isA<PostgrestException>().having(
+            (e) => e.message, 'message', contains('active_subscription')),
+      ),
+    );
+    expect(await admin.from('users').select('id').eq('id', id), isNotEmpty);
   });
 
   test('refuses an unauthenticated caller', skip: skip, () async {
