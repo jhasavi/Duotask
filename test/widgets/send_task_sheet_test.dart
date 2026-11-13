@@ -34,8 +34,8 @@ void main() {
     test('matches the checks in create_task_share', () {
       expect(canSendByLink(task(), null), isFalse);
       expect(canSendByLink(task(createdById: 'u2'), 'u1'), isFalse);
-      expect(canSendByLink(task(visibility: TaskVisibility.group), 'u1'),
-          isFalse);
+      expect(
+          canSendByLink(task(visibility: TaskVisibility.group), 'u1'), isFalse);
       expect(canSendByLink(task(recurrence: TaskRecurrence.weekly), 'u1'),
           isFalse);
       expect(canSendByLink(task(status: TaskStatus.completed), 'u1'), isFalse);
@@ -106,7 +106,8 @@ void main() {
       expect(service.shareFor('t1'), isNotNull);
     });
 
-    testWidgets('WhatsApp opens a message with the name, title and link, '
+    testWidgets(
+        'WhatsApp opens a message with the name, title and link, '
         'then saves the name', (tester) async {
       await pumpSheet(tester);
       await tester.enterText(find.byKey(const Key('send_task_name')), 'Sam');
@@ -142,7 +143,8 @@ void main() {
       expect(find.textContaining("Couldn't open that app"), findsOneWidget);
     });
 
-    testWidgets('shows the message for copying by hand when the clipboard '
+    testWidgets(
+        'shows the message for copying by hand when the clipboard '
         'is blocked, and still saves the name', (tester) async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (call) async {

@@ -25,8 +25,7 @@ enum SendChannel { whatsApp, text, email, copy }
 Uri? sendUri(SendChannel channel, String message, {String? subject}) {
   switch (channel) {
     case SendChannel.whatsApp:
-      return Uri.parse(
-          'https://wa.me/?text=${Uri.encodeComponent(message)}');
+      return Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
     case SendChannel.text:
       // "sms:?&body=" is the form both iOS and Android accept.
       return Uri.parse('sms:?&body=${Uri.encodeComponent(message)}');
@@ -295,8 +294,8 @@ class _SendTaskSheetState extends State<SendTaskSheet> {
                 onPressed: _busy ? null : _stopSharing,
                 icon: const Icon(Icons.link_off),
                 label: const Text('Turn off link'),
-                style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.urgentColor),
+                style:
+                    TextButton.styleFrom(foregroundColor: AppTheme.urgentColor),
               ),
             ),
         ],

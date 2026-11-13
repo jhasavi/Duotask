@@ -170,8 +170,7 @@ class TaskShareService extends ChangeNotifier {
       throw TaskShareException(friendlyError(e.message));
     } catch (e) {
       if (kDebugMode) print('Revoke task share error: $e');
-      throw const TaskShareException(
-          "Couldn't turn off the link. Try again.");
+      throw const TaskShareException("Couldn't turn off the link. Try again.");
     }
   }
 

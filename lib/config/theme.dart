@@ -8,11 +8,15 @@ class AppTheme {
   static const Color accentColor = Color(0xFF8B5CF6); // Purple
 
   // Task Status Colors
-  static const Color unclaimedPersonalColor = Color(0xFFFB923C); // Light Orange
-  static const Color unclaimedPartnerColor = Color(0xFFF97316); // Dark Orange
-  static const Color claimedColor = Color(0xFF3B82F6); // Blue
-  static const Color completedColor = Color(0xFF10B981); // Green
-  static const Color urgentColor = Color(0xFFEF4444); // Red
+  static const Color unclaimedPersonalColor =
+      Color(0xFFC2410C); // Orange (white text 5.2:1)
+  static const Color unclaimedPartnerColor =
+      Color(0xFF9A3412); // Dark orange (white text 7.3:1)
+  static const Color claimedColor =
+      Color(0xFF1D4ED8); // Blue (white text 6.7:1)
+  static const Color completedColor =
+      Color(0xFF047857); // Green (white text 5.5:1)
+  static const Color urgentColor = Color(0xFFB91C1C); // Red (white text 6.5:1)
 
   // Neutral Colors
   static const Color backgroundColor = Color(0xFFF8FAFC);
@@ -22,7 +26,7 @@ class AppTheme {
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
-  static const Color textTertiary = Color(0xFF94A3B8);
+  static const Color textTertiary = Color(0xFF64748B);
 
   // Dark Theme Colors
   static const Color darkBackgroundColor = Color(0xFF0F172A);

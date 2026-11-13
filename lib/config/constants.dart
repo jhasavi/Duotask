@@ -1,7 +1,7 @@
 class AppConstants {
   // App Info
   static const String appName = 'DuoTask';
-  static const String appTagline = 'Task sharing made fun';
+  static const String appTagline = "Who's doing that? Settled.";
 
   // Animation Durations
   static const Duration bubbleAnimationDuration = Duration(milliseconds: 300);

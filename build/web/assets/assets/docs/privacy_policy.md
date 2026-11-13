@@ -248,6 +248,7 @@ If you're a California resident, you have the right to:
 - Usage statistics
 - Performance monitoring
 - Can be disabled in settings
+- Visitor analytics on duotask.namasteneedham.com (the app, the landing page and the website), provided by Vercel Web Analytics. It does not use cookies and does not track you across sites. It records aggregate page views with approximate country and device type, and never the contents of the share-link pages (`/t/`)
 
 ### 7.3 Third-Party Cookies
 - Google OAuth

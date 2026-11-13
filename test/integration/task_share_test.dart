@@ -166,8 +166,8 @@ void main() {
       final token = await shareToken(owner, taskId, name: 'Sam');
       final anon = anonClient();
 
-      final view = Map<String, dynamic>.from(await anon
-          .rpc('get_shared_task', params: {'p_token': token}) as Map);
+      final view = Map<String, dynamic>.from(
+          await anon.rpc('get_shared_task', params: {'p_token': token}) as Map);
       expect(view['title'], 'Pick up the dry cleaning');
       expect(view['description'], 'Ticket is on the fridge');
       expect(view['priority'], 'urgent');
@@ -211,9 +211,9 @@ void main() {
       final token = await shareToken(owner, taskId);
       final anon = anonClient();
 
-      Future<Map> respond(String action) async => await anon.rpc(
-          'respond_to_shared_task',
-          params: {'p_token': token, 'p_action': action}) as Map;
+      Future<Map> respond(String action) async =>
+          await anon.rpc('respond_to_shared_task',
+              params: {'p_token': token, 'p_action': action}) as Map;
 
       var view = await respond('accept');
       expect(view['response'], 'accepted');
@@ -260,8 +260,7 @@ void main() {
 
       final token = await shareToken(owner, taskId);
       await owner.rpc('revoke_task_share', params: {'p_task_id': taskId});
-      await expectLater(
-          anon.rpc('get_shared_task', params: {'p_token': token}),
+      await expectLater(anon.rpc('get_shared_task', params: {'p_token': token}),
           rpcError('link_revoked'));
 
       final fresh = await shareToken(owner, taskId);
@@ -295,7 +294,8 @@ void main() {
       await anonClient().rpc('respond_to_shared_task',
           params: {'p_token': token, 'p_action': 'accept'});
 
-      await expectLater(owner.rpc('claim_task_share', params: {'p_token': token}),
+      await expectLater(
+          owner.rpc('claim_task_share', params: {'p_token': token}),
           rpcError('own_link'));
 
       final result = Map<String, dynamic>.from(await newUser
@@ -340,7 +340,8 @@ void main() {
       final again = await newUser
           .rpc('claim_task_share', params: {'p_token': token}) as Map;
       expect(again['paired'], isTrue);
-      await expectLater(third.rpc('claim_task_share', params: {'p_token': token}),
+      await expectLater(
+          third.rpc('claim_task_share', params: {'p_token': token}),
           rpcError('already_claimed'));
       expect(
           await admin

@@ -96,18 +96,20 @@ void main() {
   });
 
   test('load replaces the cache with the live links', () async {
-    api.live = [TaskShare.fromJson(shareJson({'task_id': 't9'}))];
+    api.live = [
+      TaskShare.fromJson(shareJson({'task_id': 't9'}))
+    ];
     await service.load('u1');
     expect(service.shareFor('t9'), isNotNull);
   });
 
   test('a realtime update replaces the link; a revocation removes it', () {
-    service.applyRemoteUpdate(
-        TaskShare.fromJson(shareJson({'response': 'done'})));
+    service
+        .applyRemoteUpdate(TaskShare.fromJson(shareJson({'response': 'done'})));
     expect(service.shareFor('t1')!.response, ShareResponse.done);
 
-    service.applyRemoteUpdate(TaskShare.fromJson(
-        shareJson({'revoked_at': '2026-10-17T00:00:00Z'})));
+    service.applyRemoteUpdate(
+        TaskShare.fromJson(shareJson({'revoked_at': '2026-10-17T00:00:00Z'})));
     expect(service.shareFor('t1'), isNull);
   });
 
@@ -147,11 +149,12 @@ void main() {
     test('an unpaired claim says the task arrived', () async {
       SharedPreferences.setMockInitialValues(
           {TaskShareService.pendingJoinKey: token});
-      api.claimResult = const ShareClaimResult(
-          paired: false, senderName: null, taskId: 't1');
+      api.claimResult =
+          const ShareClaimResult(paired: false, senderName: null, taskId: 't1');
 
       final outcome = await service.claimPendingJoin();
-      expect(outcome!.message, 'The task from the sender is now on your board.');
+      expect(
+          outcome!.message, 'The task from the sender is now on your board.');
     });
 
     test('a rejected claim clears the token and explains why', () async {
