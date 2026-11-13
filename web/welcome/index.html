@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DuoTask: the shared to-do app for couples and roommates</title>
+  <meta name="description" content="A shared to-do list for two. Claim chores instead of nagging, nudge each other, and send a task over WhatsApp so your partner doesn't even need an account. Free, in your browser.">
+  <link rel="canonical" href="https://duotask.namasteneedham.com/welcome/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DuoTask">
+  <meta property="og:title" content="DuoTask: the shared to-do app for two">
+  <meta property="og:description" content="Claim chores instead of nagging. Send a task over WhatsApp, no account needed to reply. Free.">
+  <meta property="og:url" content="https://duotask.namasteneedham.com/welcome/">
+  <meta property="og:image" content="https://duotask.namasteneedham.com/og-banner.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DuoTask: the shared to-do app for two">
+  <meta name="twitter:description" content="Claim chores instead of nagging. Send a task over WhatsApp, no account needed to reply. Free.">
+  <meta name="twitter:image" content="https://duotask.namasteneedham.com/og-banner.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"DuoTask","applicationCategory":"LifestyleApplication","operatingSystem":"Web","description":"A shared to-do app for two people: couples, roommates and co-parents.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://duotask.namasteneedham.com/"}
+  </script>
+  <style>
+    :root {
+      --bg: #F8FAFC; --card: #FFFFFF; --text: #0F172A; --muted: #475569;
+      --line: #E2E8F0; --primary: #4F46E5; --primary-ink: #FFFFFF; --soft: #EEF2FF;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F172A; --card: #1E293B; --text: #F1F5F9; --muted: #CBD5E1;
+        --line: #334155; --primary: #818CF8; --primary-ink: #0F172A; --soft: #1E1B4B;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); text-decoration: none; }
+    .brand img { width: 32px; height: 32px; border-radius: 9px; }
+    .btn { display: inline-block; background: var(--primary); color: var(--primary-ink); font-weight: 600;
+      padding: 12px 22px; border-radius: 12px; text-decoration: none; }
+    .btn.big { padding: 16px 30px; font-size: 18px; }
+    .hero { padding: 48px 0 40px; text-align: center; }
+    h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.12; margin: 0 0 16px; letter-spacing: -0.02em; }
+    .lead { font-size: clamp(18px, 2.6vw, 21px); color: var(--muted); max-width: 620px; margin: 0 auto 28px; }
+    .fine { color: var(--muted); font-size: 14px; margin-top: 12px; }
+    h2 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+    section { padding: 36px 0; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 20px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+    .card h3 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 16px; }
+    .steps { counter-reset: s; list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 14px; }
+    .steps li { counter-increment: s; background: var(--soft); border-radius: 16px; padding: 16px 16px 16px 60px; position: relative; }
+    .steps li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 30px; height: 30px; border-radius: 50%;
+      background: var(--primary); color: var(--primary-ink); font-weight: 700; display: grid; place-items: center; }
+    details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-top: 10px; }
+    summary { cursor: pointer; font-weight: 600; }
+    details p { color: var(--muted); margin: 10px 0 0; }
+    .cta { text-align: center; padding: 48px 0 56px; }
+    footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: 14px; }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="/welcome/"><img src="/icons/Icon-192.png" alt="" width="32" height="32">DuoTask</a>
+      <a class="btn" href="/">Open the app</a>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>"Who's doing that?"<br>Settled.</h1>
+        <p class="lead">DuoTask is a shared to-do list for two people. Claim a task instead of nagging, nudge each other kindly, and see who's doing what at a glance.</p>
+        <a class="btn big" href="/">Start free in your browser</a>
+        <p class="fine">Free to use. Works on your phone and computer. No download.</p>
+      </div>
+
+      <section>
+        <h2>Built for couples, roommates and co-parents</h2>
+        <div class="grid">
+          <div class="card"><h3>Claim, don't nag</h3><p>Every task starts unclaimed. Tap to take it, tap again when it's done. Everyone can see who has what.</p></div>
+          <div class="card"><h3>Send a task over WhatsApp</h3><p>Share any task as a link by text, WhatsApp or email. Your partner can say "I'll do it" without installing anything or making an account.</p></div>
+          <div class="card"><h3>Type it like you'd say it</h3><p>"Pick up dry cleaning tomorrow @6pm urgent" becomes a task with the right due date and priority.</p></div>
+          <div class="card"><h3>Gentle nudges</h3><p>Remind each other without a message thread. Recurring chores come back on their own.</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Up and running in a minute</h2>
+        <ol class="steps">
+          <li><strong>Sign up</strong> with email or Google.</li>
+          <li><strong>Share your pairing code</strong> with your partner or roommate. Or just send them a task link.</li>
+          <li><strong>Add the first task</strong> and watch it appear on their screen.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Questions</h2>
+        <details><summary>Is it free?</summary><p>Yes. Sharing tasks, claiming, nudges and recurring chores are free. Optional paid extras may come later, and one subscription would cover both of you.</p></details>
+        <details><summary>Does my partner need to install anything?</summary><p>No. DuoTask runs in the browser. You can add it to your home screen from your browser's share menu so it opens like an app.</p></details>
+        <details><summary>Who can see my tasks?</summary><p>Only you and the person you pair with. Personal tasks stay private to you. See the privacy policy in the app's Settings.</p></details>
+        <details><summary>Can I delete my account?</summary><p>Yes, any time, from Settings. That erases your account and tasks.</p></details>
+      </section>
+
+      <div class="cta">
+        <h2>Stop keeping score in your head</h2>
+        <p class="lead">Try it with one task this week.</p>
+        <a class="btn big" href="/">Start free</a>
+      </div>
+    </main>
+
+    <footer>© DuoTask · The shared to-do app for two</footer>
+  </div>
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

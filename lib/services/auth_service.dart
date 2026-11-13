@@ -527,6 +527,41 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// Permanently deletes the signed-in user's account and all their data.
+  ///
+  /// Calls the `delete_my_account` RPC, which removes the auth user and
+  /// cascades through every table. Returns true on success; on failure the
+  /// session is left untouched and [errorMessage] is set.
+  Future<bool> deleteAccount() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _supabase.rpc('delete_my_account');
+
+      // The auth user is gone, so the server-side session is already
+      // invalid. signOut clears the local session and Google state.
+      try {
+        await _supabase.auth.signOut();
+      } catch (_) {
+        // Token is already revoked; local cleanup below is enough.
+      }
+      _currentUser = null;
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } on SocketException {
+      _setError('No internet connection. Your account was not deleted.');
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      if (kDebugMode) print('Delete account error: $e');
+      _setError('Could not delete your account. Please try again.');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<bool> updateProfile({
     String? displayName,
     String? avatarUrl,

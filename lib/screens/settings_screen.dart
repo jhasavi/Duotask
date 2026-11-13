@@ -352,6 +352,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _showSignOutDialog();
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever),
+            title: const Text('Delete Account'),
+            subtitle: const Text('Permanently erase your account and data'),
+            textColor: AppTheme.urgentColor,
+            iconColor: AppTheme.urgentColor,
+            onTap: () {
+              _showDeleteAccountDialog();
+            },
+          ),
 
           const Divider(),
 
@@ -615,6 +625,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (route) => false,
       );
     }
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Delete account?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This permanently deletes your account, your tasks and your '
+                'pairing. It cannot be undone. Your partner stays signed up '
+                'but will be unpaired.',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'If you have a Premium subscription, cancel it first under '
+                'Manage subscription. Deleting your account does not cancel '
+                'billing.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Type DELETE to confirm',
+                ),
+                onChanged: (_) => setDialogState(() {}),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: controller.text.trim().toUpperCase() == 'DELETE'
+                  ? () => Navigator.pop(context, true)
+                  : null,
+              style:
+                  TextButton.styleFrom(foregroundColor: AppTheme.urgentColor),
+              child: const Text('Delete forever'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+
+    if (confirmed != true || !mounted) return;
+
+    final authService = context.read<AuthService>();
+    final premiumService = context.read<PremiumService>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final ok = await authService.deleteAccount();
+    if (!ok) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            authService.errorMessage ?? 'Could not delete your account.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    premiumService.reset();
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> _showThemeDialog() async {

@@ -290,7 +290,6 @@ If you have questions about this privacy policy or our data practices:
 
 **Email**: privacy@duotask.app  
 **Website**: https://duotask.app/privacy  
-**Mail**: [Your Physical Address]
 
 ### 11.2 Data Protection Officer
 

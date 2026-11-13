@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /t/
+Allow: /
+
+Sitemap: https://duotask.namasteneedham.com/sitemap.xml

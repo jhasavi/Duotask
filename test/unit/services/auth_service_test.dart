@@ -171,6 +171,17 @@ void main() {
       verify(mockAuth.signOut()).called(1);
     });
 
+    test('deleteAccount reports failure and keeps the user signed in',
+        () async {
+      when(mockSupabase.rpc('delete_my_account')).thenThrow(Exception('boom'));
+
+      final ok = await authService.deleteAccount();
+
+      expect(ok, false);
+      expect(authService.errorMessage, contains('Could not delete'));
+      verifyNever(mockAuth.signOut());
+    });
+
     test('signOut handles errors gracefully', () async {
       // Arrange
       when(mockAuth.signOut()).thenThrow(Exception('Sign out failed'));
