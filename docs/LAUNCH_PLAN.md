@@ -41,7 +41,8 @@ Still open:
 
 - Terms of Service has no refund or cancellation terms (needed for Stripe live
   mode).
-- No Vercel Web Analytics, so you can't see visitors or paywall views.
+- ~~No Vercel Web Analytics, so you can't see visitors or paywall views.~~
+  Both added: Vercel Web Analytics and a `paywall_viewed` event.
 - Tapping a bubble twice quickly goes Claimed → Completed with no
   confirmation; the undo snackbar is the only safety net.
 

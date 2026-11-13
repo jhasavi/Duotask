@@ -200,8 +200,9 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 | Paywall views → trial → paid | Pricing and paywall copy |
 | Monthly churn of paying pairs | Whether Premium keeps delivering value |
 
-All but paywall views come from `analytics.events`. Add a `paywall_viewed`
-event or use Vercel Analytics for that one.
+All of these come from `analytics.events`; paywall views are the
+`paywall_viewed` event (added 2026-11-13, see
+[MONETIZATION.md](MONETIZATION.md#measuring-usage)).
 
 ## Bigger growth bets (start only after Phase 0)
 

@@ -28,6 +28,40 @@ void main() {
     expect(find.text('Already upgraded? Refresh'), findsOneWidget);
   });
 
+  testWidgets('logs one paywall view per open, only for free users',
+      (tester) async {
+    final views = <(String, bool)>[];
+    final premium = PremiumService(
+      () async => PremiumStatus.free,
+      paymentLinkUrl: 'https://buy.stripe.com/test',
+      logPaywallView: (source, canUpgrade) async =>
+          views.add((source, canUpgrade)),
+    );
+
+    await tester.pumpWidget(host(premium));
+    await tester.pumpAndSettle();
+    expect(views, [('stats', true)]);
+
+    // Pull-to-refresh doesn't count as another view.
+    await tester.tap(find.text('Already upgraded? Refresh'));
+    await tester.pumpAndSettle();
+    expect(views, hasLength(1));
+  });
+
+  testWidgets('no paywall view is logged when status failed to load',
+      (tester) async {
+    // Unknown status might be a paying user, so it must not count.
+    final views = <String>[];
+    final premium = PremiumService(
+      () async => throw Exception('offline'),
+      logPaywallView: (source, _) async => views.add(source),
+    );
+
+    await tester.pumpWidget(host(premium));
+    await tester.pumpAndSettle();
+    expect(views, isEmpty);
+  });
+
   testWidgets('without a payment link the paywall says coming soon',
       (tester) async {
     final premium = PremiumService(
