@@ -10,7 +10,7 @@
 ### 1. Run Database Migration
 Execute the SQL migration in Supabase SQL Editor:
 ```sql
--- Run migrations/v1.2_daily_email.sql
+-- Applied by supabase/migrations/20250625000003_daily_email.sql
 ```
 
 ### 2. Get Resend API Key

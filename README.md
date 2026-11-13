@@ -122,8 +122,9 @@ duotask/
 │   ├── widgets/          # Reusable widgets
 │   │   └── task_bubble.dart
 │   └── main.dart         # App entry point
-├── supabase/            # Database schema
-│   └── schema.sql
+├── supabase/            # Database: migrations (the only schema source) and edge functions
+│   ├── migrations/
+│   └── functions/
 ├── web/                 # Web-specific files
 ├── android/             # Android-specific files
 ├── ios/                 # iOS-specific files
