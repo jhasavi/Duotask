@@ -206,6 +206,17 @@ void main() {
       expect(authService.errorMessage, contains('incorrect'));
     });
 
+    test('deleteAccount asks the user to wait after too many attempts',
+        () async {
+      final ok = await deleteFailingWith(
+        const PostgrestException(message: 'too_many_attempts', code: '54000'),
+      );
+
+      expect(ok, false);
+      expect(authService.errorMessage, contains('15 minutes'));
+      verifyNever(mockAuth.signOut());
+    });
+
     test('signOut handles errors gracefully', () async {
       // Arrange
       when(mockAuth.signOut()).thenThrow(Exception('Sign out failed'));

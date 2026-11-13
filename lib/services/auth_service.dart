@@ -535,10 +535,17 @@ class AuthService extends ChangeNotifier {
     _clearError();
 
     try {
-      await _supabase.rpc(
+      // Returns 'deleted', or 'wrong_password' (a value, not an error, so
+      // the server can record the attempt for throttling).
+      final result = await _supabase.rpc(
         'delete_my_account',
         params: {'p_password': password},
       );
+      if (result == 'wrong_password') {
+        _setError('That password is incorrect.');
+        _setLoading(false);
+        return false;
+      }
     } on SocketException {
       _setError('No internet connection. Your account was not deleted.');
       _setLoading(false);
@@ -549,6 +556,10 @@ class AuthService extends ChangeNotifier {
         _setError(
           'You have an active Premium subscription. Cancel it under '
           'Manage subscription first, then delete your account.',
+        );
+      } else if (message.contains('too_many_attempts')) {
+        _setError(
+          'Too many wrong passwords. Wait 15 minutes and try again.',
         );
       } else if (message.contains('wrong_password')) {
         _setError('That password is incorrect.');

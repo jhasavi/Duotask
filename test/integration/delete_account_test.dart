@@ -118,15 +118,35 @@ void main() {
             .having((e) => e.message, 'message', contains('password_required')),
       ),
     );
-    await expectLater(
-      client.rpc('delete_my_account', params: {'p_password': 'nope'}),
-      throwsA(
-        isA<PostgrestException>()
-            .having((e) => e.message, 'message', contains('wrong_password')),
-      ),
+    // A wrong password is a return value, not an error, so the attempt
+    // that the throttle counts isn't rolled back.
+    expect(
+      await client.rpc('delete_my_account', params: {'p_password': 'nope'}),
+      'wrong_password',
     );
     expect(await admin.from('users').select('id').eq('id', id), isNotEmpty,
         reason: 'account must survive failed attempts');
+  });
+
+  test('locks out after five wrong passwords, even with the right one',
+      skip: skip, () async {
+    final (id, client) = await signedInUser('throttle');
+
+    for (var i = 0; i < 5; i++) {
+      expect(
+        await client.rpc('delete_my_account', params: {'p_password': 'nope'}),
+        'wrong_password',
+      );
+    }
+    await expectLater(
+      client.rpc('delete_my_account', params: {'p_password': password}),
+      throwsA(
+        isA<PostgrestException>()
+            .having((e) => e.message, 'message', contains('too_many_attempts')),
+      ),
+    );
+    expect(await admin.from('users').select('id').eq('id', id), isNotEmpty,
+        reason: 'the lockout must hold even for the correct password');
   });
 
   test('refuses while a subscription is live', skip: skip, () async {
