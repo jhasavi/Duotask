@@ -352,6 +352,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _showSignOutDialog();
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever),
+            title: const Text('Delete Account'),
+            subtitle: const Text('Permanently erase your account and data'),
+            textColor: AppTheme.urgentColor,
+            iconColor: AppTheme.urgentColor,
+            onTap: () {
+              _showDeleteAccountDialog();
+            },
+          ),
 
           const Divider(),
 
@@ -617,6 +627,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _showDeleteAccountDialog() async {
+    final authService = context.read<AuthService>();
+    // Null means cancelled; otherwise the password ('' when there is none).
+    final password = await showDialog<String>(
+      context: context,
+      builder: (context) => _DeleteAccountDialog(
+        requiresPassword: authService.hasPasswordLogin,
+      ),
+    );
+
+    if (password == null || !mounted) return;
+
+    final premiumService = context.read<PremiumService>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final ok = await authService.deleteAccount(
+      password: password.isEmpty ? null : password,
+    );
+    if (!ok) {
+      messenger.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 8),
+          content: Text(
+            authService.errorMessage ?? 'Could not delete your account.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    premiumService.reset();
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      (route) => false,
+    );
+  }
+
   Future<void> _showThemeDialog() async {
     final prefsService = context.read<PreferencesService>();
 
@@ -775,6 +823,96 @@ class _SectionHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
       ),
+    );
+  }
+}
+
+/// Confirmation dialog for account deletion. Owns its text controllers so
+/// they are disposed with the dialog's State, after the exit animation, not
+/// while the fields can still be built.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.requiresPassword});
+
+  final bool requiresPassword;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _confirm = TextEditingController();
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _confirm.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  bool get _ready =>
+      _confirm.text.trim().toUpperCase() == 'DELETE' &&
+      (!widget.requiresPassword || _password.text.isNotEmpty);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete account?'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This permanently deletes your account, your tasks and your '
+              'pairing. It cannot be undone. Your partner stays signed up '
+              'but will be unpaired.',
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'If you have a Premium subscription, cancel it first under '
+              'Manage subscription. We will not delete an account that is '
+              'still being billed.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _confirm,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Type DELETE to confirm',
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            if (widget.requiresPassword) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Your password',
+                  helperText: 'Signed in with a magic link and never set a '
+                      'password? Use "Forgot password" on the sign-in '
+                      'screen first.',
+                  helperMaxLines: 3,
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed:
+              _ready ? () => Navigator.pop(context, _password.text) : null,
+          style: TextButton.styleFrom(foregroundColor: AppTheme.urgentColor),
+          child: const Text('Delete forever'),
+        ),
+      ],
     );
   }
 }

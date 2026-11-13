@@ -81,6 +81,17 @@ else
   fail "main.dart.js missing or too small (HTTP $code, ${size} bytes)"
 fi
 
+# 2b. The bundle was built with a Supabase URL and anon key. Without them the
+#     app shows "DuoTask is not configured" to every visitor, and every other
+#     check here still passes. Production served exactly that from 2026-09-25
+#     to 2026-10-30.
+if grep -qE 'https://[a-z0-9]+\.supabase\.co' /tmp/smoke_main 2>/dev/null &&
+   grep -qE 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}|sb_publishable_[A-Za-z0-9_-]{10,}' /tmp/smoke_main 2>/dev/null; then
+  pass "bundle has a Supabase URL and anon key"
+else
+  fail "bundle has no Supabase URL or anon key: the app will show 'not configured' (build with scripts/build_web.sh)"
+fi
+
 # 3. THE REGRESSION GUARD: no env file may be publicly readable.
 #    https://<domain>/assets/.env previously returned 200 with the Resend API
 #    key and Discord bot token in it.

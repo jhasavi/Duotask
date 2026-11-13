@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/task_share.dart';
 import '../services/auth_service.dart';
+import '../services/task_share_service.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 
@@ -18,6 +20,26 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController();
+
+  /// Set when the user arrived from a task someone sent them by link.
+  SharedTaskPreview? _invite;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInvite();
+  }
+
+  Future<void> _loadInvite() async {
+    final token = await TaskShareService.pendingJoinToken();
+    if (token == null || !mounted) return;
+    final preview = await context.read<TaskShareService>().preview(token);
+    if (preview == null || !mounted) return;
+    setState(() {
+      _invite = preview;
+      _isSignIn = false; // Most people arriving from a link are new.
+    });
+  }
 
   @override
   void dispose() {
@@ -148,6 +170,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
+
+                  if (_invite != null) ...[
+                    _InviteBanner(invite: _invite!),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Toggle Sign In / Sign Up
                   if (!_isMagicLink)
@@ -310,6 +337,41 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "Priya sent you a task" banner for people who arrive from a share link.
+class _InviteBanner extends StatelessWidget {
+  final SharedTaskPreview invite;
+  const _InviteBanner({required this.invite});
+
+  @override
+  Widget build(BuildContext context) {
+    final who = invite.senderName ?? 'Someone';
+    return Container(
+      key: const Key('share_invite_banner'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$who sent you "${invite.title}"',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Create a free account and it'll be waiting on your board, "
+            'so you and $who can keep track together.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }

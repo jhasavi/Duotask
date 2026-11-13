@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- The token is in the URL: never send it to another site, never index it. -->
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>A task for you · DuoTask</title>
+  <meta name="description" content="Someone sent you a task on DuoTask. Say you've got it or mark it done, no app needed.">
+  <meta property="og:title" content="A task for you on DuoTask">
+  <meta property="og:description" content="Tap to say you've got it or mark it done. No app needed.">
+  <meta property="og:image" content="/icons/Icon-512.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    :root {
+      --bg: #F8FAFC; --card: #FFFFFF; --text: #0F172A; --muted: #64748B;
+      --line: #E2E8F0; --primary: #6366F1; --primary-ink: #FFFFFF;
+      --claimed: #3B82F6; --done: #10B981; --urgent: #EF4444; --soft: #EEF2FF;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F172A; --card: #1E293B; --text: #F1F5F9; --muted: #94A3B8;
+        --line: #334155; --soft: #312E81;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 440px; margin: 0 auto; padding: 24px 16px 40px; }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+    .brand img { width: 28px; height: 28px; border-radius: 8px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+    .from { color: var(--muted); font-size: 15px; margin: 0 0 6px; }
+    h1 { font-size: 24px; line-height: 1.25; margin: 0 0 8px; overflow-wrap: anywhere; }
+    .notes { white-space: pre-wrap; margin: 0 0 12px; overflow-wrap: anywhere; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--soft); }
+    .chip.urgent { background: color-mix(in srgb, var(--urgent) 15%, transparent); color: var(--urgent); font-weight: 600; }
+    .state { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; font-weight: 600; }
+    .state.accepted { background: color-mix(in srgb, var(--claimed) 14%, transparent); color: var(--claimed); }
+    .state.done { background: color-mix(in srgb, var(--done) 14%, transparent); color: var(--done); }
+    .state.declined { background: color-mix(in srgb, var(--urgent) 12%, transparent); color: var(--urgent); }
+    .actions { display: grid; gap: 10px; margin-top: 18px; }
+    button, .cta {
+      appearance: none; border: 0; border-radius: 14px; padding: 14px 16px; min-height: 50px;
+      font: inherit; font-weight: 600; cursor: pointer; width: 100%; text-align: center;
+      text-decoration: none; display: block;
+    }
+    button.primary { background: var(--primary); color: var(--primary-ink); }
+    button.done { background: var(--done); color: #fff; }
+    button.secondary { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+    button:disabled { opacity: .6; cursor: default; }
+    .join { margin-top: 20px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+    .join h2 { font-size: 18px; margin: 0 0 4px; }
+    .join p { margin: 0 0 14px; color: var(--muted); }
+    .cta { background: var(--soft); color: var(--primary); }
+    .center { text-align: center; color: var(--muted); padding: 48px 0; }
+    .error { color: var(--urgent); font-size: 14px; margin-top: 12px; }
+    .foot { color: var(--muted); font-size: 13px; text-align: center; margin-top: 24px; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="/t/config.js"></script>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="/icons/Icon-192.png" alt=""> DuoTask</div>
+    <div id="app"><p class="center">Loading…</p></div>
+    <p class="foot" id="foot">No account needed to respond.</p>
+  </main>
+  <script>
+  (function () {
+    'use strict';
+    var cfg = window.DUOTASK_CONFIG || {};
+    var app = document.getElementById('app');
+
+    function tokenFromUrl() {
+      var m = location.pathname.match(/\/t\/([A-Za-z0-9_-]{16,64})\/?$/);
+      if (m) return m[1];
+      var q = new URLSearchParams(location.search).get('t');
+      return q && /^[A-Za-z0-9_-]{16,64}$/.test(q) ? q : null;
+    }
+
+    var token = tokenFromUrl();
+    var state = null;
+    var busy = false;
+    var errorText = '';
+
+    var ERRORS = {
+      link_not_found: ["This link doesn't work", 'Check you have the whole link, or ask for a new one.'],
+      link_expired: ['This link has expired', 'Links last 30 days. Ask the sender for a new one.'],
+      link_revoked: ['This link was turned off', 'The sender stopped sharing this task.'],
+      network: ["Couldn't load the task", 'Check your connection and try again.']
+    };
+
+    function rpc(name, body) {
+      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/' + name, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: cfg.anonKey,
+          Authorization: 'Bearer ' + cfg.anonKey
+        },
+        body: JSON.stringify(body)
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) {
+            var err = new Error((data && data.message) || 'network');
+            err.code = ERRORS[err.message] ? err.message : 'network';
+            throw err;
+          }
+          return data;
+        });
+      }, function () {
+        var err = new Error('network'); err.code = 'network'; throw err;
+      });
+    }
+
+    function el(tag, attrs, children) {
+      var node = document.createElement(tag);
+      Object.keys(attrs || {}).forEach(function (k) {
+        if (k === 'text') node.textContent = attrs[k];
+        else if (k === 'onclick') node.addEventListener('click', attrs[k]);
+        else node.setAttribute(k, attrs[k]);
+      });
+      (children || []).forEach(function (c) { if (c) node.appendChild(c); });
+      return node;
+    }
+
+    function formatDue(iso) {
+      var d = new Date(iso);
+      if (isNaN(d)) return '';
+      var opts = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+      return 'Due ' + d.toLocaleString(undefined, opts);
+    }
+
+    function showError(code) {
+      var e = ERRORS[code] || ERRORS.network;
+      document.getElementById('foot').hidden = true;
+      app.replaceChildren(el('div', { class: 'card' }, [
+        el('h1', { text: e[0] }),
+        el('p', { class: 'notes', text: e[1] }),
+        code === 'network'
+          ? el('div', { class: 'actions' }, [el('button', { class: 'primary', text: 'Try again', onclick: load })])
+          : null
+      ]), joinCard('Organize your own tasks', 'DuoTask is a free shared to-do list for two.', '/'));
+    }
+
+    function act(action) {
+      if (busy) return;
+      busy = true; errorText = ''; render();
+      rpc('respond_to_shared_task', { p_token: token, p_action: action }).then(function (data) {
+        state = data; busy = false; render();
+      }, function (err) {
+        busy = false;
+        if (err.code !== 'network') { showError(err.code); return; }
+        errorText = "That didn't go through. Check your connection and try again.";
+        render();
+      });
+    }
+
+    function button(cls, label, action) {
+      var b = el('button', { class: cls, text: label, onclick: function () { act(action); } });
+      if (busy) b.disabled = true;
+      return b;
+    }
+
+    function joinCard(title, text, href) {
+      return el('section', { class: 'join' }, [
+        el('h2', { text: title }),
+        el('p', { text: text }),
+        el('a', { class: 'cta', href: href, text: 'Get DuoTask, free' })
+      ]);
+    }
+
+    function render() {
+      var s = state;
+      var sender = s.sender_name || 'Someone';
+      var hi = s.recipient_name ? 'Hi ' + s.recipient_name + '! ' : '';
+      var completedBySender = s.task_status === 'completed' && s.response !== 'done';
+
+      var meta = el('ul', { class: 'meta' }, [
+        s.due_date ? el('li', { class: 'chip', text: formatDue(s.due_date) }) : null,
+        s.priority === 'urgent' ? el('li', { class: 'chip urgent', text: 'Urgent' }) : null
+      ]);
+
+      var stateLine = null;
+      var buttons = [];
+      if (completedBySender) {
+        stateLine = el('p', { class: 'state done', text: 'Already done. Nothing more to do here.' });
+      } else if (s.response === 'done') {
+        stateLine = el('p', { class: 'state done', text: 'Marked done. ' + sender + ' can see it. Thank you!' });
+        buttons = [button('secondary', 'Undo', 'undo')];
+      } else if (s.response === 'accepted') {
+        stateLine = el('p', { class: 'state accepted', text: "You said you'll do it. " + sender + ' can see that.' });
+        buttons = [button('done', 'Mark done', 'done'), button('secondary', "I can't do it after all", 'decline')];
+      } else if (s.response === 'declined') {
+        stateLine = el('p', { class: 'state declined', text: "You said you can't do it. " + sender + ' can see that.' });
+        buttons = [button('primary', "Actually, I'll do it", 'accept')];
+      } else {
+        buttons = [
+          button('primary', "I'll do it", 'accept'),
+          button('done', "It's done", 'done'),
+          button('secondary', "I can't do it", 'decline')
+        ];
+      }
+
+      var card = el('div', { class: 'card' }, [
+        el('p', { class: 'from', text: hi + sender + ' sent you a task' }),
+        el('h1', { text: s.title }),
+        s.description ? el('p', { class: 'notes', text: s.description }) : null,
+        meta,
+        stateLine,
+        buttons.length ? el('div', { class: 'actions' }, buttons) : null,
+        errorText ? el('p', { class: 'error', role: 'alert', text: errorText }) : null
+      ]);
+
+      var join = s.claimed ? null : joinCard(
+        'Keep track together',
+        'Get DuoTask free to see everything ' + sender + ' sends you in one place, and send tasks back.',
+        '/?join=' + encodeURIComponent(token)
+      );
+
+      app.replaceChildren(card, join || document.createComment(''));
+    }
+
+    function load() {
+      if (!token) { showError('link_not_found'); return; }
+      if (!cfg.supabaseUrl || !cfg.anonKey) { showError('network'); return; }
+      app.replaceChildren(el('p', { class: 'center', text: 'Loading…' }));
+      rpc('get_shared_task', { p_token: token }).then(function (data) {
+        state = data; render();
+      }, function (err) { showError(err.code); });
+    }
+
+    load();
+  })();
+  </script>
+</body>
+</html>

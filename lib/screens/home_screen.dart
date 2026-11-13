@@ -9,6 +9,7 @@ import '../services/nudge_service.dart';
 import '../services/email_preferences_service.dart';
 import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
+import '../services/task_share_service.dart';
 import '../models/task.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/empty_state_widget.dart';
@@ -76,10 +77,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final emailPrefs = context.read<EmailPreferencesService>();
     final notificationService = context.read<NotificationService>();
     final supabase = context.read<SupabaseClient>();
+    final taskShareService = context.read<TaskShareService>();
+    final messenger = ScaffoldMessenger.of(context);
 
     final userId = authService.currentUser?.id;
     if (userId != null) {
+      // Arrived from a task someone sent by link: take it over (and pair
+      // with the sender) before loading, so it's on the board right away.
+      final claim = await taskShareService.claimPendingJoin();
+      if (claim != null) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(claim.message),
+          duration: const Duration(seconds: 6),
+        ));
+      }
+
       await Future.wait([
+        taskShareService.load(userId),
         taskService.loadTasks(userId),
         pairingService.checkPairingStatus(userId),
         nudgeService.loadNudges(userId),

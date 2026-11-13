@@ -147,7 +147,30 @@ When you complete a recurring task, a new one is automatically created for the n
 
 ---
 
-### 8. Managing Your Account
+### 8. Send a Task to Someone Without the App
+
+Your partner (or a roommate, babysitter or parent) doesn't need DuoTask for
+you to hand them a task.
+
+1. Open a task and tap **"Send to someone"**
+2. Optionally type their name
+3. Pick **WhatsApp**, **Text**, **Email** or **Copy link**. The message is
+   sent from your own phone
+
+They open the link and tap **I'll do it**, **It's done** or **I can't do it**.
+You see their answer on the task straight away. If they then create a free
+account from the link, the task moves to their board, and if neither of you
+is paired yet, you're paired automatically.
+
+Good to know:
+- Works for personal, one-time tasks. Repeating and already-shared tasks
+  can't be sent by link yet
+- Anyone with the link can see the task's title, notes and due date
+- Links last 30 days. Tap **Turn off link** to stop one early
+
+---
+
+### 9. Managing Your Account
 
 **Settings Screen**:
 - **Profile**: View your email and display name

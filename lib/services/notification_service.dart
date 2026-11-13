@@ -76,7 +76,7 @@ class NotificationService extends ChangeNotifier {
           'user_id': userId,
           'token': token,
           'platform': Platform.isIOS ? 'ios' : 'android',
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         },
         onConflict: 'token',
       );

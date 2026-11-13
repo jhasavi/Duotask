@@ -23,7 +23,7 @@ just requested — see "Automated guards" below.
   Nothing is read from a bundled `.env` asset in a release build.
 - **CI/CD** — GitHub repository secrets. See the header comments in
   `.github/workflows/deploy.yml` and `integration.yml` for the required names.
-- **Database (cron jobs)** — Supabase Vault. `migrations/setup_email_cron.sql`
+- **Database (cron jobs)** — Supabase Vault. `supabase/migrations/20250625000005_setup_email_cron.sql`
   reads credentials at run time rather than embedding them.
 
 ## Automated guards

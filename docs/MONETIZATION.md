@@ -204,6 +204,28 @@ select date_trunc('week', s.created_at) as cohort,
 from s group by 1 order by 1 desc;
 ```
 
+Paywall funnel, the share of users who saw the paywall and then started
+Premium within 14 days. A `paywall_viewed` is logged once per opening of the
+stats screen by a free user (repeats within a minute are dropped);
+`props->>'can_upgrade' = 'false'` marks views in a build with no Payment Link,
+where the paywall says "coming soon".
+
+```sql
+with v as (
+  select user_id, min(created_at) as first_view
+  from analytics.events
+  where event = 'paywall_viewed' and props->>'can_upgrade' = 'true'
+  group by user_id
+)
+select date_trunc('week', v.first_view) as week,
+       count(*) as viewers,
+       count(*) filter (where exists (select 1 from analytics.events e
+         where e.user_id = v.user_id and e.event = 'premium_started'
+           and e.created_at between v.first_view
+                                and v.first_view + interval '14 days')) as converted_14d
+from v group by 1 order by 1 desc;
+```
+
 Premium conversions:
 
 ```sql

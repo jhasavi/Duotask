@@ -21,6 +21,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   Future<PairStats>? _stats;
+  bool _paywallViewLogged = false;
 
   @override
   void initState() {
@@ -35,6 +36,12 @@ class _StatsScreenState extends State<StatsScreen> {
     setState(() {
       _stats = premium.isPremium ? _loadStats() : null;
     });
+    // Once per screen open, and only once status has loaded, so a paying
+    // user's first frame (before status arrives) doesn't count as a view.
+    if (premium.hasLoaded && !premium.isPremium && !_paywallViewLogged) {
+      _paywallViewLogged = true;
+      premium.logPaywallViewed('stats');
+    }
   }
 
   Future<PairStats> _loadStats() async {

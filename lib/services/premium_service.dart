@@ -13,6 +13,8 @@ import '../models/premium_status.dart';
 /// those columns.
 class PremiumService extends ChangeNotifier {
   final Future<PremiumStatus> Function() _loadStatus;
+  final Future<void> Function(String source, bool canUpgrade)?
+      _logPaywallView;
   final String _paymentLinkUrl;
   final String _customerPortalUrl;
 
@@ -24,7 +26,9 @@ class PremiumService extends ChangeNotifier {
     this._loadStatus, {
     String? paymentLinkUrl,
     String? customerPortalUrl,
-  })  : _paymentLinkUrl = paymentLinkUrl ?? AppConfig.stripePaymentLinkUrl,
+    Future<void> Function(String source, bool canUpgrade)? logPaywallView,
+  })  : _logPaywallView = logPaywallView,
+        _paymentLinkUrl = paymentLinkUrl ?? AppConfig.stripePaymentLinkUrl,
         _customerPortalUrl =
             customerPortalUrl ?? AppConfig.stripeCustomerPortalUrl;
 
@@ -32,6 +36,10 @@ class PremiumService extends ChangeNotifier {
     return PremiumService(
       () async => PremiumStatus.fromRpc(
         await supabase.rpc('get_premium_status'),
+      ),
+      logPaywallView: (source, canUpgrade) => supabase.rpc(
+        'log_paywall_viewed',
+        params: {'p_source': source, 'p_can_upgrade': canUpgrade},
       ),
     );
   }
@@ -58,6 +66,19 @@ class PremiumService extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Records a `paywall_viewed` usage event (the paywall-views step of the
+  /// funnel in docs/MONETIZATION.md). Never throws: analytics must not break
+  /// the screen that shows the paywall.
+  Future<void> logPaywallViewed(String source) async {
+    final log = _logPaywallView;
+    if (log == null) return;
+    try {
+      await log(source, canUpgrade);
+    } catch (e) {
+      if (kDebugMode) print('Paywall view logging error: $e');
     }
   }
 

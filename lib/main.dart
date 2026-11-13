@@ -19,6 +19,7 @@ import 'services/preferences_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/email_preferences_service.dart';
 import 'services/premium_service.dart';
+import 'services/task_share_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -82,6 +83,10 @@ void main() async {
   }
 
   await _initializeFirebaseMessaging();
+
+  // A recipient tapping "Get DuoTask" on a share link lands on /?join=<token>.
+  // Keep the token before sign-up redirects (OAuth, magic link) drop the URL.
+  if (kIsWeb) await TaskShareService.captureJoinToken(Uri.base);
 
   // Initialize Supabase
   await Supabase.initialize(
@@ -178,6 +183,12 @@ class DuoTaskApp extends StatelessWidget {
 
         ChangeNotifierProvider<PremiumService>(
           create: (context) => PremiumService.supabase(
+            context.read<SupabaseClient>(),
+          ),
+        ),
+
+        ChangeNotifierProvider<TaskShareService>(
+          create: (context) => TaskShareService.supabase(
             context.read<SupabaseClient>(),
           ),
         ),

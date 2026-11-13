@@ -46,9 +46,8 @@ exists anywhere in `supabase/migrations/`, `supabase/schema.sql`, or git
 history — they can't be reconstructed locally. Once linked to the live
 project, run `supabase migration list --linked` (or `supabase db diff`) and
 either write the missing migrations from what's found or repair the history.
-Separately, `supabase/schema.sql` itself is stale — it predates the
-`email_preferences`/`nudges` migrations and should not be treated as
-authoritative; `supabase/migrations/00000000000000_baseline_schema.sql` is.
+The stale `supabase/schema.sql` and legacy top-level `migrations/` were
+removed on 2026-11-13 (ADR-001); `supabase/migrations/` is the only source.
 
 ### Stop committing `build/web`
 Tracked only because Vercel currently serves the committed directory. Once a

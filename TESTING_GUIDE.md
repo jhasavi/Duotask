@@ -49,6 +49,41 @@ file.
 
 See [docs/RELEASE.md](docs/RELEASE.md) for how to provision the test project.
 
+### Running integration tests locally
+
+You can run the whole suite against a local Supabase stack (Docker) instead
+of a hosted test project. This first worked on 2026-10-16, and it found three
+bugs that the stubbed-Postgres check had missed (see
+`20261016000000_fix_fresh_project_schema_gaps.sql` and
+`20261016000002_fix_cycle_task_status_permission_check.sql`).
+
+Two local tweaks are needed. Make them in a **copy** of `supabase/`, so the
+repo stays as it is:
+
+- The cron migrations refuse to run without the Vault secrets, so add a
+  migration that sorts first and creates them.
+- Use Postgres 17 to match production. If the CLI wants an image you don't
+  have, pin one you do have in `.temp/postgres-version`.
+
+```bash
+mkdir -p /tmp/duotask-local && cp -R supabase /tmp/duotask-local/
+cd /tmp/duotask-local
+cat > supabase/migrations/19990101000000_local_vault_stub.sql <<'SQL'
+select vault.create_secret('http://127.0.0.1:54321', 'project_url');
+select vault.create_secret('local-anon', 'anon_key');
+SQL
+sed -i '' 's/^major_version = 15/major_version = 17/' supabase/config.toml
+supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor,storage-api
+eval "$(supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=')"
+cd -   # back to the repo
+SUPABASE_TEST_URL=$API_URL SUPABASE_TEST_ANON_KEY=$ANON_KEY \
+  SUPABASE_TEST_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY flutter test --tags integration
+```
+
+The keys `supabase status` prints are Supabase's fixed local demo keys, not
+secrets. After changing a migration, copy it into the stack's `migrations/`
+and run `supabase db reset --local`.
+
 ### What the integration suite covers
 
 | Test | Replaces |
@@ -58,6 +93,8 @@ See [docs/RELEASE.md](docs/RELEASE.md) for how to provision the test project.
 | `pairing_flow_test.dart` — a consumed code cannot be redeemed twice | (was never checked) |
 | `pairing_flow_test.dart` — unpairing clears both sides | "Test unpair" |
 | `pairing_flow_test.dart` — a group task is visible to the partner | "Create personal vs group tasks" |
+| `rpc_permissions_test.dart` — `cycle_task_status` rejects outsiders and spoofed `user_uuid` | (was never checked) |
+| `task_share_test.dart` — share links: owner-only, anon visibility, responses, revoke/expiry, claim and auto-pair | (new feature, [docs/SHARE_LINKS.md](docs/SHARE_LINKS.md)) |
 
 ## Static analysis
 
