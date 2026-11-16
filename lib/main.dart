@@ -60,6 +60,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 /// existing in-app Realtime subscription either way.
 Future<void> _initializeFirebaseMessaging() async {
   if (kIsWeb) return; // Push notifications are mobile-only for now.
+  // On iOS the native Firebase SDK raises an Objective-C exception (not a Dart
+  // one) when handed placeholder options, which kills the app at launch before
+  // the try/catch below can help. Skip until a real config is generated.
+  if (DefaultFirebaseOptions.currentPlatform.projectId.endsWith('placeholder')) {
+    return;
+  }
   try {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
