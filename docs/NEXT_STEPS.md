@@ -285,8 +285,10 @@ that lead to a new pair.
 
 - Stop committing `build/web` once one CI deploy is green.
 - Run the 5 integration tests against the staging project in CI.
-- Explicit timezone picker in Settings (the device offset is captured
-  silently today, and half-hour offsets fall back to UTC).
+- Detect the device's real IANA timezone on first load (needs a plugin such
+  as `flutter_timezone`). The Settings picker exists now, but new accounts
+  still start on a whole-hour `Etc/GMT` guess, and half-hour offsets (India,
+  Nepal) start on UTC until the user picks a zone.
 - Update the Supabase CLI (installed 2.39.2, current 2.121.0) and set
   `[db] major_version = 17` in `supabase/config.toml` to match production.
 - Offline mode (queue changes, sync later), from

@@ -86,13 +86,18 @@ release keystore (doc above — deliberately a manual step, since losing
 that credential is unrecoverable), and an actual device/simulator run to
 eyeball the mobile UI once Xcode is set up.
 
+Also shipped: a **timezone picker** in Settings → Digest timezone (searchable
+list of IANA zones with live UTC offsets; search "new york" or "+5:30"). New
+accounts still start on a zone guessed from the device's whole-hour UTC
+offset, so someone in a half-hour zone such as India starts on UTC until they
+pick theirs — detecting the real zone on first load would need a plugin
+(e.g. `flutter_timezone`) and is a candidate follow-up.
+
 ## Next phase
 
 - Offline task queue with sync
 - Analytics dashboard
 - Multi-partner (team) support
-- Timezone picker in Settings (today the timezone is captured silently from
-  the device's UTC offset on first load — see `EmailPreferencesService`)
 
 ## Engineering backlog
 

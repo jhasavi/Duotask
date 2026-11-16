@@ -8,6 +8,8 @@ import '../services/pairing_service.dart';
 import '../services/email_preferences_service.dart';
 import '../services/premium_service.dart';
 import '../widgets/premium_widgets.dart';
+import '../widgets/timezone_picker.dart';
+import '../utils/timezone_options.dart';
 import '../config/app_config.dart';
 import '../config/theme.dart';
 import 'auth_screen.dart';
@@ -179,38 +181,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           Consumer<EmailPreferencesService>(
             builder: (context, emailPrefs, _) {
-              return SwitchListTile(
-                title: const Text('Daily Email Digest'),
-                subtitle: const Text(
-                  'Receive task summary via email at 8 AM your local time',
-                ),
-                value: emailPrefs.dailyEmailEnabled,
-                onChanged: emailPrefs.isLoading
-                    ? null
-                    : (value) async {
-                        final userId =
-                            context.read<AuthService>().currentUser?.id;
-                        if (userId == null) return;
-                        final messenger = ScaffoldMessenger.of(context);
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text('Daily Email Digest'),
+                    subtitle: const Text(
+                      'Receive task summary via email at 8 AM your local time',
+                    ),
+                    value: emailPrefs.dailyEmailEnabled,
+                    onChanged: emailPrefs.isLoading
+                        ? null
+                        : (value) async {
+                            final userId =
+                                context.read<AuthService>().currentUser?.id;
+                            if (userId == null) return;
+                            final messenger = ScaffoldMessenger.of(context);
 
-                        final success = await emailPrefs.setDailyEmailEnabled(
-                          userId,
-                          value,
-                        );
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              success
-                                  ? value
-                                      ? 'Daily email digest enabled'
-                                      : 'Daily email digest disabled'
-                                  : emailPrefs.errorMessage ??
-                                      'Failed to update email preferences',
-                            ),
+                            final success =
+                                await emailPrefs.setDailyEmailEnabled(
+                              userId,
+                              value,
+                            );
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? value
+                                          ? 'Daily email digest enabled'
+                                          : 'Daily email digest disabled'
+                                      : emailPrefs.errorMessage ??
+                                          'Failed to update email preferences',
+                                ),
+                              ),
+                            );
+                          },
+                    secondary: const Icon(Icons.email_outlined),
+                  ),
+                  ListTile(
+                    key: const Key('digest-timezone-tile'),
+                    leading: const Icon(Icons.public),
+                    title: const Text('Digest timezone'),
+                    subtitle: Text(timezoneLabel(emailPrefs.timezone)),
+                    trailing: const Icon(Icons.chevron_right),
+                    enabled: !emailPrefs.isLoading,
+                    onTap: () async {
+                      final userId =
+                          context.read<AuthService>().currentUser?.id;
+                      if (userId == null) return;
+                      final messenger = ScaffoldMessenger.of(context);
+
+                      final selected = await showTimezonePicker(
+                        context,
+                        current: emailPrefs.timezone,
+                      );
+                      if (selected == null || selected == emailPrefs.timezone) {
+                        return;
+                      }
+
+                      final success =
+                          await emailPrefs.setTimezone(userId, selected);
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success
+                                ? 'Digest timezone set to $selected'
+                                : emailPrefs.errorMessage ??
+                                    'Failed to update timezone',
                           ),
-                        );
-                      },
-                secondary: const Icon(Icons.email_outlined),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               );
             },
           ),

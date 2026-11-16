@@ -126,10 +126,11 @@ warns but does not fail when they are unset.
   that exist in no local file. Checked locally (2026-08-28): no trace of them
   in migrations, `schema.sql`, or git history — run `supabase migration list
   --linked` once linked and reconcile from what the live project actually has.
-- Timezone for the email digest is captured silently from the device's UTC
-  offset (`EmailPreferencesService.deviceOffsetTimezone`); there's no explicit
-  picker in Settings yet, and non-whole-hour offsets (e.g. UTC+5:30) fall back
-  to UTC.
+- A new account's digest timezone starts as a guess from the device's UTC
+  offset (`EmailPreferencesService.deviceOffsetTimezone`), and non-whole-hour
+  offsets (e.g. UTC+5:30) fall back to UTC. Users can correct it any time in
+  Settings → Digest timezone, but until they do, someone in India gets their
+  digest at 08:00 UTC rather than 08:00 local.
 
 See [UNIMPLEMENTED_FEATURES.md](UNIMPLEMENTED_FEATURES.md) for the feature
 backlog.
