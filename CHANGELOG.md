@@ -5,6 +5,25 @@ All notable changes to DuoTask will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-11-16 — Launch readiness
+
+Not deployed. Branch `feat/launch-readiness` (PR 11).
+
+### Added
+- **Account deletion** (`delete_my_account` RPC, Settings > Delete Account),
+  with a throttled password check; blocked while a subscription is active.
+- **Invite-your-partner links** that pair on sign-up; pairing is refused if
+  the invitee is already paired.
+- **Lifecycle emails** (invite your partner, tips, trial ending) via the
+  `lifecycle-emails` edge function; opt-out under "Tips and reminders".
+  See [docs/LIFECYCLE_EMAILS.md](docs/LIFECYCLE_EMAILS.md).
+- **Timezone picker** in Settings for the daily email digest.
+- Landing page, refund/cancellation terms, `paywall_viewed` event.
+
+### Changed
+- iOS UIScene migration (Flutter 3.41); Firebase init is skipped while the
+  config is still the placeholder, which previously crashed iOS at launch.
+
 ## [Unreleased] - 2026-10-16 — Send a task to someone without the app
 
 Not deployed. See [docs/SHARE_LINKS.md](docs/SHARE_LINKS.md).

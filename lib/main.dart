@@ -63,7 +63,8 @@ Future<void> _initializeFirebaseMessaging() async {
   // On iOS the native Firebase SDK raises an Objective-C exception (not a Dart
   // one) when handed placeholder options, which kills the app at launch before
   // the try/catch below can help. Skip until a real config is generated.
-  if (DefaultFirebaseOptions.currentPlatform.projectId.endsWith('placeholder')) {
+  if (DefaultFirebaseOptions.currentPlatform.projectId
+      .endsWith('placeholder')) {
     return;
   }
   try {
