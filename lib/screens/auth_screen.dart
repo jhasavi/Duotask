@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/pair_invite.dart';
 import '../models/task_share.dart';
 import '../services/auth_service.dart';
+import '../services/pairing_service.dart';
 import '../services/task_share_service.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
@@ -24,10 +26,26 @@ class _AuthScreenState extends State<AuthScreen> {
   /// Set when the user arrived from a task someone sent them by link.
   SharedTaskPreview? _invite;
 
+  /// Set when the user arrived from a partner's invite link: the inviter's
+  /// first name, or '' when they have none.
+  String? _pairInviter;
+
   @override
   void initState() {
     super.initState();
     _loadInvite();
+    _loadPairInvite();
+  }
+
+  Future<void> _loadPairInvite() async {
+    final code = await PairInvite.pending();
+    if (code == null || !mounted) return;
+    final name = await context.read<PairingService>().invitePreview(code);
+    if (name == null || !mounted) return;
+    setState(() {
+      _pairInviter = name;
+      _isSignIn = false; // Most people arriving from an invite are new.
+    });
   }
 
   Future<void> _loadInvite() async {
@@ -173,6 +191,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   if (_invite != null) ...[
                     _InviteBanner(invite: _invite!),
+                    const SizedBox(height: 24),
+                  ] else if (_pairInviter != null) ...[
+                    PairInviteBanner(inviterName: _pairInviter!),
                     const SizedBox(height: 24),
                   ],
 
@@ -369,6 +390,45 @@ class _InviteBanner extends StatelessWidget {
           Text(
             "Create a free account and it'll be waiting on your board, "
             'so you and $who can keep track together.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Sam invited you to DuoTask" banner for people who arrive from a
+/// partner's invite link.
+class PairInviteBanner extends StatelessWidget {
+  /// The inviter's first name, or '' when they have none.
+  final String inviterName;
+  const PairInviteBanner({super.key, required this.inviterName});
+
+  @override
+  Widget build(BuildContext context) {
+    final named = inviterName.trim().isNotEmpty;
+    return Container(
+      key: const Key('pair_invite_banner'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            named
+                ? '$inviterName invited you to DuoTask'
+                : "You've been invited to DuoTask",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Create a free account and you'll be paired automatically, so "
+            "you can share tasks and see who's doing what.",
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],

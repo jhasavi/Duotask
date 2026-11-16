@@ -13,8 +13,7 @@ import '../models/premium_status.dart';
 /// those columns.
 class PremiumService extends ChangeNotifier {
   final Future<PremiumStatus> Function() _loadStatus;
-  final Future<void> Function(String source, bool canUpgrade)?
-      _logPaywallView;
+  final Future<void> Function(String source, bool canUpgrade)? _logPaywallView;
   final String _paymentLinkUrl;
   final String _customerPortalUrl;
 

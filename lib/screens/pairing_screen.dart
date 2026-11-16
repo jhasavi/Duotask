@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/pairing_service.dart';
+import '../config/app_config.dart';
+import '../widgets/invite_link_buttons.dart';
 import '../config/theme.dart';
 import '../utils/haptic_helper.dart';
 
@@ -602,12 +604,10 @@ class _PairingScreenState extends State<PairingScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Share this code with your partner',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontStyle: FontStyle.italic,
-                    ),
+              InviteLinkButtons(
+                code: _myPairingCode!,
+                appBaseUrl: AppConfig.publicAppUrl,
+                onSent: context.read<PairingService>().logInviteSent,
               ),
               const SizedBox(height: 16),
             ] else if (_isLoadingCode) ...[

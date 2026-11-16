@@ -137,3 +137,43 @@ sign-ups are low, the "Keep track together" card is.
   then expose the title to the preview bot.
 - **One live link per task.** Sending the same task to two people sends the
   same link, and the first to act wins.
+
+## Partner invite links
+
+*Built 2026-11-15. Ships with the same push of `main`.*
+
+Share links send one task. Invite links send the whole partnership: under
+their pairing code, the inviter gets WhatsApp, Text, Email and Copy link
+buttons that send `https://<app>/?pair=<CODE>`.
+
+- **Opening the link** shows "Sam invited you to DuoTask" on the sign-up
+  screen (first name only, via the anon-callable `pair_invite_preview`), with
+  Sign Up selected.
+- **The code survives sign-up.** `main.dart` stores `?pair=` before an OAuth
+  or magic-link redirect can drop it, exactly like `?join=` (`PairInvite`).
+- **After sign-in** the home screen calls `PairingService.claimPendingInvite`,
+  which pairs through `accept_pairing` and says "You're paired with Sam!".
+  An already-paired user isn't paired twice; their own link, or an expired
+  code, gets a plain message. Offline, the code is kept for the next launch.
+- The 8-character code is still shown, and the message includes it, for
+  anyone who would rather type it.
+
+Funnel (`20261115000001_pair_invite_links.sql`): `pair_invite_sent` (with
+`props.channel`) → `pair_invite_opened` (once per invite) → `pair_created`.
+
+```sql
+select count(*) filter (where event = 'pair_invite_sent')   as sent,
+       count(*) filter (where event = 'pair_invite_opened') as opened,
+       count(*) filter (where event = 'pair_created')       as paired
+from analytics.events
+where created_at > now() - interval '30 days';
+```
+
+`pair_created` counts every pairing, including typed codes, so compare it
+with `opened` over time rather than reading it as invite conversions.
+
+Tested 2026-11-15: unit tests for the link, message and storage and every
+claim outcome, widget tests for the buttons, integration tests against a
+local stack (anon preview, claim pairs both users, no double pairing, channel
+validation), and twice by hand in a browser against a local stack: sign up
+from a link and land paired, with the funnel events recorded in order.

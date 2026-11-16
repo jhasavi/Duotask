@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../models/pair_invite.dart';
 import '../models/pairing.dart';
 import '../models/user.dart';
 
@@ -328,6 +329,87 @@ class PairingService extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  // --- Invite links ---------------------------------------------------------
+
+  /// The inviter's first name for an invite [code] ('' if they have none),
+  /// or null when the code isn't valid or the request fails.
+  Future<String?> invitePreview(String code) async {
+    try {
+      final name =
+          await _supabase.rpc('pair_invite_preview', params: {'p_code': code});
+      return name is String ? name : null;
+    } catch (e) {
+      if (kDebugMode) print('Invite preview error: $e');
+      return null;
+    }
+  }
+
+  /// Records a `pair_invite_sent` usage event. Never throws.
+  Future<void> logInviteSent(String channel) async {
+    try {
+      await _supabase
+          .rpc('log_pair_invite_sent', params: {'p_channel': channel});
+    } catch (e) {
+      if (kDebugMode) print('Invite sent logging error: $e');
+    }
+  }
+
+  /// If the user opened a partner's invite link before signing in, pairs
+  /// them now. Returns null when there was nothing to do, or when it
+  /// couldn't tell (offline), in which case the code is kept for next launch.
+  Future<PairInviteOutcome?> claimPendingInvite(String userId) async {
+    final code = await PairInvite.pending();
+    if (code == null) return null;
+
+    await checkPairingStatus(userId);
+    if (errorMessage != null) return null;
+
+    if (isPaired) {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "You're already paired, so the invite link wasn't used.",
+      );
+    }
+
+    if (await acceptPairingCode(userId, code)) {
+      await PairInvite.clear();
+      final name = partner?.displayName?.trim();
+      return PairInviteOutcome(
+        paired: true,
+        message: (name == null || name.isEmpty)
+            ? "You're paired! Tasks you share now show up for both of you."
+            : "You're paired with $name! Tasks you share now show up for "
+                'both of you.',
+      );
+    }
+
+    final error = errorMessage ?? '';
+    if (error == 'Cannot pair with yourself') {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "That's your own invite link. Send it to your partner.",
+      );
+    }
+    if (error == 'Invalid or expired pairing code') {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: 'That invite link has expired. Ask for a new one.',
+      );
+    }
+    if (error.startsWith('Failed to accept pairing:')) {
+      // The server refused for some other reason; retrying won't help.
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "Couldn't pair from that invite link. Ask for a new one.",
+      );
+    }
+    return null; // Probably offline: keep the code and try next launch.
   }
 
   Future<bool> unpair(String userId) async {

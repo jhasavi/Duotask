@@ -92,6 +92,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
       }
 
+      // Arrived from a partner's invite link: pair now.
+      final invite = await pairingService.claimPendingInvite(userId);
+      if (invite != null) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(invite.message),
+          duration: const Duration(seconds: 6),
+        ));
+      }
+
       await Future.wait([
         taskShareService.load(userId),
         taskService.loadTasks(userId),
@@ -163,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (!mounted) return;
+
+    // Nothing done this week (a brand-new pair, or a quiet week): a "0 shared
+    // tasks finished together 🎉" card is no celebration, so skip it. Not
+    // marked as shown, so it can still appear later today if they finish one.
+    if ((counts['user'] ?? 0) + (counts['partner'] ?? 0) == 0) return;
 
     // Show modal
     await showDialog(
