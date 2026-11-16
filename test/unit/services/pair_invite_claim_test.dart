@@ -111,6 +111,22 @@ void main() {
     expect(await PairInvite.pending(), isNull);
   });
 
+  test('the server refusing a second pairing drops the code', () async {
+    await withPendingCode();
+    final joiner = _FakePairing(
+        acceptResult: false, acceptError: PairingService.alreadyPairedError);
+    expect((await joiner.claimPendingInvite('u1'))!.message,
+        contains('already paired'));
+    expect(await PairInvite.pending(), isNull);
+
+    await withPendingCode();
+    final inviter = _FakePairing(
+        acceptResult: false, acceptError: PairingService.inviterPairedError);
+    expect((await inviter.claimPendingInvite('u1'))!.message,
+        contains('paired with someone else'));
+    expect(await PairInvite.pending(), isNull);
+  });
+
   test('offline: keeps the code for next launch', () async {
     await withPendingCode();
     final offlineCheck = _FakePairing(

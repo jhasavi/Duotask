@@ -168,6 +168,58 @@ void main() {
   );
 
   test(
+    'someone already paired cannot join a second code',
+    () async {
+      final userA = await createUser('a');
+      final userB = await createUser('b');
+      final userC = await createUser('c');
+
+      final serviceB = PairingService(await clientFor(userB));
+      final aCode =
+          await PairingService(await clientFor(userA)).createPairingCode(userA);
+      expect(await serviceB.acceptPairingCode(userB, aCode!), isTrue);
+
+      // B, now paired with A, types C's code.
+      final cCode =
+          await PairingService(await clientFor(userC)).createPairingCode(userC);
+      expect(await serviceB.acceptPairingCode(userB, cCode!), isFalse);
+      expect(serviceB.errorMessage, PairingService.alreadyPairedError);
+
+      final active = await admin
+          .from('pairings')
+          .select('id')
+          .eq('status', 'active')
+          .or('requester_id.eq.$userB,recipient_id.eq.$userB');
+      expect(active, hasLength(1), reason: 'B must have exactly one pairing');
+    },
+    tags: ['integration'],
+    skip: skip,
+  );
+
+  test(
+    'a code stops working once its owner has paired with someone else',
+    () async {
+      final userA = await createUser('a');
+      final userB = await createUser('b');
+      final userC = await createUser('c');
+
+      final serviceA = PairingService(await clientFor(userA));
+      final aCode = await serviceA.createPairingCode(userA);
+
+      // A pairs with C by joining C's code; A's own code is still pending.
+      final cCode =
+          await PairingService(await clientFor(userC)).createPairingCode(userC);
+      expect(await serviceA.acceptPairingCode(userA, cCode!), isTrue);
+
+      final serviceB = PairingService(await clientFor(userB));
+      expect(await serviceB.acceptPairingCode(userB, aCode!), isFalse);
+      expect(serviceB.errorMessage, PairingService.inviterPairedError);
+    },
+    tags: ['integration'],
+    skip: skip,
+  );
+
+  test(
     'unpairing clears the partner for both users',
     () async {
       final userA = await createUser('a');

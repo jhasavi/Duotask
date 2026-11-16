@@ -17,6 +17,11 @@ class PairingService extends ChangeNotifier {
 
   PairingService(this._supabase);
 
+  static const alreadyPairedError =
+      "You're already paired. Unpair first to pair with someone else.";
+  static const inviterPairedError =
+      "That code's owner is already paired with someone else.";
+
   Pairing? get currentPairing => _currentPairing;
   AppUser? get partner => _partner;
   bool get isLoading => _isLoading;
@@ -303,6 +308,16 @@ class PairingService extends ChangeNotifier {
           _setLoading(false);
           return false;
         }
+        if (e.message.contains('already_paired')) {
+          _setError(alreadyPairedError);
+          _setLoading(false);
+          return false;
+        }
+        if (e.message.contains('inviter_paired')) {
+          _setError(inviterPairedError);
+          _setLoading(false);
+          return false;
+        }
         rethrow;
       }
 
@@ -392,6 +407,21 @@ class PairingService extends ChangeNotifier {
       return const PairInviteOutcome(
         paired: false,
         message: "That's your own invite link. Send it to your partner.",
+      );
+    }
+    if (error == alreadyPairedError) {
+      // Paired between the status check and the join (another device?).
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "You're already paired, so the invite link wasn't used.",
+      );
+    }
+    if (error == inviterPairedError) {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: 'Whoever sent that invite has paired with someone else.',
       );
     }
     if (error == 'Invalid or expired pairing code') {
