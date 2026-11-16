@@ -218,6 +218,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                     secondary: const Icon(Icons.email_outlined),
                   ),
+                  SwitchListTile(
+                    key: const Key('lifecycle-emails-switch'),
+                    title: const Text('Tips and reminders'),
+                    subtitle: const Text(
+                      'A few emails in your first two weeks to help you get '
+                      'started',
+                    ),
+                    value: emailPrefs.lifecycleEmailsEnabled,
+                    onChanged: emailPrefs.isLoading
+                        ? null
+                        : (value) async {
+                            final userId =
+                                context.read<AuthService>().currentUser?.id;
+                            if (userId == null) return;
+                            final messenger = ScaffoldMessenger.of(context);
+                            final success = await emailPrefs
+                                .setLifecycleEmailsEnabled(userId, value);
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? value
+                                          ? 'Tips and reminders turned on'
+                                          : 'Tips and reminders turned off'
+                                      : emailPrefs.errorMessage ??
+                                          'Failed to update email preferences',
+                                ),
+                              ),
+                            );
+                          },
+                    secondary: const Icon(Icons.tips_and_updates_outlined),
+                  ),
                   ListTile(
                     key: const Key('digest-timezone-tile'),
                     leading: const Icon(Icons.public),
