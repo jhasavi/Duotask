@@ -7,11 +7,11 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 - **[User Guide](USER_GUIDE.md)** - Complete user documentation, getting started, and troubleshooting
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Development setup, project structure, and contribution guidelines
 - **[Architecture](ARCHITECTURE.md)** - System architecture, database schema, and technical design
-- **[Project Status](PROJECT_STATUS.md)** - Current state and what blocks release
+- **[Next Actions](docs/NEXT_ACTIONS.md)** - What to do before release, in order
 - **[Security](SECURITY.md)** - Credential handling and automated guards
 - **[Release Process](docs/RELEASE.md)** - How deployments work
 - **[Testing Guide](TESTING_GUIDE.md)** - The hermetic and integration suites
-- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - Shipped work and next steps
+- **[Growth plan](docs/NEXT_STEPS.md)** - Monetization and growth after launch
 
 ## 🎯 Features
 

@@ -47,7 +47,7 @@ first; repeat in live mode for production.
 ### 1. Staging Supabase project
 
 - [ ] Create a project, e.g. `duotask-staging`. The same project can serve as
-      the CI **test** project that PROJECT_STATUS.md asks for.
+      the CI **test** project that NEXT_ACTIONS.md asks for.
 - [ ] **Before** `db push`, add the Vault secrets in the SQL editor (new
       projects already have the `supabase_vault` extension):
       ```sql

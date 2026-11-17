@@ -3,8 +3,8 @@
 *Last updated: August 28, 2026*
 
 Shipped work has been removed from this list. See
-[PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) for what exists today and
-[PROJECT_STATUS.md](PROJECT_STATUS.md) for what blocks release.
+[CHANGELOG.md](CHANGELOG.md) for what exists today and
+[docs/NEXT_ACTIONS.md](docs/NEXT_ACTIONS.md) for what blocks release.
 
 ---
 

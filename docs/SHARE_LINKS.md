@@ -1,7 +1,7 @@
 # Send a task to someone without the app
 
 *Built 2026-10-16. Not deployed: it ships with the next push of `main`, which
-needs Phase 0 of [NEXT_STEPS.md](NEXT_STEPS.md) first.*
+needs [NEXT_ACTIONS.md](NEXT_ACTIONS.md) first.*
 
 DuoTask only works once both people have signed up and paired, so every new
 user has to talk someone into installing an app before they get any value.

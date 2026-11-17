@@ -4,8 +4,12 @@ Four credentials were exposed and must be replaced. They are out of the
 working tree but remain in git history, so **removing them changed nothing —
 rotation is the only fix.**
 
-*Status as of 2026-10-15: none of the four has been rotated. The public
-`/assets/.env` leak itself is closed (verified 2026-09-16).*
+*Status as of 2026-11-17:* **Resend rotated, Discord rotated, Vercel nothing to
+do** (the leaked OIDC token was short-lived and expired). **Supabase is NOT
+done:** the leaked `service_role` key still works. The dashboard has no
+"generate new JWT secret" button any more, so use Route B below. See
+[NEXT_ACTIONS.md](NEXT_ACTIONS.md). The public `/assets/.env` leak itself is
+closed (verified 2026-09-16).*
 
 ## Do-it-now checklist (≈45 minutes, in this order)
 
@@ -28,8 +32,7 @@ effects (it changes the anon key, and the web app must be rebuilt with it).
        secret `anon_key`, your local `.env`) and redeploy the web app — §3
 6. [ ] **Verify** (5 min) — trigger the digest and a nudge, sign in on the
        web app, run `scripts/smoke_test.sh https://duotask.namasteneedham.com`
-7. [ ] Tick the boxes in [PROJECT_STATUS.md](../PROJECT_STATUS.md) and the
-       checklist at the bottom of this file.
+7. [ ] Tick the checklist at the bottom of this file.
 
 > **Before you push anything:** `main` has local commits that are not on
 > GitHub yet, starting with `338dac9` (adds
@@ -224,9 +227,9 @@ nothing, because copies may already exist.
 ## Checklist
 
 - [ ] Reviewed Resend, Supabase auth, and Discord logs for misuse
-- [ ] Resend key deleted and replaced; digest send verified
-- [ ] Discord token reset (or application deleted)
-- [ ] Vercel token rotated
+- [x] Resend key deleted and replaced (2026-11-17); new key set as Supabase secret. Digest send not yet verified
+- [x] Discord token reset (2026-11-17)
+- [x] Vercel: no long-lived leaked token exists; nothing to rotate
 - [ ] Supabase JWT keys rotated; new anon key in GitHub secrets, Vault and `.env`
 - [ ] Edge functions redeployed; web app rebuilt and redeployed with the new anon key
 - [x] `scripts/smoke_test.sh` passes against production (2026-09-16; re-run after the redeploy)

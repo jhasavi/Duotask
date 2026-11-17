@@ -1,12 +1,12 @@
 # DuoTask launch plan: social posts, app stores, and making money
 
-*Written 2026-10-23. Complements [NEXT_STEPS.md](NEXT_STEPS.md); it doesn't replace it.*
+*Written 2026-10-23. Complements [NEXT_ACTIONS.md](NEXT_ACTIONS.md); it doesn't replace it.*
 
 ## Verdict
 
 1. **Stay web-only for now.** Don't pay for Apple or Google yet. The web app
    is installable (PWA), works on phones, and costs nothing per sale.
-2. **Don't promote it until Phase 0 of NEXT_STEPS.md is done.** Production
+2. **Don't promote it until NEXT_ACTIONS.md is done.** Production
    probably still lacks the tags/recurrence/timezone/share-link migrations,
    and the leaked keys are not rotated. Advertising a broken product wastes
    the one first impression you get.
@@ -109,8 +109,8 @@ couple, 100 paying couples is about $3,000/year before fees. It's worth doing
 because it costs almost nothing to run, not because it will replace income.
 Don't spend on ads until organic signups convert.
 
-1. **Fix the base first** (NEXT_STEPS Phase 0, about a day).
-2. **Turn on Premium via Stripe test mode, then live** (NEXT_STEPS Phase 1).
+1. **Fix the base first** (NEXT_ACTIONS.md).
+2. **Turn on Premium via Stripe test mode, then live** (NEXT_STEPS.md Phase 1).
    Everything is built: webhook, paywall, Streaks & Stats. Add refund terms to
    the Terms of Service first.
 3. **Price**: $3.99/month or $29.99/year per couple, 14-day trial. Both
@@ -129,7 +129,7 @@ Don't spend on ads until organic signups convert.
 
 ## Before you post anything
 
-- [ ] Phase 0: rotate credentials, reconcile production migrations, deploy
+- [ ] Everything in docs/NEXT_ACTIONS.md
 - [ ] Create a test account on production and run through sign-up, pairing,
       adding a tagged task and sending a task by link
 - [ ] Add Vercel Web Analytics
