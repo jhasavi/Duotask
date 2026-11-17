@@ -92,7 +92,7 @@ void main() async {
 
   await _initializeFirebaseMessaging();
 
-  // A recipient tapping "Get DuoTask" on a share link lands on /?join=<token>.
+  // A recipient tapping "Get EvenHalf" on a share link lands on /?join=<token>.
   // Keep the token before sign-up redirects (OAuth, magic link) drop the URL.
   if (kIsWeb) await TaskShareService.captureJoinToken(Uri.base);
   // Same for a partner invite link, /?pair=<CODE>.
@@ -119,7 +119,7 @@ void main() async {
   await connectivityService.initialize();
 
   runApp(
-    DuoTaskApp(
+    EvenHalfApp(
       notifications: notifications,
       preferencesService: preferencesService,
       connectivityService: connectivityService,
@@ -127,12 +127,12 @@ void main() async {
   );
 }
 
-class DuoTaskApp extends StatelessWidget {
+class EvenHalfApp extends StatelessWidget {
   final FlutterLocalNotificationsPlugin notifications;
   final PreferencesService preferencesService;
   final ConnectivityService connectivityService;
 
-  const DuoTaskApp({
+  const EvenHalfApp({
     super.key,
     required this.notifications,
     required this.preferencesService,
@@ -254,7 +254,7 @@ class _ConfigErrorApp extends StatelessWidget {
                 Icon(Icons.error_outline, size: 48),
                 SizedBox(height: 16),
                 Text(
-                  'DuoTask is not configured',
+                  'EvenHalf is not configured',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),

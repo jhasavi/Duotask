@@ -96,7 +96,7 @@ async function registerUser(interaction) {
 
   const embed = new EmbedBuilder()
     .setTitle('✅ Registration Successful!')
-    .setDescription(`Welcome to DuoTask, ${name}!`)
+    .setDescription(`Welcome to EvenHalf, ${name}!`)
     .setColor(0x00FF00)
     .addFields({ name: 'Email', value: email });
 
@@ -121,7 +121,7 @@ async function loginUser(interaction) {
 
   const embed = new EmbedBuilder()
     .setTitle('✅ Login Successful!')
-    .setDescription('You are now connected to DuoTask')
+    .setDescription('You are now connected to EvenHalf')
     .setColor(0x00FF00);
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -315,14 +315,14 @@ async function handleButtonInteraction(interaction) {
 const commands = [
   new SlashCommandBuilder()
     .setName('register')
-    .setDescription('Create a DuoTask account')
+    .setDescription('Create an EvenHalf account')
     .addStringOption(option => option.setName('email').setDescription('Your email').setRequired(true))
     .addStringOption(option => option.setName('password').setDescription('Your password').setRequired(true))
     .addStringOption(option => option.setName('name').setDescription('Your name').setRequired(true)),
   
   new SlashCommandBuilder()
     .setName('login')
-    .setDescription('Login to DuoTask')
+    .setDescription('Login to EvenHalf')
     .addStringOption(option => option.setName('email').setDescription('Your email').setRequired(true))
     .addStringOption(option => option.setName('password').setDescription('Your password').setRequired(true)),
   

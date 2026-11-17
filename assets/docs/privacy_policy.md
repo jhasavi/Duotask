@@ -1,10 +1,10 @@
 # Privacy Policy
 
-**Last Updated: October 31, 2025**
+**Last Updated: November 17, 2026**
 
 ## Introduction
 
-Welcome to DuoTask ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, store, and protect your information when you use our task-sharing application.
+Welcome to EvenHalf ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, store, and protect your information when you use our task-sharing application.
 
 ## 1. Information We Collect
 
@@ -40,7 +40,7 @@ Welcome to DuoTask ("we," "our," or "us"). We respect your privacy and are commi
 **Usage Events:**
 - When you sign up, pair with a partner, create or complete a task, send a
   nudge, or start or end a Premium subscription, we record the event type,
-  your account ID and the time. We use this only to understand how DuoTask is
+  your account ID and the time. We use this only to understand how EvenHalf is
   used. We do not record task titles, descriptions or nudge messages for
   this purpose, we do not use third-party tracking or advertising SDKs, and
   these records are deleted when you delete your account.
@@ -122,7 +122,7 @@ We share data with trusted third-party service providers:
 
 **Stripe (Payments, Premium only):**
 - Processes Premium subscription payments; your card details go directly to
-  Stripe and are never seen or stored by DuoTask
+  Stripe and are never seen or stored by EvenHalf
 - We store your Stripe customer and subscription IDs and subscription status
 - [Privacy Policy](https://stripe.com/privacy)
 
@@ -257,7 +257,7 @@ If you're a California resident, you have the right to:
 
 ## 8. Children's Privacy
 
-DuoTask is not intended for children under 13. We do not knowingly collect information from children under 13.
+EvenHalf is not intended for children under 13. We do not knowingly collect information from children under 13.
 
 If you believe a child has provided us with information:
 - Contact us immediately
@@ -289,14 +289,14 @@ Your data may be transferred to and stored in countries other than your own. We 
 
 If you have questions about this privacy policy or our data practices:
 
-**Email**: privacy@duotask.app  
-**Website**: https://duotask.app/privacy  
+**Email**: privacy@evenhalf.app  
+**Website**: https://evenhalf.app/privacy/  
 
 ### 11.2 Data Protection Officer
 
 For GDPR-related inquiries:
 
-**Email**: dpo@duotask.app
+**Email**: privacy@evenhalf.app
 
 ### 11.3 Response Time
 
@@ -367,7 +367,7 @@ We do not use automated decision-making or profiling that produces legal effects
 
 ---
 
-**By using DuoTask, you acknowledge that you have read and understood this Privacy Policy.**
+**By using EvenHalf, you acknowledge that you have read and understood this Privacy Policy.**
 
 ---
 

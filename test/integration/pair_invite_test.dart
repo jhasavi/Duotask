@@ -11,8 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:duotask/models/pair_invite.dart';
-import 'package:duotask/services/pairing_service.dart';
+import 'package:evenhalf/models/pair_invite.dart';
+import 'package:evenhalf/services/pairing_service.dart';
 
 import '../support/integration_env.dart';
 

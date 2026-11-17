@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:duotask/models/task.dart';
+import 'package:evenhalf/models/task.dart';
 
 void main() {
   group('Task Model Tests', () {

@@ -1,4 +1,4 @@
-# DuoTask
+# EvenHalf
 
 A visually engaging, real-time task-sharing app built with Flutter and Supabase, designed to help two people — such as couples, roommates, or teammates — coordinate daily responsibilities in a fun and effortless way.
 
@@ -55,7 +55,7 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 
 ### For Users
 
-1. Visit the live app: **https://duotask-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app**
+1. Visit the live app: **https://evenhalf-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app**
 2. Sign up with email or Google
 3. Generate a pairing code to connect with your partner
 4. Start adding and managing tasks together!
@@ -67,7 +67,7 @@ See the **[User Guide](USER_GUIDE.md)** for detailed instructions.
 ```bash
 # Clone repository
 git clone <repository-url>
-cd duotask
+cd evenhalf
 
 # Install dependencies
 flutter pub get
@@ -98,7 +98,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for technical details.
 ## 📁 Project Structure
 
 ```
-duotask/
+evenhalf/
 ├── lib/
 │   ├── config/           # App configuration and theme
 │   │   ├── app_config.dart

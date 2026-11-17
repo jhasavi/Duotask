@@ -1,4 +1,4 @@
-# DuoTask - Developer Guide
+# EvenHalf - Developer Guide
 
 ## Development Setup
 
@@ -16,7 +16,7 @@
 ```bash
 # Clone repository (if using Git)
 git clone <repository-url>
-cd duotask
+cd evenhalf
 
 # Install Flutter dependencies
 flutter pub get
@@ -54,7 +54,7 @@ See [SECURITY.md](SECURITY.md).
 ## Project Structure
 
 ```
-duotask/
+evenhalf/
 ├── lib/
 │   ├── main.dart                 # App entry point
 │   ├── config/

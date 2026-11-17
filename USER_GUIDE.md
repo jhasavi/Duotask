@@ -1,8 +1,8 @@
-# DuoTask - User Guide
+# EvenHalf - User Guide
 
-## Welcome to DuoTask! 🎯
+## Welcome to EvenHalf! 🎯
 
-DuoTask is a task management app designed for partners who want to collaborate and share responsibilities. Whether you're managing household chores, planning projects, or organizing your life together, DuoTask makes it easy to stay in sync.
+EvenHalf is a task management app designed for partners who want to collaborate and share responsibilities. Whether you're managing household chores, planning projects, or organizing your life together, EvenHalf makes it easy to stay in sync.
 
 ## Getting Started
 
@@ -149,7 +149,7 @@ When you complete a recurring task, a new one is automatically created for the n
 
 ### 8. Send a Task to Someone Without the App
 
-Your partner (or a roommate, babysitter or parent) doesn't need DuoTask for
+Your partner (or a roommate, babysitter or parent) doesn't need EvenHalf for
 you to hand them a task.
 
 1. Open a task and tap **"Send to someone"**
@@ -270,7 +270,7 @@ Don't clutter shared views with personal items. Keep work tasks, personal goals,
 ## FAQs
 
 **Q: Can I pair with multiple partners?**  
-A: Not currently. DuoTask supports 1-to-1 pairing only.
+A: Not currently. EvenHalf supports 1-to-1 pairing only.
 
 **Q: Can I undo completing a task?**  
 A: Not yet, but this feature is planned. For now, you can create a new task.
@@ -278,7 +278,7 @@ A: Not yet, but this feature is planned. For now, you can create a new task.
 **Q: What happens if I delete my account?**  
 A: All your tasks are deleted, and your partner is automatically unpaired.
 
-**Q: Can I use DuoTask offline?**  
+**Q: Can I use EvenHalf offline?**  
 A: Not yet. Offline mode is planned for future releases.
 
 **Q: Is there a mobile app?**  
@@ -300,7 +300,7 @@ A: Export feature coming soon. For now, you can manually copy task details.
 
 ## Updates
 
-DuoTask is actively being developed. New features coming soon:
+EvenHalf is actively being developed. New features coming soon:
 - 📱 Mobile apps (iOS & Android)
 - 🔔 Push notifications
 - 💬 In-app messaging
@@ -320,7 +320,7 @@ DuoTask is actively being developed. New features coming soon:
 
 ```
 ┌─────────────────────────────────────┐
-│         DUOTASK QUICK START         │
+│         EVENHALF QUICK START         │
 ├─────────────────────────────────────┤
 │ 1. Sign Up / Sign In                │
 │    → Email or Google                │

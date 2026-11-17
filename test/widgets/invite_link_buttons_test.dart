@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:duotask/widgets/invite_link_buttons.dart';
+import 'package:evenhalf/widgets/invite_link_buttons.dart';
 
 void main() {
   late List<Uri> launched;
@@ -13,7 +13,7 @@ void main() {
         home: Scaffold(
           body: InviteLinkButtons(
             code: 'AB12CD34',
-            appBaseUrl: 'https://duotask.example.com',
+            appBaseUrl: 'https://evenhalf.example.com',
             onSent: sent.add,
             launcher: (uri) async {
               launched.add(uri);
@@ -53,7 +53,7 @@ void main() {
     expect(launched, hasLength(1));
     expect(launched.single.host, 'wa.me');
     final text = launched.single.queryParameters['text']!;
-    expect(text, contains('https://duotask.example.com/?pair=AB12CD34'));
+    expect(text, contains('https://evenhalf.example.com/?pair=AB12CD34'));
     expect(sent, ['whatsapp']);
   });
 

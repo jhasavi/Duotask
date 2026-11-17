@@ -21,11 +21,11 @@ effects (it changes the anon key, and the web app must be rebuilt with it).
 2. [ ] **Resend** (5 min) — delete key `re_jR6ucccW_…`, create a
        *Sending access* key, then:
        `supabase secrets set RESEND_API_KEY=<new> --project-ref <ref>` — §1
-3. [ ] **Discord** (2 min) — Developer Portal → DuoTask → Bot → *Reset Token*.
+3. [ ] **Discord** (2 min) — Developer Portal → EvenHalf → Bot → *Reset Token*.
        The bot isn't deployed anywhere; if you don't plan to run it, delete
        the application instead — §2
 4. [ ] **Vercel** (3 min) — https://vercel.com/account/tokens → delete every
-       token older than today → create one scoped to DuoTask → GitHub secret
+       token older than today → create one scoped to EvenHalf → GitHub secret
        `VERCEL_TOKEN` — §4
 5. [ ] **Supabase service_role** (15 min) — rotate, then update **every**
        place the anon key lives (GitHub secret `SUPABASE_ANON_KEY`, Vault
@@ -102,7 +102,7 @@ account — reading and posting in every server the bot has joined.
 **Revoke and replace**
 
 1. Go to https://discord.com/developers/applications
-2. Select the DuoTask application → **Bot**
+2. Select the EvenHalf application → **Bot**
 3. **Reset Token** → confirm. This invalidates the old token immediately.
 4. Copy the new token.
 
@@ -133,7 +133,7 @@ row in every table, and create or delete any user. It was committed in
 are both JWTs signed with the project's JWT secret. There is no way to
 invalidate *only* the leaked `service_role` key — whichever route you take,
 the **anon key changes too**, and existing user sessions may be signed out
-once. That is acceptable at DuoTask's size; just do it in one sitting.
+once. That is acceptable at EvenHalf's size; just do it in one sitting.
 
 **Revoke and replace** (pick one route; check the dashboard wording, which
 Supabase has been changing)
@@ -185,7 +185,7 @@ long-lived account token as a precaution.
 
 1. https://vercel.com/account/tokens
 2. Delete any token you don't recognise or that predates today
-3. **Create Token** → scope it to the DuoTask project → copy
+3. **Create Token** → scope it to the EvenHalf project → copy
 
 **Where it goes**
 

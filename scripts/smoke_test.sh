@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Post-deploy smoke test. Verifies a deployed DuoTask build is actually
+# Post-deploy smoke test. Verifies a deployed EvenHalf build is actually
 # serving, is not leaking secrets, and is not a stale bundle.
 #
 # Usage:
-#   scripts/smoke_test.sh https://duotask.example.com
+#   scripts/smoke_test.sh https://evenhalf.example.com
 set -euo pipefail
 
 BASE_URL="${1:-}"
@@ -82,7 +82,7 @@ else
 fi
 
 # 2b. The bundle was built with a Supabase URL and anon key. Without them the
-#     app shows "DuoTask is not configured" to every visitor, and every other
+#     app shows "EvenHalf is not configured" to every visitor, and every other
 #     check here still passes. Production served exactly that from 2026-09-25
 #     to 2026-10-30.
 if grep -qE 'https://[a-z0-9]+\.supabase\.co' /tmp/smoke_main 2>/dev/null &&

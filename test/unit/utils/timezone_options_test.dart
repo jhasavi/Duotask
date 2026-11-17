@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:duotask/utils/timezone_options.dart';
+import 'package:evenhalf/utils/timezone_options.dart';
 
 void main() {
   // Fixed instants so DST-observing zones have a known offset.

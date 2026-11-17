@@ -1,5 +1,5 @@
 // Pure helpers for the stripe-webhook function: signature verification and
-// the mapping from a Stripe subscription to DuoTask's premium columns.
+// the mapping from a Stripe subscription to EvenHalf's premium columns.
 // No Deno or network APIs here, so stripe_test.ts can exercise all of it.
 
 /** How far a signed timestamp may drift from now, as Stripe's SDKs default. */

@@ -11,6 +11,18 @@
       "destination": "/t/index.html"
     },
     {
+      "source": "/welcome",
+      "destination": "/welcome/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

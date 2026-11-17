@@ -152,7 +152,7 @@ serve(async (req) => {
           message: {
             token: deviceToken.token,
             notification: {
-              title: 'DuoTask',
+              title: 'EvenHalf',
               body: nudge.message,
             },
             data: {

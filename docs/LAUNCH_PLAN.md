@@ -1,4 +1,4 @@
-# DuoTask launch plan: social posts, app stores, and making money
+# EvenHalf launch plan: social posts, app stores, and making money
 
 *Written 2026-10-23. Complements [NEXT_ACTIONS.md](NEXT_ACTIONS.md); it doesn't replace it.*
 
@@ -53,13 +53,13 @@ between two people*, not "task app". Lead with the problem.
 
 **X, launch post**
 > "Who's doing that?" is the most-asked question in every household.
-> I built DuoTask: a shared to-do for two people. Tasks are bubbles, you claim
+> I built EvenHalf: a shared to-do for two people. Tasks are bubbles, you claim
 > them, nudge each other, and it confetti-bombs you when something's done.
 > Free: https://duotask.namasteneedham.com
 
 **X, the invite hook** (the strongest feature: no install needed to respond)
 > You can send a task to your partner over WhatsApp and they can say "I'll do
-> it" from a link. No app, no account. That's DuoTask. https://duotask.namasteneedham.com
+> it" from a link. No app, no account. That's EvenHalf. https://duotask.namasteneedham.com
 
 **Facebook (personal or a page)**
 > I made a small app for couples and roommates: one shared task list where you
@@ -99,7 +99,7 @@ Why web-first is right here:
   landing page.
 
 When you do go to stores, the code is closer than it looks: the app ID
-(`com.namasteneedham.duotask`), icons and Android signing are wired. Missing:
+(`com.namasteneedham.evenhalf`), icons and Android signing are wired. Missing:
 the keystore, a real Firebase project, an Xcode install, and RevenueCat.
 
 ## How to make money

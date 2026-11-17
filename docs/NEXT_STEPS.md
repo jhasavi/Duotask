@@ -1,4 +1,4 @@
-# DuoTask: monetization and growth plan
+# EvenHalf: monetization and growth plan
 
 *Strategy only. What to do **next** lives in [NEXT_ACTIONS.md](NEXT_ACTIONS.md);
 this page is the longer plan that follows it. Last reviewed 2026-11-17.*
@@ -27,12 +27,39 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 6. Add **Vercel Web Analytics** (one script tag in `web/index.html`) so you
    can see visitors and paywall views, not just database writes.
 
+## Competition and positioning (checked 2026-11-17)
+
+The "shared chores for couples" category is crowded and mostly iOS-only:
+another app named **DuoTask** (iPhone, with `duotask.app`; that's why we
+renamed, see [NEXT_ACTIONS.md §0](NEXT_ACTIONS.md#0-rename-to-evenhalf-blocks-marketing-not-the-merge)),
+*Chores Together* (points and rewards), *Chore Wars* (XP),
+*Pairwork* (hourly value of housework), *Chores* (recurring tasks),
+*DuoMode* (Android habits), and Cupla (couples calendar). Most of them compete
+on gamification.
+
+Lead with what they don't do:
+
+1. **Your partner doesn't need to install anything.** Send a task over
+   WhatsApp or text and they answer from a link. Nobody else has this, and it
+   removes the biggest problem with any two-person app: getting the second
+   person to sign up.
+2. **Works on any phone, today.** Web and PWA, so mixed iPhone/Android
+   couples work from day one.
+3. **Fairness and mental load, not points** (bet #2 below). Gamified apps
+   wear off; "the app that ends the 'I do everything' fight" doesn't.
+
+Every landing page, store listing and post should open with #1.
+
+**Brand line:** *EvenHalf: your better half, evened out.* Short form for
+store listings: "Shared to-do list for couples. No app needed for your
+partner."
+
 ## Monetization strategy (recommendations)
 
 ### Model: freemium, one subscription per couple
 
 - Keep **everything needed to share tasks free**: pairing, shared and
-  personal tasks, claiming, nudges, recurrence. DuoTask only works if
+  personal tasks, claiming, nudges, recurrence. EvenHalf only works if
   *both* people use it, so the free tier is the acquisition channel. Gating
   core sharing would kill the invite loop.
 - Charge for **depth and convenience**, bought once for the pair. The code
@@ -131,7 +158,7 @@ before any price test, because pricing doesn't matter until pairs form.
 
 Any personal task can go out as a link from the sender's own phone
 (WhatsApp, text, email, copy). The recipient answers on a lightweight page
-with no account. "Get DuoTask" then signs them up and pairs the two of you
+with no account. "Get EvenHalf" then signs them up and pairs the two of you
 automatically.
 
 It differs from the idea as first written in two ways:

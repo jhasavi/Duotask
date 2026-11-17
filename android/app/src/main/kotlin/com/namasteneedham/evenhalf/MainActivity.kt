@@ -1,4 +1,4 @@
-package com.namasteneedham.duotask
+package com.namasteneedham.evenhalf
 
 import io.flutter.embedding.android.FlutterActivity
 

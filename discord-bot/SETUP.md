@@ -1,4 +1,4 @@
-# 🤖 DuoTask Discord Bot - Quick Start
+# 🤖 EvenHalf Discord Bot - Quick Start
 
 ## ✅ Configuration Saved
 
@@ -14,7 +14,7 @@ Your Discord bot is configured with:
 4. **Paste it below** to complete setup:
 
 ```bash
-cd /Users/sanjeevjha/duo/duotask/discord-bot
+cd ~/EvenHalf/discord-bot
 
 # Edit .env and replace YOUR_BOT_TOKEN_GOES_HERE with your actual token
 nano .env
@@ -27,7 +27,7 @@ nano .env
 
 ### Start the bot:
 ```bash
-cd /Users/sanjeevjha/duo/duotask/discord-bot
+cd ~/EvenHalf/discord-bot
 npm install
 npm start
 ```

@@ -10,6 +10,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Same variable the lifecycle-emails function uses for links back to the app.
+const APP_URL = (Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com').replace(/\/$/, '')
 
 interface EmailData {
   user_email: string
@@ -70,13 +72,13 @@ function buildEmailHtml(data: EmailData, tasks: TasksData): string {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>DuoTask Daily Digest</title>
+      <title>EvenHalf Daily Digest</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       
       <!-- Header -->
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #6366f1; margin: 0;">DuoTask</h1>
+        <h1 style="color: #6366f1; margin: 0;">EvenHalf</h1>
         <p style="color: #6b7280; margin: 8px 0;">Your Daily Task Digest</p>
         <p style="color: #9ca3af; font-size: 0.875rem;">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
@@ -140,17 +142,17 @@ function buildEmailHtml(data: EmailData, tasks: TasksData): string {
         <!-- Pair Up Section -->
         <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 32px;">
           <h3 style="color: #92400e; margin: 0 0 8px 0;">💡 Pair up to share tasks!</h3>
-          <p style="color: #78350f; margin: 0;">Connect with a partner in DuoTask to collaborate on shared tasks together.</p>
+          <p style="color: #78350f; margin: 0;">Connect with a partner in EvenHalf to collaborate on shared tasks together.</p>
         </div>
       `}
 
       <!-- Footer -->
       <div style="text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
         <p style="color: #6b7280; font-size: 0.875rem; margin: 8px 0;">
-          <a href="https://duotask-seven.vercel.app" style="color: #6366f1; text-decoration: none;">Open DuoTask</a>
+          <a href="${APP_URL}" style="color: #6366f1; text-decoration: none;">Open EvenHalf</a>
         </p>
         <p style="color: #9ca3af; font-size: 0.75rem; margin: 8px 0;">
-          Don't want these emails? <a href="https://duotask-seven.vercel.app/settings" style="color: #6b7280;">Manage preferences</a>
+          Don't want these emails? <a href="${APP_URL}/settings" style="color: #6b7280;">Manage preferences</a>
         </p>
       </div>
 
@@ -244,9 +246,9 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'DuoTask <onboarding@resend.dev>',
+            from: 'EvenHalf <onboarding@resend.dev>',
             to: [emailData.user_email],
-            subject: `Your Daily DuoTask Digest - ${emailData.total_open} task${emailData.total_open !== 1 ? 's' : ''}`,
+            subject: `Your Daily EvenHalf Digest - ${emailData.total_open} task${emailData.total_open !== 1 ? 's' : ''}`,
             html: htmlContent,
           }),
         })

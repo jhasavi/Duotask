@@ -52,7 +52,7 @@ Future<void> showSendTaskSheet(BuildContext context, Task task) {
   );
 }
 
-/// Sends a task to someone who doesn't have DuoTask: name them, pick
+/// Sends a task to someone who doesn't have EvenHalf: name them, pick
 /// WhatsApp, text, email or copy, and the link goes from your own phone.
 class SendTaskSheet extends StatefulWidget {
   final Task task;
@@ -208,7 +208,7 @@ class _SendTaskSheetState extends State<SendTaskSheet> {
           Text('Send to someone', style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            "They don't need DuoTask. They'll get a link where they can say "
+            "They don't need EvenHalf. They'll get a link where they can say "
             "they've got it or mark it done, and you'll see it here.",
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: AppTheme.textSecondary),

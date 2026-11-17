@@ -10,7 +10,7 @@ import '../services/stats_service.dart';
 import '../utils/pair_stats.dart';
 import '../widgets/premium_widgets.dart';
 
-/// Completion streaks and partner stats — the first DuoTask Premium feature.
+/// Completion streaks and partner stats — the first EvenHalf Premium feature.
 /// Free users see what it offers and an upgrade button instead.
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -305,7 +305,7 @@ class _Paywall extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Part of DuoTask Premium. One subscription covers both of you.',
+          'Part of EvenHalf Premium. One subscription covers both of you.',
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),

@@ -62,18 +62,18 @@ function content(row: LifecycleEmailRow): Content {
   switch (row.kind) {
     case 'invite_partner':
       return {
-        subject: 'DuoTask works best with two',
+        subject: 'EvenHalf works best with two',
         heading: 'Invite your partner',
         paragraphs: [
-          "DuoTask is a to-do list for two people, and it really starts working once the other person is on it: you can see who's taking care of what, without asking.",
-          "Open DuoTask, tap Pair Now, and send them a link by WhatsApp, text or email. They tap it, sign up, and you're paired. It takes about a minute.",
+          "EvenHalf is a to-do list for two people, and it really starts working once the other person is on it: you can see who's taking care of what, without asking.",
+          "Open EvenHalf, tap Pair Now, and send them a link by WhatsApp, text or email. They tap it, sign up, and you're paired. It takes about a minute.",
         ],
         cta: 'Invite your partner',
         optOutNote: true,
       }
     case 'tips':
       return {
-        subject: '3 things that make DuoTask easier',
+        subject: '3 things that make EvenHalf easier',
         heading: 'Three small things worth knowing',
         paragraphs: [],
         bullets: [
@@ -83,17 +83,17 @@ function content(row: LifecycleEmailRow): Content {
             ? `Claim a task when you take it on, so ${partner} can see you've got it.`
             : "Send a task to anyone by link. They can say \"I'll do it\" without the app.",
         ],
-        cta: 'Open DuoTask',
+        cta: 'Open EvenHalf',
         optOutNote: true,
       }
     case 'trial_ending': {
       const day = row.trial_ends_at ? formatDay(row.trial_ends_at, row.timezone) : 'soon'
       return {
-        subject: `Your DuoTask Premium trial ends ${day}`,
+        subject: `Your EvenHalf Premium trial ends ${day}`,
         heading: 'Your Premium trial is ending',
         paragraphs: [
-          `Your free trial of DuoTask Premium ends on ${day}. If you keep it, your subscription starts then and Stripe charges the card you added. You and your partner both keep Premium.`,
-          "To cancel instead, open DuoTask, go to Settings and choose Manage subscription before the trial ends. You won't be charged.",
+          `Your free trial of EvenHalf Premium ends on ${day}. If you keep it, your subscription starts then and Stripe charges the card you added. You and your partner both keep Premium.`,
+          "To cancel instead, open EvenHalf, go to Settings and choose Manage subscription before the trial ends. You won't be charged.",
         ],
         cta: 'Manage subscription',
         optOutNote: false,
@@ -107,8 +107,8 @@ export function renderLifecycleEmail(row: LifecycleEmailRow, appUrl: string): Re
   const name = firstName(row.display_name)
   const greeting = name ? `Hi ${name},` : 'Hi,'
   const footer = c.optOutNote
-    ? "You're getting this because you recently joined DuoTask. To stop these emails, turn off \"Tips and reminders\" in DuoTask's Settings."
-    : "You're getting this because you started a DuoTask Premium trial."
+    ? "You're getting this because you recently joined EvenHalf. To stop these emails, turn off \"Tips and reminders\" in EvenHalf's Settings."
+    : "You're getting this because you started an EvenHalf Premium trial."
 
   const text = [
     greeting,

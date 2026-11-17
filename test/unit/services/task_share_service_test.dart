@@ -1,5 +1,5 @@
-import 'package:duotask/models/task_share.dart';
-import 'package:duotask/services/task_share_service.dart';
+import 'package:evenhalf/models/task_share.dart';
+import 'package:evenhalf/services/task_share_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -52,7 +52,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     api = FakeTaskShareApi();
-    service = TaskShareService(api, appBaseUrl: 'https://duotask.app');
+    service = TaskShareService(api, appBaseUrl: 'https://evenhalf.app');
   });
 
   test('share caches the link for the task and notifies', () async {
@@ -64,7 +64,7 @@ void main() {
     expect(api.created, [('t1', 'Priya')]);
     expect(service.shareFor('t1'), same(share));
     expect(service.urlFor(share).toString(),
-        'https://duotask.app/t/abcdefghijklmnopqrstuvwx');
+        'https://evenhalf.app/t/abcdefghijklmnopqrstuvwx');
     expect(notified, 1);
   });
 
@@ -117,14 +117,14 @@ void main() {
     test('captureJoinToken stores a valid ?join= token only', () async {
       expect(
           await TaskShareService.captureJoinToken(
-              Uri.parse('https://duotask.app/?join=$token')),
+              Uri.parse('https://evenhalf.app/?join=$token')),
           token);
       expect(await TaskShareService.pendingJoinToken(), token);
 
       await TaskShareService.clearPendingJoinToken();
       expect(
           await TaskShareService.captureJoinToken(
-              Uri.parse('https://duotask.app/?join=bad')),
+              Uri.parse('https://evenhalf.app/?join=bad')),
           isNull);
       expect(await TaskShareService.pendingJoinToken(), isNull);
     });

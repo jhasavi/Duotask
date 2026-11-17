@@ -1,14 +1,14 @@
 # Terms of Service
 
-**Last Updated: November 13, 2026**
+**Last Updated: November 17, 2026**
 
 ## 1. Acceptance of Terms
 
-By accessing and using DuoTask ("the App"), you accept and agree to be bound by the terms and provision of this agreement.
+By accessing and using EvenHalf ("the App"), you accept and agree to be bound by the terms and provision of this agreement.
 
 ## 2. Description of Service
 
-DuoTask is a task-sharing application designed for two people to coordinate and manage shared responsibilities. The service includes:
+EvenHalf is a task-sharing application designed for two people to coordinate and manage shared responsibilities. The service includes:
 
 - User account creation and management
 - Task creation, assignment, and tracking
@@ -62,7 +62,7 @@ Your privacy is important to us. Please review our [Privacy Policy](#) for infor
 ## 7. Intellectual Property
 
 ### 7.1 Our Rights
-- DuoTask and its original content, features, and functionality are owned by us
+- EvenHalf and its original content, features, and functionality are owned by us
 - Our trademarks and trade dress may not be used without permission
 
 ### 7.2 Your Content
@@ -110,7 +110,7 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW:
 
 ## 11A. Premium Subscriptions, Cancellation and Refunds
 
-DuoTask is free to use. Some features ("Premium") require a paid subscription.
+EvenHalf is free to use. Some features ("Premium") require a paid subscription.
 
 - **One subscription covers both partners.** If you or your paired partner has an active subscription, both of you have Premium. If the subscriber cancels or unpairs, Premium ends for the other person at the end of the paid period.
 - **Billing.** Subscriptions renew automatically each month or year at the price shown at checkout until you cancel. Payments are processed by Stripe. Prices may change; we will tell you before a change applies to your next renewal.
@@ -168,8 +168,8 @@ The service is hosted in the United States. By using the service from other loca
 
 If you have questions about these Terms of Service, please contact us at:
 
-- **Email**: support@duotask.app
-- **Website**: https://duotask.app/support
+- **Email**: support@evenhalf.app
+- **Website**: https://evenhalf.app/terms/
 
 ## 19. Severability
 
@@ -177,11 +177,11 @@ If any provision of these terms is found to be unenforceable, the remaining prov
 
 ## 20. Entire Agreement
 
-These terms constitute the entire agreement between you and DuoTask regarding use of the service.
+These terms constitute the entire agreement between you and EvenHalf regarding use of the service.
 
 ---
 
-**By using DuoTask, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.**
+**By using EvenHalf, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.**
 
 ---
 

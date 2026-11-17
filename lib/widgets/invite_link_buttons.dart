@@ -63,7 +63,7 @@ class _InviteLinkButtonsState extends State<InviteLinkButtons> {
 
     // Open the app (or copy) straight away, while still inside the tap:
     // browsers block popups and clipboard writes after an await.
-    final uri = sendUri(channel, message, subject: 'Pair with me on DuoTask');
+    final uri = sendUri(channel, message, subject: 'Pair with me on EvenHalf');
     if (uri == null) {
       await _copy(message, 'Invite link copied. Paste it to your partner.');
     } else if (!await _launch(uri)) {

@@ -1,6 +1,6 @@
 class AppConstants {
   // App Info
-  static const String appName = 'DuoTask';
+  static const String appName = 'EvenHalf';
   static const String appTagline = "Who's doing that? Settled.";
 
   // Animation Durations

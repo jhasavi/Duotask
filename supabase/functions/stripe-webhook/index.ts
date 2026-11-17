@@ -6,7 +6,7 @@
 // partner of a paying user as premium.
 //
 // Handled events:
-//   checkout.session.completed      links the Stripe customer to a DuoTask
+//   checkout.session.completed      links the Stripe customer to an EvenHalf
 //                                   user (via the Payment Link's
 //                                   client_reference_id) and turns premium on
 //   customer.subscription.updated   renewals, cancel-at-period-end, failures
@@ -120,7 +120,7 @@ async function handleCheckoutCompleted(
   if (!userId) {
     // Not retryable: Stripe would just redeliver the same payload. Shows up
     // in the function logs and in Stripe's event view for manual linking.
-    console.error(`checkout ${session.id}: no matching DuoTask user`)
+    console.error(`checkout ${session.id}: no matching EvenHalf user`)
     return json({ ignored: 'no matching user' })
   }
 

@@ -23,7 +23,7 @@ class PairInvite {
   }
 
   static String buildMessage({required Uri url, required String code}) =>
-      "Let's share our to-dos on DuoTask. Tap to pair with me: $url\n"
+      "Let's share our to-dos on EvenHalf. Tap to pair with me: $url\n"
       '(Or enter my code $code in the app.)';
 
   /// Reads `?pair=<CODE>` from the launch URL (web) and keeps it until the

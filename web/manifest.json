@@ -1,6 +1,6 @@
 {
-  "name": "DuoTask",
-  "short_name": "DuoTask",
+  "name": "EvenHalf",
+  "short_name": "EvenHalf",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#F8FAFC",

@@ -66,8 +66,8 @@ repo stays as it is:
   have, pin one you do have in `.temp/postgres-version`.
 
 ```bash
-mkdir -p /tmp/duotask-local && cp -R supabase /tmp/duotask-local/
-cd /tmp/duotask-local
+mkdir -p /tmp/evenhalf-local && cp -R supabase /tmp/evenhalf-local/
+cd /tmp/evenhalf-local
 cat > supabase/migrations/19990101000000_local_vault_stub.sql <<'SQL'
 select vault.create_secret('http://127.0.0.1:54321', 'project_url');
 select vault.create_secret('local-anon', 'anon_key');

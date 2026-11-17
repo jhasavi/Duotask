@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:duotask/models/pair_invite.dart';
+import 'package:evenhalf/models/pair_invite.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -21,9 +21,9 @@ void main() {
   });
 
   test('buildUrl puts the code in ?pair= at the app root', () {
-    final url =
-        PairInvite.buildUrl('https://duotask.example.com/welcome/', 'AB12CD34');
-    expect(url.toString(), 'https://duotask.example.com/?pair=AB12CD34');
+    final url = PairInvite.buildUrl(
+        'https://evenhalf.example.com/welcome/', 'AB12CD34');
+    expect(url.toString(), 'https://evenhalf.example.com/?pair=AB12CD34');
   });
 
   test('buildMessage includes the link and the code as a fallback', () {

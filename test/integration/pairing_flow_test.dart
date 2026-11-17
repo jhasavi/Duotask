@@ -13,9 +13,9 @@
 // Run with: flutter test --tags integration
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:duotask/services/pairing_service.dart';
-import 'package:duotask/services/task_service.dart';
-import 'package:duotask/models/task.dart';
+import 'package:evenhalf/services/pairing_service.dart';
+import 'package:evenhalf/services/task_service.dart';
+import 'package:evenhalf/models/task.dart';
 
 import '../support/integration_env.dart';
 

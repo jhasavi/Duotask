@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:duotask/models/premium_status.dart';
-import 'package:duotask/screens/stats_screen.dart';
-import 'package:duotask/services/premium_service.dart';
-import 'package:duotask/utils/pair_stats.dart';
+import 'package:evenhalf/models/premium_status.dart';
+import 'package:evenhalf/screens/stats_screen.dart';
+import 'package:evenhalf/services/premium_service.dart';
+import 'package:evenhalf/utils/pair_stats.dart';
 
 void main() {
   Widget host(PremiumService premium) => ChangeNotifierProvider.value(

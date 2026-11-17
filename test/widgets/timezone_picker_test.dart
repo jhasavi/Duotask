@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:duotask/widgets/timezone_picker.dart';
+import 'package:evenhalf/widgets/timezone_picker.dart';
 
 class _Harness extends StatelessWidget {
   final String current;

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:duotask/services/auth_service.dart';
+import 'package:evenhalf/services/auth_service.dart';
 
 import '../../test_helpers.mocks.dart';
 

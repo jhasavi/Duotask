@@ -1,4 +1,4 @@
-import 'package:duotask/models/task_share.dart';
+import 'package:evenhalf/models/task_share.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> shareJson([Map<String, dynamic> overrides = const {}]) => {
@@ -57,7 +57,7 @@ void main() {
       expect(line({'response': 'accepted'}), "Priya said they'll do it");
       expect(line({'response': 'declined'}), "Priya can't do it");
       expect(line({'response': 'done'}), 'Priya marked it done');
-      expect(line({'claimed_by_id': 'u2'}), 'Priya joined DuoTask');
+      expect(line({'claimed_by_id': 'u2'}), 'Priya joined EvenHalf');
     });
 
     test('falls back when there is no name', () {
@@ -73,15 +73,15 @@ void main() {
 
   group('buildUrl', () {
     test('appends /t/<token> with or without a trailing slash', () {
-      expect(TaskShare.buildUrl('https://duotask.app', 'tok').toString(),
-          'https://duotask.app/t/tok');
-      expect(TaskShare.buildUrl('https://duotask.app/', 'tok').toString(),
-          'https://duotask.app/t/tok');
+      expect(TaskShare.buildUrl('https://evenhalf.app', 'tok').toString(),
+          'https://evenhalf.app/t/tok');
+      expect(TaskShare.buildUrl('https://evenhalf.app/', 'tok').toString(),
+          'https://evenhalf.app/t/tok');
     });
   });
 
   group('buildMessage', () {
-    final url = Uri.parse('https://duotask.app/t/tok');
+    final url = Uri.parse('https://evenhalf.app/t/tok');
 
     test('greets by name and includes the title and link', () {
       final msg = TaskShare.buildMessage(
@@ -89,7 +89,7 @@ void main() {
       expect(msg, startsWith('Hi Sam! '));
       expect(msg, contains('"Pick up dry cleaning"'));
       expect(msg, contains('no app needed'));
-      expect(msg, endsWith('https://duotask.app/t/tok'));
+      expect(msg, endsWith('https://evenhalf.app/t/tok'));
     });
 
     test('omits the greeting when there is no name, and shows the due date',

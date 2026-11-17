@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../models/premium_status.dart';
 
-/// Tracks whether the signed-in user (or their partner) has DuoTask Premium.
+/// Tracks whether the signed-in user (or their partner) has EvenHalf Premium.
 ///
 /// Premium is bought on the web through a Stripe Payment Link; the
 /// `stripe-webhook` Edge Function records the result in `users.is_premium`,
@@ -97,7 +97,7 @@ class PremiumService extends ChangeNotifier {
       _customerPortalUrl.isEmpty ? null : Uri.tryParse(_customerPortalUrl);
 
   /// Appends `client_reference_id` to a Stripe Payment Link so the webhook
-  /// can tell which DuoTask account paid. Existing query parameters (e.g. a
+  /// can tell which EvenHalf account paid. Existing query parameters (e.g. a
   /// `prefilled_promo_code`) are kept.
   static Uri? buildCheckoutUri(String paymentLinkUrl,
       {required String userId}) {

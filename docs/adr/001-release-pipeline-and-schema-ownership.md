@@ -6,7 +6,7 @@
 
 ## Context
 
-DuoTask is Flutter (web in production) + Supabase (Postgres, Auth, Realtime,
+EvenHalf is Flutter (web in production) + Supabase (Postgres, Auth, Realtime,
 edge functions) + Vercel, with Stripe for Premium. The app layering is sound:
 screens and widgets never touch Supabase directly, services own all data
 access, four Realtime channels are service-owned, privileged operations are

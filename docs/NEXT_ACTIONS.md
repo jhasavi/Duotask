@@ -20,11 +20,65 @@ runs `supabase db push` against production.
 
 ## Moving to the MacBook
 
-`git pull`, `flutter pub get`, `supabase login`,
-`supabase link --project-ref xqhlnuvpogiolzkucupt`, `vercel login`,
-`gh auth login`. Copy `.env` over securely (AirDrop or a password manager,
-never email or chat). `.env` currently lists `SUPABASE_ANON_KEY` twice; keep
-one.
+Done 2026-11-17: the MacBook is on `feat/launch-readiness` and `.env` was
+copied from the Mac mini over SSH. The duplicate `SUPABASE_ANON_KEY` line
+(both copies were the same) was dropped, and the MacBook-only
+`VERCEL_URL` / `WEB_REDIRECT_URL` were kept. `flutter analyze` is clean.
+Folder is now `~/EvenHalf` on both machines and the GitHub repo is
+`jhasavi/EvenHalf` (see §0). Still per machine if needed: `supabase login`,
+`supabase link --project-ref xqhlnuvpogiolzkucupt`, `vercel login`.
+
+## 0. Rename to EvenHalf (blocks marketing, not the merge)
+
+**Why:** on 2026-11-17 we found another "DuoTask" in the same niche, an iPhone
+shared to-do app for couples
+([App Store id6752819525](https://apps.apple.com/us/app/duotask/id6752819525))
+that owns `duotask.app`. Our legal pages were sending users' mail there. We
+renamed to **EvenHalf** (a pun on "better half": share the load evenly).
+On 2026-11-17 `evenhalf.com` and `evenhalf.app` were both unregistered, and
+no App Store app used the name.
+
+**Done in code (2026-11-17):** every user-facing string, the web pages,
+emails, the PWA manifest and the Dart package (`package:evenhalf`). The
+Android/iOS bundle id is now `com.namasteneedham.evenhalf` (safe, nothing is
+published). Legal contacts are `support@` and `privacy@evenhalf.app`.
+Public pages `/privacy/` and `/terms/` are generated from `assets/docs/*.md`
+by `scripts/build_legal_pages.py` and linked from the landing page footer.
+
+**Kept on purpose (they're tied to outside consoles):** the live host
+`duotask.namasteneedham.com`, the Supabase OAuth URL scheme
+`io.supabase.duotask`, the Supabase project ref, Resend key names, and the
+placeholder Firebase ids. Old migrations and CHANGELOG entries still say
+DuoTask; that's history.
+
+**Your steps, in order:**
+
+1. **Buy `evenhalf.com` and `evenhalf.app` today** (Cloudflare Registrar or
+   Namecheap, about $10 + $15/year). Until then someone else can take them.
+   Then do a free USPTO search for "EvenHalf" (classes 9 and 42):
+   https://tmsearch.uspto.gov
+2. **Email:** turn on Cloudflare Email Routing (free) for `evenhalf.app` and
+   forward `support@` and `privacy@` to your inbox. The Terms and Privacy
+   Policy already list them.
+3. **Point the domain at Vercel:** add `evenhalf.app` (primary) and
+   `evenhalf.com` (redirect) to the Vercel project. Keep
+   `duotask.namasteneedham.com` as a redirect so old share links work.
+4. **Switch the app URL in one go** (ask Claude, it's a find-and-replace):
+   `_defaultPublicAppUrl` in `lib/config/app_config.dart`, `APP_URL` default
+   in both email functions, the canonical/OG tags in `web/index.html` and
+   `web/welcome/index.html`, `web/sitemap.xml`, `web/robots.txt`.
+5. **Consoles that hold the old URL or name:**
+   - Supabase → Authentication → URL Configuration: Site URL and redirect
+     URLs for the new domain; Email Templates: replace "DuoTask".
+   - Google Cloud → OAuth client: add the new domain as an authorized
+     JavaScript origin; rename the consent screen to EvenHalf.
+   - Resend: verify `evenhalf.app` as a sending domain and set the edge
+     function secret `EMAIL_FROM` to `EvenHalf <hello@evenhalf.app>`.
+   - Stripe (when set up): business name EvenHalf, Terms
+     `https://evenhalf.app/terms/`, Privacy `https://evenhalf.app/privacy/`.
+   - Vercel and GitHub project names (cosmetic).
+6. Claim `@evenhalf` (or `@evenhalfapp`) on X, Instagram and TikTok before
+   posting anything.
 
 ## 1. Close the Supabase key leak (blocking)
 

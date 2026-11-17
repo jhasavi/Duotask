@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:duotask/models/task.dart';
-import 'package:duotask/widgets/task_bubble.dart';
+import 'package:evenhalf/models/task.dart';
+import 'package:evenhalf/widgets/task_bubble.dart';
 
 import '../test_helpers.dart';
 

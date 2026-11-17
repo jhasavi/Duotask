@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:duotask/services/preferences_service.dart';
+import 'package:evenhalf/services/preferences_service.dart';
 
 void main() {
   late PreferencesService preferencesService;

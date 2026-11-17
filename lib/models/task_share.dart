@@ -13,7 +13,7 @@ enum ShareResponse {
       );
 }
 
-/// A link that sends one task to someone who doesn't have DuoTask.
+/// A link that sends one task to someone who doesn't have EvenHalf.
 ///
 /// Rows live in `task_shares` (migration 20261016000001). The recipient
 /// opens `<app>/t/<token>`, a lightweight page outside the Flutter app, and
@@ -88,7 +88,7 @@ class TaskShare {
         : 'Your contact';
     if (isRevoked) return 'Link turned off';
     if (isExpired(now)) return 'Link expired';
-    if (claimedById != null) return '$who joined DuoTask';
+    if (claimedById != null) return '$who joined EvenHalf';
     switch (response) {
       case ShareResponse.done:
         return '$who marked it done';

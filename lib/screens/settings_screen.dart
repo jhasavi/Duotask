@@ -82,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Premium Section
-          const _SectionHeader(title: 'DuoTask Premium'),
+          const _SectionHeader(title: 'EvenHalf Premium'),
           Consumer<PremiumService>(
             builder: (context, premium, _) {
               return Column(

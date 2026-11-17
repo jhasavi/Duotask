@@ -1,4 +1,4 @@
-# Monetization: DuoTask Premium (web) and usage analytics
+# Monetization: EvenHalf Premium (web) and usage analytics
 
 *Written 2026-10-15. Nothing here is live yet: the migrations aren't applied,
 the webhook isn't deployed, and no Stripe product exists.*
@@ -12,7 +12,7 @@ the webhook isn't deployed, and no Stripe product exists.*
 | Usage events, recorded by triggers into private `analytics.events` | `supabase/migrations/20261015000002_usage_events.sql` |
 | Premium state in the app | `lib/services/premium_service.dart`, `lib/models/premium_status.dart` |
 | Gated feature: Streaks & Stats | `lib/screens/stats_screen.dart`, `lib/utils/pair_stats.dart`, `lib/services/stats_service.dart` |
-| Upgrade / Manage subscription | Settings → *DuoTask Premium*; paywall on the stats screen; 🔥 icon in the home app bar |
+| Upgrade / Manage subscription | Settings → *EvenHalf Premium*; paywall on the stats screen; 🔥 icon in the home app bar |
 
 How a purchase flows:
 
@@ -79,7 +79,7 @@ first; repeat in live mode for production.
 
 ### 2. Stripe product and links (test mode)
 
-- [ ] **Product catalog → Add product**: "DuoTask Premium", with a recurring price
+- [ ] **Product catalog → Add product**: "EvenHalf Premium", with a recurring price
       (for example $2.99/month, and optionally $24/year). The price is your
       call; the code doesn't hardcode it.
 - [ ] **Payment Links → New**: pick the price, then under *After payment*

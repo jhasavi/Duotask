@@ -59,7 +59,7 @@ class SupabaseTaskShareApi implements TaskShareApi {
   }
 }
 
-/// Sends tasks to people who don't have DuoTask, and turns those people
+/// Sends tasks to people who don't have EvenHalf, and turns those people
 /// into users.
 ///
 /// The sender creates a link for a task and shares it from their own phone
@@ -67,7 +67,7 @@ class SupabaseTaskShareApi implements TaskShareApi {
 /// provider, sender registration or per-message cost, and the message comes
 /// from someone the recipient knows.
 ///
-/// When the recipient taps "Get DuoTask" on the link page they land on
+/// When the recipient taps "Get EvenHalf" on the link page they land on
 /// `/?join=<token>`. [captureJoinToken] keeps that token across sign-up
 /// (including OAuth and magic-link redirects), and [claimPendingJoin] hands
 /// the task to their new account once they're signed in.

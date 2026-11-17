@@ -7,7 +7,7 @@
 //
 // Deploy:  supabase functions deploy lifecycle-emails
 // Secrets: RESEND_API_KEY (required)
-//          EMAIL_FROM  e.g. 'DuoTask <hello@yourdomain.com>' on a domain
+//          EMAIL_FROM  e.g. 'EvenHalf <hello@yourdomain.com>' on a domain
 //                      verified in Resend. Resend's shared test sender only
 //                      delivers to the Resend account owner.
 //          APP_URL     defaults to https://duotask.namasteneedham.com
@@ -19,7 +19,7 @@ import { type LifecycleEmailRow, renderLifecycleEmail } from './templates.ts'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'DuoTask <onboarding@resend.dev>'
+const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'EvenHalf <onboarding@resend.dev>'
 const APP_URL = Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com'
 // Overridable so a test can point it at a stub.
 const RESEND_URL = Deno.env.get('RESEND_URL') || 'https://api.resend.com/emails'

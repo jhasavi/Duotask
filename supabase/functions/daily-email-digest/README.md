@@ -21,7 +21,7 @@ Execute the SQL migration in Supabase SQL Editor:
 
 ### 3. Configure Supabase Secrets
 ```bash
-cd /Users/sanjeevjha/duo/duotask
+cd ~/EvenHalf
 supabase secrets set RESEND_API_KEY=re_your_key_here
 ```
 
@@ -93,7 +93,7 @@ SELECT cron.alter_job(
 ```
 
 ### Customize Email Template
-Edit `/Users/sanjeevjha/duo/duotask/supabase/functions/daily-email-digest/index.ts`
+Edit `~/EvenHalf/supabase/functions/daily-email-digest/index.ts`
 and redeploy:
 ```bash
 supabase functions deploy daily-email-digest

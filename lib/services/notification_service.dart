@@ -110,7 +110,7 @@ class NotificationService extends ChangeNotifier {
 
     await _notifications.show(
       message.hashCode,
-      notification.title ?? 'DuoTask',
+      notification.title ?? 'EvenHalf',
       notification.body ?? '',
       details,
     );

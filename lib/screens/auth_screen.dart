@@ -398,7 +398,7 @@ class _InviteBanner extends StatelessWidget {
   }
 }
 
-/// "Sam invited you to DuoTask" banner for people who arrive from a
+/// "Sam invited you to EvenHalf" banner for people who arrive from a
 /// partner's invite link.
 class PairInviteBanner extends StatelessWidget {
   /// The inviter's first name, or '' when they have none.
@@ -421,8 +421,8 @@ class PairInviteBanner extends StatelessWidget {
         children: [
           Text(
             named
-                ? '$inviterName invited you to DuoTask'
-                : "You've been invited to DuoTask",
+                ? '$inviterName invited you to EvenHalf'
+                : "You've been invited to EvenHalf",
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),

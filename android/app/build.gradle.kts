@@ -28,7 +28,7 @@ if (hasReleaseKeystore) {
 }
 
 android {
-    namespace = "com.namasteneedham.duotask"
+    namespace = "com.namasteneedham.evenhalf"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -46,7 +46,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.namasteneedham.duotask"
+        applicationId = "com.namasteneedham.evenhalf"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

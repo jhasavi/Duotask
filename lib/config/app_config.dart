@@ -97,7 +97,7 @@ class AppConfig {
           ) !=
           ''
       ? const String.fromEnvironment('APP_NAME')
-      : (dotenv.env['APP_NAME'] ?? 'DuoTask');
+      : (dotenv.env['APP_NAME'] ?? 'EvenHalf');
 
   static String get appVersion => const String.fromEnvironment(
             'APP_VERSION',

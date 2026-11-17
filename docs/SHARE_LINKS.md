@@ -3,7 +3,7 @@
 *Built 2026-10-16. Not deployed: it ships with the next push of `main`, which
 needs [NEXT_ACTIONS.md](NEXT_ACTIONS.md) first.*
 
-DuoTask only works once both people have signed up and paired, so every new
+EvenHalf only works once both people have signed up and paired, so every new
 user has to talk someone into installing an app before they get any value.
 Share links remove that step, and turn every task sent into an invitation to
 the person most likely to sign up.
@@ -21,7 +21,7 @@ the person most likely to sign up.
    it**, **It's done** and **I can't do it**. Their answer updates the task
    (claimed, completed, back to unclaimed) and the sender sees it live, on the
    task's detail screen and in the send sheet.
-3. **Conversion**: the page offers **Get DuoTask, free**, which opens
+3. **Conversion**: the page offers **Get EvenHalf, free**, which opens
    `/?join=<token>`. The sign-up screen shows "Alex sent you …" and defaults to
    Sign Up. After sign-up, the task moves to the new account, and if neither
    person is paired yet, **they're paired automatically**: the task becomes a
@@ -119,7 +119,7 @@ sign-ups are low, the "Keep track together" card is.
   to run them yourself.
 - **End to end in a browser** (a local build against the same stack):
   - Opening the link, accepting
-  - "Get DuoTask", then the sign-up banner
+  - "Get EvenHalf", then the sign-up banner
   - Sign-up, then auto-pair, with the task shown in progress on the new board
   - The sender's sheet updating live to "Mom marked it done"
   - Turning off the link
@@ -131,7 +131,7 @@ sign-ups are low, the "Keep track together" card is.
 - **Repeating and shared tasks can't be sent by link.** Supporting them needs
   the guest to count as the claimer for the ownership lock, and the next
   occurrence created on the server.
-- **The link preview is generic** ("A task for you on DuoTask"): the page is
+- **The link preview is generic** ("A task for you on EvenHalf"): the page is
   static, so WhatsApp can't show the task title. Showing it would need a
   server-rendered `/t/:token` (for example a Vercel function), which would
   then expose the title to the preview bot.
@@ -146,7 +146,7 @@ Share links send one task. Invite links send the whole partnership: under
 their pairing code, the inviter gets WhatsApp, Text, Email and Copy link
 buttons that send `https://<app>/?pair=<CODE>`.
 
-- **Opening the link** shows "Sam invited you to DuoTask" on the sign-up
+- **Opening the link** shows "Sam invited you to EvenHalf" on the sign-up
   screen (first name only, via the anon-callable `pair_invite_preview`), with
   Sign Up selected.
 - **The code survives sign-up.** `main.dart` stores `?pair=` before an OAuth

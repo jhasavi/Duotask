@@ -6,9 +6,9 @@
   <!-- The token is in the URL: never send it to another site, never index it. -->
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
-  <title>A task for you · DuoTask</title>
-  <meta name="description" content="Someone sent you a task on DuoTask. Say you've got it or mark it done, no app needed.">
-  <meta property="og:title" content="A task for you on DuoTask">
+  <title>A task for you · EvenHalf</title>
+  <meta name="description" content="Someone sent you a task on EvenHalf. Say you've got it or mark it done, no app needed.">
+  <meta property="og:title" content="A task for you on EvenHalf">
   <meta property="og:description" content="Tap to say you've got it or mark it done. No app needed.">
   <meta property="og:image" content="/icons/Icon-512.png">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -67,14 +67,14 @@
 </head>
 <body>
   <main>
-    <div class="brand"><img src="/icons/Icon-192.png" alt=""> DuoTask</div>
+    <div class="brand"><img src="/icons/Icon-192.png" alt=""> EvenHalf</div>
     <div id="app"><p class="center">Loading…</p></div>
     <p class="foot" id="foot">No account needed to respond.</p>
   </main>
   <script>
   (function () {
     'use strict';
-    var cfg = window.DUOTASK_CONFIG || {};
+    var cfg = window.EVENHALF_CONFIG || {};
     var app = document.getElementById('app');
 
     function tokenFromUrl() {
@@ -146,7 +146,7 @@
         code === 'network'
           ? el('div', { class: 'actions' }, [el('button', { class: 'primary', text: 'Try again', onclick: load })])
           : null
-      ]), joinCard('Organize your own tasks', 'DuoTask is a free shared to-do list for two.', '/'));
+      ]), joinCard('Organize your own tasks', 'EvenHalf is a free shared to-do list for two.', '/'));
     }
 
     function act(action) {
@@ -172,7 +172,7 @@
       return el('section', { class: 'join' }, [
         el('h2', { text: title }),
         el('p', { text: text }),
-        el('a', { class: 'cta', href: href, text: 'Get DuoTask, free' })
+        el('a', { class: 'cta', href: href, text: 'Get EvenHalf, free' })
       ]);
     }
 
@@ -220,7 +220,7 @@
 
       var join = s.claimed ? null : joinCard(
         'Keep track together',
-        'Get DuoTask free to see everything ' + sender + ' sends you in one place, and send tasks back.',
+        'Get EvenHalf free to see everything ' + sender + ' sends you in one place, and send tasks back.',
         '/?join=' + encodeURIComponent(token)
       );
 

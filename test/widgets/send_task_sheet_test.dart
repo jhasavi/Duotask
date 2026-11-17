@@ -1,6 +1,6 @@
-import 'package:duotask/models/task.dart';
-import 'package:duotask/services/task_share_service.dart';
-import 'package:duotask/widgets/send_task_sheet.dart';
+import 'package:evenhalf/models/task.dart';
+import 'package:evenhalf/services/task_share_service.dart';
+import 'package:evenhalf/widgets/send_task_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,7 +43,7 @@ void main() {
   });
 
   group('sendUri', () {
-    const msg = 'Hi Sam! "Milk & eggs" https://duotask.app/t/tok';
+    const msg = 'Hi Sam! "Milk & eggs" https://evenhalf.app/t/tok';
 
     test('encodes the message for each channel', () {
       final wa = sendUri(SendChannel.whatsApp, msg)!;
@@ -70,7 +70,7 @@ void main() {
 
     setUp(() {
       api = FakeTaskShareApi();
-      service = TaskShareService(api, appBaseUrl: 'https://duotask.app');
+      service = TaskShareService(api, appBaseUrl: 'https://evenhalf.app');
       launched = [];
       clipboard = null;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -118,7 +118,7 @@ void main() {
       final text = Uri.decodeComponent(launched.single.toString());
       expect(text, contains('Hi Sam!'));
       expect(text, contains('Pick up dry cleaning'));
-      expect(text, contains('https://duotask.app/t/abcdefghijklmnopqrstuvwx'));
+      expect(text, contains('https://evenhalf.app/t/abcdefghijklmnopqrstuvwx'));
       expect(api.created.last, ('t1', 'Sam'));
     });
 

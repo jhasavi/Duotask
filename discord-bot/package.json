@@ -1,14 +1,14 @@
 {
-  "name": "duotask-discord-bot",
+  "name": "evenhalf-discord-bot",
   "version": "1.0.0",
-  "description": "DuoTask Discord Bot - Task management via Discord",
+  "description": "EvenHalf Discord Bot - Task management via Discord",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js"
   },
-  "keywords": ["discord", "bot", "tasks", "duotask"],
+  "keywords": ["discord", "bot", "tasks", "evenhalf"],
   "author": "",
   "license": "MIT",
   "dependencies": {

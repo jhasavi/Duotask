@@ -7,7 +7,7 @@ Three emails, each sent at most once per user:
 
 | Email | When | Why |
 |---|---|---|
-| **Invite your partner** | 1–7 days after sign-up, while still unpaired | Pairing is what makes DuoTask useful; signups who never pair never come back |
+| **Invite your partner** | 1–7 days after sign-up, while still unpaired | Pairing is what makes EvenHalf useful; signups who never pair never come back |
 | **3 tips** | 3–14 days after sign-up | Natural-language input, repeating chores, and claiming (or send-by-link if unpaired) |
 | **Trial ending** | Within 3 days of a Premium trial converting | Fair warning before Stripe charges; reduces refunds and chargebacks |
 
@@ -43,13 +43,13 @@ All enforced in the database (`claim_lifecycle_emails`,
 ## Setup (owner)
 
 1. **Verify a sending domain in Resend** (for example `namasteneedham.com`)
-   and pick a from address such as `DuoTask <hello@namasteneedham.com>`.
+   and pick a from address such as `EvenHalf <hello@namasteneedham.com>`.
    Resend's shared `onboarding@resend.dev` sender only delivers to the Resend
    account owner. **The existing daily digest uses that sender today**, so it
    is probably not reaching users either.
 2. Set the function secrets, using the rotated Resend key:
    ```bash
-   supabase secrets set RESEND_API_KEY=re_... EMAIL_FROM='DuoTask <hello@namasteneedham.com>' APP_URL=https://duotask.namasteneedham.com
+   supabase secrets set RESEND_API_KEY=re_... EMAIL_FROM='EvenHalf <hello@namasteneedham.com>' APP_URL=https://duotask.namasteneedham.com
    ```
 3. Deploy: `supabase functions deploy lifecycle-emails`
 4. The migration creates the cron job; it needs the same Vault secrets

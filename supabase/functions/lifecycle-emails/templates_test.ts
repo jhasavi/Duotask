@@ -2,7 +2,7 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.168.0/testing/asserts.ts'
 import { escapeHtml, firstName, formatDay, type LifecycleEmailRow, renderLifecycleEmail } from './templates.ts'
 
-const APP = 'https://duotask.example.com'
+const APP = 'https://evenhalf.example.com'
 
 function row(over: Partial<LifecycleEmailRow> = {}): LifecycleEmailRow {
   return {
@@ -37,7 +37,7 @@ Deno.test('a display name cannot inject HTML', () => {
 
 Deno.test('invite_partner greets by first name and links to the app', () => {
   const e = renderLifecycleEmail(row(), APP)
-  assertEquals(e.subject, 'DuoTask works best with two')
+  assertEquals(e.subject, 'EvenHalf works best with two')
   assert(e.text.startsWith('Hi Sam,'))
   assert(e.text.includes('Pair Now'))
   assert(e.html.includes(`href="${APP}"`))
@@ -54,7 +54,7 @@ Deno.test('tips names the partner when paired, and suggests share links when not
   assert(paired.text.includes('so Alex can see'))
   const solo = renderLifecycleEmail(row({ kind: 'tips' }), APP)
   assert(solo.text.includes('Send a task to anyone by link'))
-  assertEquals(solo.subject, '3 things that make DuoTask easier')
+  assertEquals(solo.subject, '3 things that make EvenHalf easier')
 })
 
 Deno.test('trial_ending gives the end day in the user timezone, with no opt-out line', () => {
@@ -63,7 +63,7 @@ Deno.test('trial_ending gives the end day in the user timezone, with no opt-out 
     row({ kind: 'trial_ending', trial_ends_at: '2026-11-20T03:00:00Z' }),
     APP,
   )
-  assertEquals(e.subject, 'Your DuoTask Premium trial ends Thursday, November 19')
+  assertEquals(e.subject, 'Your EvenHalf Premium trial ends Thursday, November 19')
   assert(e.text.includes('Manage subscription'))
   assert(!e.text.includes('Tips and reminders'))
 })

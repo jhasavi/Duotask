@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to DuoTask will be documented in this file.
+All notable changes to EvenHalf (formerly DuoTask) will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-11-16 — Launch readiness
 
 Not deployed. Branch `feat/launch-readiness` (PR 11).
+
+### Changed
+- **Renamed DuoTask to EvenHalf** (2026-11-17). Another app called DuoTask in
+  the same niche owns `duotask.app`. All user-facing text, emails, web pages,
+  the PWA manifest, the Dart package (`evenhalf`) and the mobile bundle id
+  (`com.namasteneedham.evenhalf`) are renamed. Legal contacts are
+  `support@` / `privacy@evenhalf.app`. See docs/NEXT_ACTIONS.md §0.
+- The landing page leads with "your partner doesn't need to install
+  anything".
+- Daily digest email links use `APP_URL` instead of a stale Vercel preview URL.
+
+### Added (rename)
+- Public `/privacy/` and `/terms/` pages, generated from `assets/docs/*.md`
+  by `scripts/build_legal_pages.py`, linked from the landing page footer.
 
 ### Added
 - **Account deletion** (`delete_my_account` RPC, Settings > Delete Account),

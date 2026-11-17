@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the DuoTask web bundle for deployment.
+# Build the EvenHalf web bundle for deployment.
 #
 # Configuration is injected with --dart-define rather than by bundling a .env
 # asset. A previous build shipped .env inside the bundle, which served the
@@ -37,7 +37,7 @@ require SUPABASE_ANON_KEY
 
 APP_VERSION="${APP_VERSION:-$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)}"
 
-echo "==> Building DuoTask web v${APP_VERSION}"
+echo "==> Building EvenHalf web v${APP_VERSION}"
 
 flutter build web --release \
   --dart-define=SUPABASE_URL="$SUPABASE_URL" \
@@ -49,7 +49,7 @@ flutter build web --release \
   --dart-define=STRIPE_PAYMENT_LINK_URL="${STRIPE_PAYMENT_LINK_URL:-}" \
   --dart-define=STRIPE_CUSTOMER_PORTAL_URL="${STRIPE_CUSTOMER_PORTAL_URL:-}" \
   --dart-define=PUBLIC_APP_URL="${PUBLIC_APP_URL:-}" \
-  --dart-define=APP_NAME="${APP_NAME:-DuoTask}" \
+  --dart-define=APP_NAME="${APP_NAME:-EvenHalf}" \
   --dart-define=APP_VERSION="$APP_VERSION" \
   --dart-define=DEBUG_MODE=false
 
@@ -57,7 +57,7 @@ flutter build web --release \
 # it gets the same public client config as a tiny script. Only the URL and
 # the anon key, both public by design.
 mkdir -p build/web/t
-printf 'window.DUOTASK_CONFIG = { supabaseUrl: "%s", anonKey: "%s" };\n' \
+printf 'window.EVENHALF_CONFIG = { supabaseUrl: "%s", anonKey: "%s" };\n' \
   "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > build/web/t/config.js
 
 # Belt and braces: never ship an env file, whatever the asset config says.
