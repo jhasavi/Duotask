@@ -51,6 +51,21 @@ by `scripts/build_legal_pages.py` and linked from the landing page footer.
 placeholder Firebase ids. Old migrations and CHANGELOG entries still say
 DuoTask; that's history.
 
+**Also renamed (2026-11-17):** GitHub repo `jhasavi/EvenHalf` (old URL
+redirects), folder `~/EvenHalf` on the MacBook (with a `~/DuoTask` symlink) and
+on the Mac mini, the entries in `sync-projects.sh` / `msync.sh` (installed
+copies on both machines; the copies in `~/nb/scripts/maintenance` are edited
+but not committed). The namasteneedham.com pages moved to `/evenhalf/*` with
+redirects from `/duotask/*`: [jhasavi/nneedham#8](https://github.com/jhasavi/nneedham/pull/8),
+not merged yet.
+
+**Two sets of legal pages to reconcile:** the app's own Terms and Privacy
+(`assets/docs/*.md`, now also at `/terms/` and `/privacy/`, contact
+`support@evenhalf.app`) and the shorter, more current ones on
+namasteneedham.com/evenhalf (contact `info@namasteneedham.com`). Pick one as
+the source of truth before Stripe live mode and store listings; the app's
+version has the refund terms Stripe needs.
+
 **Your steps, in order:**
 
 1. **Buy `evenhalf.com` and `evenhalf.app` today** (Cloudflare Registrar or
