@@ -67,7 +67,7 @@ See the **[User Guide](USER_GUIDE.md)** for detailed instructions.
 ```bash
 # Clone repository
 git clone <repository-url>
-cd evenhalf
+cd EvenHalf
 
 # Install dependencies
 flutter pub get

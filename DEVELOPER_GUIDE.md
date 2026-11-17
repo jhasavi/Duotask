@@ -16,7 +16,7 @@
 ```bash
 # Clone repository (if using Git)
 git clone <repository-url>
-cd evenhalf
+cd EvenHalf
 
 # Install Flutter dependencies
 flutter pub get
