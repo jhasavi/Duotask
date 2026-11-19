@@ -85,7 +85,7 @@ first; repeat in live mode for production.
 - [ ] **Payment Links → New**: pick the price, then under *After payment*
       choose **Don't show confirmation page → redirect to** your app URL
       (staging URL for test mode,
-      `https://duotask.namasteneedham.com/` for live). Copy the link
+      `https://evenhalf.app/` for live). Copy the link
       (`https://buy.stripe.com/test_…`).
 - [ ] **Settings → Billing → Customer portal**: enable it, allow cancellation,
       and copy the **login link** (`https://billing.stripe.com/p/login/test_…`).

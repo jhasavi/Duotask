@@ -8,7 +8,7 @@ EvenHalf is a task management app designed for partners who want to collaborate 
 
 ### 1. Sign Up / Sign In
 
-**Visit**: https://duotask.namasteneedham.com
+**Visit**: https://evenhalf.app
 
 **Sign Up Options**:
 - **Email & Password**: Enter your email, create a password (min. 6 characters), and choose a display name
@@ -312,7 +312,7 @@ EvenHalf is actively being developed. New features coming soon:
 
 **Version**: 1.0.0  
 **Last Updated**: December 23, 2025  
-**Website**: https://duotask.namasteneedham.com
+**Website**: https://evenhalf.app
 
 ---
 

@@ -22,7 +22,7 @@ EvenHalf is a Flutter-based cross-platform task management application designed 
 ### Deployment
 - **Web Hosting**: Vercel
 - **Database Hosting**: Supabase Cloud
-- **Domain**: duotask.namasteneedham.com (configured)
+- **Domain**: evenhalf.app (to be registered; see docs/NEXT_ACTIONS.md §0)
 
 ## System Architecture
 

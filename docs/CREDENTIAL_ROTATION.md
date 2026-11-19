@@ -31,7 +31,7 @@ effects (it changes the anon key, and the web app must be rebuilt with it).
        place the anon key lives (GitHub secret `SUPABASE_ANON_KEY`, Vault
        secret `anon_key`, your local `.env`) and redeploy the web app — §3
 6. [ ] **Verify** (5 min) — trigger the digest and a nudge, sign in on the
-       web app, run `scripts/smoke_test.sh https://duotask.namasteneedham.com`
+       web app, run `scripts/smoke_test.sh https://evenhalf.app`
 7. [ ] Tick the checklist at the bottom of this file.
 
 > **Before you push anything:** `main` has local commits that are not on
@@ -69,7 +69,7 @@ appears to come from you, which is a phishing and domain-reputation risk.
 1. Go to https://resend.com/api-keys
 2. Find the existing key → **⋯ → Delete**. Delete first; a leaked sending key
    is worth more to an attacker than a few minutes of digest downtime.
-3. **Create API Key** → name it `duotask-production` → permission
+3. **Create API Key** → name it `evenhalf-production` → permission
    **Sending access** (not Full access) → copy the new value.
 
 **Where it goes**
@@ -167,7 +167,7 @@ Supabase has been changing)
 
 **Verify**
 
-- Sign in on https://duotask.namasteneedham.com (a stale anon key shows up as
+- Sign in on https://evenhalf.app (a stale anon key shows up as
   401s on every request)
 - Send yourself a nudge → push arrives (exercises Vault `anon_key`)
 - `supabase functions invoke daily-email-digest --project-ref <ref>` → 200
@@ -200,7 +200,7 @@ The first successful `deploy.yml` run.
 ## 5. Confirm the leak is closed — *done 2026-09-16*
 
 Production now serves a bundle with no `/assets/.env`, and
-`scripts/smoke_test.sh https://duotask.namasteneedham.com` passes. Re-run it
+`scripts/smoke_test.sh https://evenhalf.app` passes. Re-run it
 after the redeploy in §3 as a regression check.
 
 ---

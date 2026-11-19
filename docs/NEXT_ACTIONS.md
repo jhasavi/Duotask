@@ -131,7 +131,7 @@ Also: the legacy JWT secret itself was shown on screen in a Claude session on
 
 `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` (`xqhlnuvpogiolzkucupt`),
 `SUPABASE_DB_PASSWORD`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
-Create a `VERCEL_TOKEN` scoped to the DuoTask project. Details:
+Create a `VERCEL_TOKEN` scoped to the EvenHalf project. Details:
 [RELEASE.md](RELEASE.md#one-time-setup). Currently present: `SUPABASE_URL`,
 `SUPABASE_ANON_KEY` and the three `GOOGLE_*` ids.
 

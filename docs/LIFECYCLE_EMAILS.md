@@ -49,7 +49,7 @@ All enforced in the database (`claim_lifecycle_emails`,
    is probably not reaching users either.
 2. Set the function secrets, using the rotated Resend key:
    ```bash
-   supabase secrets set RESEND_API_KEY=re_... EMAIL_FROM='EvenHalf <hello@namasteneedham.com>' APP_URL=https://duotask.namasteneedham.com
+   supabase secrets set RESEND_API_KEY=re_... EMAIL_FROM='EvenHalf <hello@namasteneedham.com>' APP_URL=https://evenhalf.app
    ```
 3. Deploy: `supabase functions deploy lifecycle-emails`
 4. The migration creates the cron job; it needs the same Vault secrets

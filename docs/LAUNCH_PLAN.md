@@ -55,11 +55,11 @@ between two people*, not "task app". Lead with the problem.
 > "Who's doing that?" is the most-asked question in every household.
 > I built EvenHalf: a shared to-do for two people. Tasks are bubbles, you claim
 > them, nudge each other, and it confetti-bombs you when something's done.
-> Free: https://duotask.namasteneedham.com
+> Free: https://evenhalf.app
 
 **X, the invite hook** (the strongest feature: no install needed to respond)
 > You can send a task to your partner over WhatsApp and they can say "I'll do
-> it" from a link. No app, no account. That's EvenHalf. https://duotask.namasteneedham.com
+> it" from a link. No app, no account. That's EvenHalf. https://evenhalf.app
 
 **Facebook (personal or a page)**
 > I made a small app for couples and roommates: one shared task list where you

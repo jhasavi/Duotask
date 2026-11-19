@@ -16,7 +16,7 @@ the person most likely to sign up.
    > Hi Sam! Could you take care of this? "Pick up the dry cleaning" (due Fri
    > Oct 17, 6:00 PM)
    > Tap to say you've got it or mark it done, no app needed:
-   > https://duotask.namasteneedham.com/t/k3Jd9xQ2mPzR7vLwT0aYc8Ns
+   > https://evenhalf.app/t/k3Jd9xQ2mPzR7vLwT0aYc8Ns
 2. **Recipient**, no account: `/t/<token>` shows the task with **I'll do
    it**, **It's done** and **I can't do it**. Their answer updates the task
    (claimed, completed, back to unclaimed) and the sender sees it live, on the
