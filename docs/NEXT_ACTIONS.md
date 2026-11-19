@@ -1,6 +1,6 @@
 # Next actions before release
 
-*Written 2026-11-17 on the Mac mini. This is the **only** to-do list; the other
+*Short ranked version: [RELEASE_TOP_10.md](RELEASE_TOP_10.md). Written 2026-11-17 on the Mac mini. This is the **only** to-do list; the other
 docs are reference. Branch: `feat/launch-readiness` (PR 11). The code is done:
 `flutter analyze` clean, 193 tests pass, CI green.*
 
