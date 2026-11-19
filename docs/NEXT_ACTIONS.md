@@ -30,10 +30,9 @@ Folder is now `~/EvenHalf` on both machines and the GitHub repo is
 
 ## 0. Rename to EvenHalf (blocks marketing, not the merge)
 
-**Why:** on 2026-11-17 we found another "DuoTask" in the same niche, an iPhone
-shared to-do app for couples
-([App Store id6752819525](https://apps.apple.com/us/app/duotask/id6752819525))
-that owns `duotask.app`. Our legal pages were sending users' mail there. We
+**Why:** on 2026-11-17 we found an existing app with our old name in the same niche, an iPhone
+shared to-do app for couples (App Store id6752819525) that owns the matching
+`.app` domain. Our legal pages were sending users' mail there. We
 renamed to **EvenHalf** (a pun on "better half": share the load evenly).
 On 2026-11-17 `evenhalf.com` and `evenhalf.app` were both unregistered, and
 no App Store app used the name.
@@ -45,18 +44,17 @@ published). Legal contacts are `support@` and `privacy@evenhalf.app`.
 Public pages `/privacy/` and `/terms/` are generated from `assets/docs/*.md`
 by `scripts/build_legal_pages.py` and linked from the landing page footer.
 
-**Kept on purpose (they're tied to outside consoles):** the live host
-`duotask.namasteneedham.com`, the Supabase OAuth URL scheme
-`io.supabase.duotask`, the Supabase project ref, Resend key names, and the
-placeholder Firebase ids. Old migrations and CHANGELOG entries still say
-DuoTask; that's history.
+**Kept on purpose (they're tied to outside consoles):** the current live host (the
+old-name subdomain of namasteneedham.com), the Supabase OAuth URL scheme, the
+Supabase project ref, Resend key names, and the placeholder Firebase ids. Old
+migrations and CHANGELOG entries still use the old name; that's history.
 
 **Also renamed (2026-11-17):** GitHub repo `jhasavi/EvenHalf` (old URL
-redirects), folder `~/EvenHalf` on the MacBook (with a `~/DuoTask` symlink) and
+redirects), folder `~/EvenHalf` on the MacBook (with a symlink from the old folder name) and
 on the Mac mini, the entries in `sync-projects.sh` / `msync.sh` (installed
 copies on both machines; the copies in `~/nb/scripts/maintenance` are edited
 but not committed). The namasteneedham.com pages moved to `/evenhalf/*` with
-redirects from `/duotask/*`: [jhasavi/nneedham#8](https://github.com/jhasavi/nneedham/pull/8),
+redirects from the old paths: [jhasavi/nneedham#8](https://github.com/jhasavi/nneedham/pull/8),
 not merged yet.
 
 **Two sets of legal pages to reconcile:** the app's own Terms and Privacy
@@ -77,14 +75,14 @@ version has the refund terms Stripe needs.
    Policy already list them.
 3. **Point the domain at Vercel:** add `evenhalf.app` (primary) and
    `evenhalf.com` (redirect) to the Vercel project. Keep
-   `duotask.namasteneedham.com` as a redirect so old share links work.
+   the current live host as a redirect so old share links work.
 4. **Switch the app URL in one go** (ask Claude, it's a find-and-replace):
    `_defaultPublicAppUrl` in `lib/config/app_config.dart`, `APP_URL` default
    in both email functions, the canonical/OG tags in `web/index.html` and
    `web/welcome/index.html`, `web/sitemap.xml`, `web/robots.txt`.
 5. **Consoles that hold the old URL or name:**
    - Supabase → Authentication → URL Configuration: Site URL and redirect
-     URLs for the new domain; Email Templates: replace "DuoTask".
+     URLs for the new domain; Email Templates: replace the old app name.
    - Google Cloud → OAuth client: add the new domain as an authorized
      JavaScript origin; rename the consent screen to EvenHalf.
    - Resend: verify `evenhalf.app` as a sending domain and set the edge
@@ -119,7 +117,7 @@ the legacy ones. Order matters, and nothing is disabled until the last step:
    publishable key. Rebuild and redeploy the web app.
 5. Verify: sign in on the live site, send a nudge, invoke
    `supabase functions invoke daily-email-digest`, run
-   `scripts/smoke_test.sh https://duotask.namasteneedham.com`.
+   `scripts/smoke_test.sh <live app URL>`.
 6. **Only then** Dashboard → API Keys → **Disable legacy API keys**. Re-test
    the same things. Proof it worked: a request using the old `service_role`
    key returns 401.
@@ -170,8 +168,8 @@ the new Resend key works.
 - Legal review of the Terms: Massachusetts jurisdiction, 14-day refund window,
   arbitration clause.
 - Enable Vercel Web Analytics in the Vercel dashboard.
-- Resend hygiene: `duotask-prod` and `duotask-dev` have Full access and no
-  activity. Delete `duotask-dev`; give prod Sending access only.
+- Resend hygiene: the two old-name keys (prod and dev) have Full access and no
+  activity. Delete the dev one; give prod Sending access only.
 
 ## 7. Later (not blocking)
 

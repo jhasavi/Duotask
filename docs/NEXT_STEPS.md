@@ -30,7 +30,7 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 ## Competition and positioning (checked 2026-11-17)
 
 The "shared chores for couples" category is crowded and mostly iOS-only:
-another app named **DuoTask** (iPhone, with `duotask.app`; that's why we
+another app with our old name (iPhone, with the matching `.app` domain; that's why we
 renamed, see [NEXT_ACTIONS.md §0](NEXT_ACTIONS.md#0-rename-to-evenhalf-blocks-marketing-not-the-merge)),
 *Chores Together* (points and rewards), *Chore Wars* (XP),
 *Pairwork* (hourly value of housework), *Chores* (recurring tasks),
