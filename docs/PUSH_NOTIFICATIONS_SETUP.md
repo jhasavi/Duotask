@@ -49,7 +49,7 @@ that grants access by itself). The two platform config files stay
 gitignored.
 
 Android's `applicationId` is currently the Flutter default,
-`com.example.duotask` (`android/app/build.gradle.kts`) — decide on a real
+the old `com.example.duotask` id (now `com.namasteneedham.evenhalf`) — decide on a real
 one and update it *before* running `flutterfire configure`, since the
 Android app is registered in Firebase against whatever `applicationId` is
 set at the time.

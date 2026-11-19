@@ -166,7 +166,7 @@ the new Resend key works.
 
 ## 6. Owner and legal items (no code)
 
-- Mail for `support@duotask.app` and `privacy@duotask.app`.
+- Mail for `support@evenhalf.app` and `privacy@evenhalf.app` (see §0 step 2).
 - Legal review of the Terms: Massachusetts jurisdiction, 14-day refund window,
   arbitration clause.
 - Enable Vercel Web Analytics in the Vercel dashboard.

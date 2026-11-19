@@ -293,7 +293,7 @@ A: Export feature coming soon. For now, you can manually copy task details.
 
 **Issues or Questions?**
 - Check the browser console (F12) for error messages
-- Email: support@duotask.namasteneedham.com
+- Email: support@evenhalf.app
 - Report bugs: Create an issue on GitHub (if available)
 
 ---
