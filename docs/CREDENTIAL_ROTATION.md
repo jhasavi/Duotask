@@ -4,8 +4,12 @@ Four credentials were exposed and must be replaced. They are out of the
 working tree but remain in git history, so **removing them changed nothing —
 rotation is the only fix.**
 
-*Status as of 2026-10-15: none of the four has been rotated. The public
-`/assets/.env` leak itself is closed (verified 2026-09-16).*
+*Status as of 2026-11-17:* **Resend rotated, Discord rotated, Vercel nothing to
+do** (the leaked OIDC token was short-lived and expired). **Supabase is NOT
+done:** the leaked `service_role` key still works. The dashboard has no
+"generate new JWT secret" button any more, so use Route B below. See
+[NEXT_ACTIONS.md](NEXT_ACTIONS.md). The public `/assets/.env` leak itself is
+closed (verified 2026-09-16).*
 
 ## Do-it-now checklist (≈45 minutes, in this order)
 
@@ -17,19 +21,18 @@ effects (it changes the anon key, and the web app must be rebuilt with it).
 2. [ ] **Resend** (5 min) — delete key `re_jR6ucccW_…`, create a
        *Sending access* key, then:
        `supabase secrets set RESEND_API_KEY=<new> --project-ref <ref>` — §1
-3. [ ] **Discord** (2 min) — Developer Portal → DuoTask → Bot → *Reset Token*.
+3. [ ] **Discord** (2 min) — Developer Portal → EvenHalf → Bot → *Reset Token*.
        The bot isn't deployed anywhere; if you don't plan to run it, delete
        the application instead — §2
 4. [ ] **Vercel** (3 min) — https://vercel.com/account/tokens → delete every
-       token older than today → create one scoped to DuoTask → GitHub secret
+       token older than today → create one scoped to EvenHalf → GitHub secret
        `VERCEL_TOKEN` — §4
 5. [ ] **Supabase service_role** (15 min) — rotate, then update **every**
        place the anon key lives (GitHub secret `SUPABASE_ANON_KEY`, Vault
        secret `anon_key`, your local `.env`) and redeploy the web app — §3
 6. [ ] **Verify** (5 min) — trigger the digest and a nudge, sign in on the
-       web app, run `scripts/smoke_test.sh https://duotask.namasteneedham.com`
-7. [ ] Tick the boxes in [PROJECT_STATUS.md](../PROJECT_STATUS.md) and the
-       checklist at the bottom of this file.
+       web app, run `scripts/smoke_test.sh https://evenhalf.app`
+7. [ ] Tick the checklist at the bottom of this file.
 
 > **Before you push anything:** `main` has local commits that are not on
 > GitHub yet, starting with `338dac9` (adds
@@ -66,7 +69,7 @@ appears to come from you, which is a phishing and domain-reputation risk.
 1. Go to https://resend.com/api-keys
 2. Find the existing key → **⋯ → Delete**. Delete first; a leaked sending key
    is worth more to an attacker than a few minutes of digest downtime.
-3. **Create API Key** → name it `duotask-production` → permission
+3. **Create API Key** → name it `evenhalf-production` → permission
    **Sending access** (not Full access) → copy the new value.
 
 **Where it goes**
@@ -99,7 +102,7 @@ account — reading and posting in every server the bot has joined.
 **Revoke and replace**
 
 1. Go to https://discord.com/developers/applications
-2. Select the DuoTask application → **Bot**
+2. Select the EvenHalf application → **Bot**
 3. **Reset Token** → confirm. This invalidates the old token immediately.
 4. Copy the new token.
 
@@ -130,7 +133,7 @@ row in every table, and create or delete any user. It was committed in
 are both JWTs signed with the project's JWT secret. There is no way to
 invalidate *only* the leaked `service_role` key — whichever route you take,
 the **anon key changes too**, and existing user sessions may be signed out
-once. That is acceptable at DuoTask's size; just do it in one sitting.
+once. That is acceptable at EvenHalf's size; just do it in one sitting.
 
 **Revoke and replace** (pick one route; check the dashboard wording, which
 Supabase has been changing)
@@ -164,7 +167,7 @@ Supabase has been changing)
 
 **Verify**
 
-- Sign in on https://duotask.namasteneedham.com (a stale anon key shows up as
+- Sign in on https://evenhalf.app (a stale anon key shows up as
   401s on every request)
 - Send yourself a nudge → push arrives (exercises Vault `anon_key`)
 - `supabase functions invoke daily-email-digest --project-ref <ref>` → 200
@@ -182,7 +185,7 @@ long-lived account token as a precaution.
 
 1. https://vercel.com/account/tokens
 2. Delete any token you don't recognise or that predates today
-3. **Create Token** → scope it to the DuoTask project → copy
+3. **Create Token** → scope it to the EvenHalf project → copy
 
 **Where it goes**
 
@@ -197,7 +200,7 @@ The first successful `deploy.yml` run.
 ## 5. Confirm the leak is closed — *done 2026-09-16*
 
 Production now serves a bundle with no `/assets/.env`, and
-`scripts/smoke_test.sh https://duotask.namasteneedham.com` passes. Re-run it
+`scripts/smoke_test.sh https://evenhalf.app` passes. Re-run it
 after the redeploy in §3 as a regression check.
 
 ---
@@ -224,9 +227,9 @@ nothing, because copies may already exist.
 ## Checklist
 
 - [ ] Reviewed Resend, Supabase auth, and Discord logs for misuse
-- [ ] Resend key deleted and replaced; digest send verified
-- [ ] Discord token reset (or application deleted)
-- [ ] Vercel token rotated
+- [x] Resend key deleted and replaced (2026-11-17); new key set as Supabase secret. Digest send not yet verified
+- [x] Discord token reset (2026-11-17)
+- [x] Vercel: no long-lived leaked token exists; nothing to rotate
 - [ ] Supabase JWT keys rotated; new anon key in GitHub secrets, Vault and `.env`
 - [ ] Edge functions redeployed; web app rebuilt and redeployed with the new anon key
 - [x] `scripts/smoke_test.sh` passes against production (2026-09-16; re-run after the redeploy)

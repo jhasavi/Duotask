@@ -9,6 +9,7 @@ import '../services/nudge_service.dart';
 import '../services/email_preferences_service.dart';
 import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
+import '../services/task_share_service.dart';
 import '../models/task.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/empty_state_widget.dart';
@@ -76,10 +77,32 @@ class _HomeScreenState extends State<HomeScreen> {
     final emailPrefs = context.read<EmailPreferencesService>();
     final notificationService = context.read<NotificationService>();
     final supabase = context.read<SupabaseClient>();
+    final taskShareService = context.read<TaskShareService>();
+    final messenger = ScaffoldMessenger.of(context);
 
     final userId = authService.currentUser?.id;
     if (userId != null) {
+      // Arrived from a task someone sent by link: take it over (and pair
+      // with the sender) before loading, so it's on the board right away.
+      final claim = await taskShareService.claimPendingJoin();
+      if (claim != null) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(claim.message),
+          duration: const Duration(seconds: 6),
+        ));
+      }
+
+      // Arrived from a partner's invite link: pair now.
+      final invite = await pairingService.claimPendingInvite(userId);
+      if (invite != null) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(invite.message),
+          duration: const Duration(seconds: 6),
+        ));
+      }
+
       await Future.wait([
+        taskShareService.load(userId),
         taskService.loadTasks(userId),
         pairingService.checkPairingStatus(userId),
         nudgeService.loadNudges(userId),
@@ -149,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (!mounted) return;
+
+    // Nothing done this week (a brand-new pair, or a quiet week): a "0 shared
+    // tasks finished together 🎉" card is no celebration, so skip it. Not
+    // marked as shown, so it can still appear later today if they finish one.
+    if ((counts['user'] ?? 0) + (counts['partner'] ?? 0) == 0) return;
 
     // Show modal
     await showDialog(

@@ -10,7 +10,9 @@ name: Deploy
 # in CI from the commit being deployed makes that failure mode impossible.
 #
 # Required repository secrets:
-#   SUPABASE_URL, SUPABASE_ANON_KEY   - client config, injected via --dart-define
+#   SUPABASE_URL, SUPABASE_ANON_KEY   - client config, injected via --dart-define.
+#                                       SUPABASE_ANON_KEY holds the new publishable
+#                                       key (sb_publishable_...), not the legacy JWT.
 #   WEB_REDIRECT_URL                  - OAuth redirect target
 #   GOOGLE_WEB_CLIENT_ID              - Google sign-in
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
@@ -95,9 +97,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pinned so a CLI release can't change how production migrations are
+      # applied. Bump on purpose, after `supabase db push` works locally.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.39.2
 
       - name: Push migrations
         env:
@@ -123,6 +127,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: "3.41.9"
           cache: true
 
       - name: Install dependencies
@@ -149,7 +154,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          npm install --global vercel@latest
+          npm install --global vercel@54.11.1
           vercel deploy build/web \
             --prod \
             --yes \

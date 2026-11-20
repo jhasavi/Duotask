@@ -1,10 +1,10 @@
 # Privacy Policy
 
-**Last Updated: October 31, 2025**
+**Last Updated: November 17, 2026**
 
 ## Introduction
 
-Welcome to DuoTask ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, store, and protect your information when you use our task-sharing application.
+Welcome to EvenHalf ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, store, and protect your information when you use our task-sharing application.
 
 ## 1. Information We Collect
 
@@ -40,7 +40,7 @@ Welcome to DuoTask ("we," "our," or "us"). We respect your privacy and are commi
 **Usage Events:**
 - When you sign up, pair with a partner, create or complete a task, send a
   nudge, or start or end a Premium subscription, we record the event type,
-  your account ID and the time. We use this only to understand how DuoTask is
+  your account ID and the time. We use this only to understand how EvenHalf is
   used. We do not record task titles, descriptions or nudge messages for
   this purpose, we do not use third-party tracking or advertising SDKs, and
   these records are deleted when you delete your account.
@@ -94,7 +94,18 @@ We use your information to:
 - Your display name and profile picture are visible to your partner
 - Pairing status and activity are shared
 
-### 3.2 With Service Providers
+### 3.2 Tasks You Send by Link
+- When you send a task by link, anyone who has the link can see that task's
+  title, notes, due date, priority and status, and your display name (unless
+  it is your email address, which is never shown)
+- They can say they'll do it, say they can't, or mark it done, without an
+  account. You see their response in the app
+- If you type their name, we store it with the link so we can show it to you
+- Links stop working after 30 days, or as soon as you turn them off
+- We don't send the message ourselves; you send it from your own phone or
+  email, so we never receive the recipient's phone number or email address
+
+### 3.3 With Service Providers
 
 We share data with trusted third-party service providers:
 
@@ -111,7 +122,7 @@ We share data with trusted third-party service providers:
 
 **Stripe (Payments, Premium only):**
 - Processes Premium subscription payments; your card details go directly to
-  Stripe and are never seen or stored by DuoTask
+  Stripe and are never seen or stored by EvenHalf
 - We store your Stripe customer and subscription IDs and subscription status
 - [Privacy Policy](https://stripe.com/privacy)
 
@@ -120,7 +131,7 @@ We share data with trusted third-party service providers:
 - Manages device tokens
 - [Privacy Policy](https://firebase.google.com/support/privacy)
 
-### 3.3 Legal Requirements
+### 3.4 Legal Requirements
 
 We may disclose your information if required by law or in response to:
 - Court orders or subpoenas
@@ -129,11 +140,11 @@ We may disclose your information if required by law or in response to:
 - Protection of our rights
 - Emergency situations
 
-### 3.4 Business Transfers
+### 3.5 Business Transfers
 
 In the event of a merger, acquisition, or sale of assets, your information may be transferred to the new entity.
 
-### 3.5 We Do NOT Sell Your Data
+### 3.6 We Do NOT Sell Your Data
 
 We do not sell, rent, or trade your personal information to third parties for marketing purposes.
 
@@ -237,6 +248,7 @@ If you're a California resident, you have the right to:
 - Usage statistics
 - Performance monitoring
 - Can be disabled in settings
+- Visitor analytics on evenhalf.namasteneedham.com (the app, the landing page and the website), provided by Vercel Web Analytics. It does not use cookies and does not track you across sites. It records aggregate page views with approximate country and device type, and never the contents of the share-link pages (`/t/`)
 
 ### 7.3 Third-Party Cookies
 - Google OAuth
@@ -245,7 +257,7 @@ If you're a California resident, you have the right to:
 
 ## 8. Children's Privacy
 
-DuoTask is not intended for children under 13. We do not knowingly collect information from children under 13.
+EvenHalf is not intended for children under 13. We do not knowingly collect information from children under 13.
 
 If you believe a child has provided us with information:
 - Contact us immediately
@@ -277,15 +289,14 @@ Your data may be transferred to and stored in countries other than your own. We 
 
 If you have questions about this privacy policy or our data practices:
 
-**Email**: privacy@duotask.app  
-**Website**: https://duotask.app/privacy  
-**Mail**: [Your Physical Address]
+**Email**: privacy@evenhalf.app  
+**Website**: https://evenhalf.app/privacy/  
 
 ### 11.2 Data Protection Officer
 
 For GDPR-related inquiries:
 
-**Email**: dpo@duotask.app
+**Email**: privacy@evenhalf.app
 
 ### 11.3 Response Time
 
@@ -356,7 +367,7 @@ We do not use automated decision-making or profiling that produces legal effects
 
 ---
 
-**By using DuoTask, you acknowledge that you have read and understood this Privacy Policy.**
+**By using EvenHalf, you acknowledge that you have read and understood this Privacy Policy.**
 
 ---
 

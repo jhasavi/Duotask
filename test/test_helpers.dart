@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mockito/annotations.dart';
 
-import 'package:duotask/models/task.dart';
-import 'package:duotask/models/user.dart';
-import 'package:duotask/models/pairing.dart';
+import 'package:evenhalf/models/task.dart';
+import 'package:evenhalf/models/user.dart';
+import 'package:evenhalf/models/pairing.dart';
 
 // Generate mocks with build_runner
 @GenerateMocks([

@@ -19,6 +19,8 @@ import 'services/preferences_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/email_preferences_service.dart';
 import 'services/premium_service.dart';
+import 'models/pair_invite.dart';
+import 'services/task_share_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -58,6 +60,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 /// existing in-app Realtime subscription either way.
 Future<void> _initializeFirebaseMessaging() async {
   if (kIsWeb) return; // Push notifications are mobile-only for now.
+  // On iOS the native Firebase SDK raises an Objective-C exception (not a Dart
+  // one) when handed placeholder options, which kills the app at launch before
+  // the try/catch below can help. Skip until a real config is generated.
+  if (DefaultFirebaseOptions.currentPlatform.projectId
+      .endsWith('placeholder')) {
+    return;
+  }
   try {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
@@ -83,6 +92,12 @@ void main() async {
 
   await _initializeFirebaseMessaging();
 
+  // A recipient tapping "Get EvenHalf" on a share link lands on /?join=<token>.
+  // Keep the token before sign-up redirects (OAuth, magic link) drop the URL.
+  if (kIsWeb) await TaskShareService.captureJoinToken(Uri.base);
+  // Same for a partner invite link, /?pair=<CODE>.
+  if (kIsWeb) await PairInvite.capture(Uri.base);
+
   // Initialize Supabase
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
@@ -104,7 +119,7 @@ void main() async {
   await connectivityService.initialize();
 
   runApp(
-    DuoTaskApp(
+    EvenHalfApp(
       notifications: notifications,
       preferencesService: preferencesService,
       connectivityService: connectivityService,
@@ -112,12 +127,12 @@ void main() async {
   );
 }
 
-class DuoTaskApp extends StatelessWidget {
+class EvenHalfApp extends StatelessWidget {
   final FlutterLocalNotificationsPlugin notifications;
   final PreferencesService preferencesService;
   final ConnectivityService connectivityService;
 
-  const DuoTaskApp({
+  const EvenHalfApp({
     super.key,
     required this.notifications,
     required this.preferencesService,
@@ -182,6 +197,12 @@ class DuoTaskApp extends StatelessWidget {
           ),
         ),
 
+        ChangeNotifierProvider<TaskShareService>(
+          create: (context) => TaskShareService.supabase(
+            context.read<SupabaseClient>(),
+          ),
+        ),
+
         ChangeNotifierProvider<EmailPreferencesService>(
           create: (context) => EmailPreferencesService(
             context.read<SupabaseClient>(),
@@ -233,7 +254,7 @@ class _ConfigErrorApp extends StatelessWidget {
                 Icon(Icons.error_outline, size: 48),
                 SizedBox(height: 16),
                 Text(
-                  'DuoTask is not configured',
+                  'EvenHalf is not configured',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),

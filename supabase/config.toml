@@ -1,5 +1,5 @@
 # A string used to distinguish different Supabase projects on the same host.
-project_id = "duotask"
+project_id = "evenhalf"
 
 [api]
 enabled = true
@@ -20,4 +20,15 @@ port = 54323
 # Stripe calls this endpoint without a Supabase JWT; the function verifies
 # the Stripe-Signature header instead.
 [functions.stripe-webhook]
+verify_jwt = false
+
+# The cron jobs and the nudge trigger authenticate with FUNCTION_AUTH_SECRET
+# (checked in _shared/auth.ts) because the new sb_ API keys are not JWTs.
+[functions.daily-email-digest]
+verify_jwt = false
+
+[functions.lifecycle-emails]
+verify_jwt = false
+
+[functions.send-nudge-push]
 verify_jwt = false

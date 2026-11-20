@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the DuoTask web bundle for deployment.
+# Build the EvenHalf web bundle for deployment.
 #
 # Configuration is injected with --dart-define rather than by bundling a .env
 # asset. A previous build shipped .env inside the bundle, which served the
@@ -33,11 +33,16 @@ require() {
 }
 
 require SUPABASE_URL
+# The new publishable key (sb_publishable_...) replaces the legacy anon key.
+# supabase_flutter takes either as its "anon key", so one define serves both.
+if [[ -n "${SUPABASE_PUBLISHABLE_KEY:-}" ]]; then
+  SUPABASE_ANON_KEY="$SUPABASE_PUBLISHABLE_KEY"
+fi
 require SUPABASE_ANON_KEY
 
 APP_VERSION="${APP_VERSION:-$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)}"
 
-echo "==> Building DuoTask web v${APP_VERSION}"
+echo "==> Building EvenHalf web v${APP_VERSION}"
 
 flutter build web --release \
   --dart-define=SUPABASE_URL="$SUPABASE_URL" \
@@ -48,9 +53,17 @@ flutter build web --release \
   --dart-define=GOOGLE_ANDROID_CLIENT_ID="${GOOGLE_ANDROID_CLIENT_ID:-}" \
   --dart-define=STRIPE_PAYMENT_LINK_URL="${STRIPE_PAYMENT_LINK_URL:-}" \
   --dart-define=STRIPE_CUSTOMER_PORTAL_URL="${STRIPE_CUSTOMER_PORTAL_URL:-}" \
-  --dart-define=APP_NAME="${APP_NAME:-DuoTask}" \
+  --dart-define=PUBLIC_APP_URL="${PUBLIC_APP_URL:-}" \
+  --dart-define=APP_NAME="${APP_NAME:-EvenHalf}" \
   --dart-define=APP_VERSION="$APP_VERSION" \
   --dart-define=DEBUG_MODE=false
+
+# The share-link page (/t/<token>) is plain HTML outside the Flutter app, so
+# it gets the same public client config as a tiny script. Only the URL and
+# the anon key, both public by design.
+mkdir -p build/web/t
+printf 'window.EVENHALF_CONFIG = { supabaseUrl: "%s", anonKey: "%s" };\n' \
+  "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > build/web/t/config.js
 
 # Belt and braces: never ship an env file, whatever the asset config says.
 rm -f build/web/assets/.env build/web/assets/.env.example \

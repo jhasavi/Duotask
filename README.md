@@ -1,4 +1,4 @@
-# DuoTask
+# EvenHalf
 
 A visually engaging, real-time task-sharing app built with Flutter and Supabase, designed to help two people — such as couples, roommates, or teammates — coordinate daily responsibilities in a fun and effortless way.
 
@@ -7,11 +7,11 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 - **[User Guide](USER_GUIDE.md)** - Complete user documentation, getting started, and troubleshooting
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Development setup, project structure, and contribution guidelines
 - **[Architecture](ARCHITECTURE.md)** - System architecture, database schema, and technical design
-- **[Project Status](PROJECT_STATUS.md)** - Current state and what blocks release
+- **[Next Actions](docs/NEXT_ACTIONS.md)** - What to do before release, in order
 - **[Security](SECURITY.md)** - Credential handling and automated guards
 - **[Release Process](docs/RELEASE.md)** - How deployments work
 - **[Testing Guide](TESTING_GUIDE.md)** - The hermetic and integration suites
-- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - Shipped work and next steps
+- **[Growth plan](docs/NEXT_STEPS.md)** - Monetization and growth after launch
 
 ## 🎯 Features
 
@@ -55,7 +55,7 @@ A visually engaging, real-time task-sharing app built with Flutter and Supabase,
 
 ### For Users
 
-1. Visit the live app: **https://duotask-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app**
+1. Visit the live app: **https://evenhalf-nxpt77b88-sanjeevs-projects-e08bbbfb.vercel.app**
 2. Sign up with email or Google
 3. Generate a pairing code to connect with your partner
 4. Start adding and managing tasks together!
@@ -67,7 +67,7 @@ See the **[User Guide](USER_GUIDE.md)** for detailed instructions.
 ```bash
 # Clone repository
 git clone <repository-url>
-cd duotask
+cd EvenHalf
 
 # Install dependencies
 flutter pub get
@@ -98,7 +98,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for technical details.
 ## 📁 Project Structure
 
 ```
-duotask/
+evenhalf/
 ├── lib/
 │   ├── config/           # App configuration and theme
 │   │   ├── app_config.dart
@@ -122,8 +122,9 @@ duotask/
 │   ├── widgets/          # Reusable widgets
 │   │   └── task_bubble.dart
 │   └── main.dart         # App entry point
-├── supabase/            # Database schema
-│   └── schema.sql
+├── supabase/            # Database: migrations (the only schema source) and edge functions
+│   ├── migrations/
+│   └── functions/
 ├── web/                 # Web-specific files
 ├── android/             # Android-specific files
 ├── ios/                 # iOS-specific files

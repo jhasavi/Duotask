@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-import 'package:duotask/services/connectivity_service.dart';
+import 'package:evenhalf/services/connectivity_service.dart';
 
 // Mock class for Connectivity
 class MockConnectivity extends Mock implements Connectivity {}

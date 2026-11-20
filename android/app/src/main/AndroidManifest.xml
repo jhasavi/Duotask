@@ -2,7 +2,7 @@
     <!-- Required on Android 13+ to show notifications, including FCM pushes. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="duotask"
+        android:label="EvenHalf"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

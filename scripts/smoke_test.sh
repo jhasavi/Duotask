@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Post-deploy smoke test. Verifies a deployed DuoTask build is actually
+# Post-deploy smoke test. Verifies a deployed EvenHalf build is actually
 # serving, is not leaking secrets, and is not a stale bundle.
 #
 # Usage:
-#   scripts/smoke_test.sh https://duotask.example.com
+#   scripts/smoke_test.sh https://evenhalf.example.com
 set -euo pipefail
 
 BASE_URL="${1:-}"
@@ -79,6 +79,17 @@ if [[ "$code" == "200" && "$size" -gt 500000 ]]; then
   pass "main.dart.js served (${size} bytes)"
 else
   fail "main.dart.js missing or too small (HTTP $code, ${size} bytes)"
+fi
+
+# 2b. The bundle was built with a Supabase URL and anon key. Without them the
+#     app shows "EvenHalf is not configured" to every visitor, and every other
+#     check here still passes. Production served exactly that from 2026-09-25
+#     to 2026-10-30.
+if grep -qE 'https://[a-z0-9]+\.supabase\.co' /tmp/smoke_main 2>/dev/null &&
+   grep -qE 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}|sb_publishable_[A-Za-z0-9_-]{10,}' /tmp/smoke_main 2>/dev/null; then
+  pass "bundle has a Supabase URL and anon key"
+else
+  fail "bundle has no Supabase URL or anon key: the app will show 'not configured' (build with scripts/build_web.sh)"
 fi
 
 # 3. THE REGRESSION GUARD: no env file may be publicly readable.

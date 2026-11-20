@@ -1,4 +1,4 @@
-name: duotask
+name: evenhalf
 description: A visually engaging, real-time task-sharing app for two people built with Flutter and Supabase.
 publish_to: 'none'
 version: 1.2.0+2

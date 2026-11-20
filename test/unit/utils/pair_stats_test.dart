@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:duotask/utils/pair_stats.dart';
+import 'package:evenhalf/utils/pair_stats.dart';
 
 void main() {
   const me = 'me';

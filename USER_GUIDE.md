@@ -1,14 +1,14 @@
-# DuoTask - User Guide
+# EvenHalf - User Guide
 
-## Welcome to DuoTask! 🎯
+## Welcome to EvenHalf! 🎯
 
-DuoTask is a task management app designed for partners who want to collaborate and share responsibilities. Whether you're managing household chores, planning projects, or organizing your life together, DuoTask makes it easy to stay in sync.
+EvenHalf is a task management app designed for partners who want to collaborate and share responsibilities. Whether you're managing household chores, planning projects, or organizing your life together, EvenHalf makes it easy to stay in sync.
 
 ## Getting Started
 
 ### 1. Sign Up / Sign In
 
-**Visit**: https://duotask.namasteneedham.com
+**Visit**: https://evenhalf.app
 
 **Sign Up Options**:
 - **Email & Password**: Enter your email, create a password (min. 6 characters), and choose a display name
@@ -147,7 +147,30 @@ When you complete a recurring task, a new one is automatically created for the n
 
 ---
 
-### 8. Managing Your Account
+### 8. Send a Task to Someone Without the App
+
+Your partner (or a roommate, babysitter or parent) doesn't need EvenHalf for
+you to hand them a task.
+
+1. Open a task and tap **"Send to someone"**
+2. Optionally type their name
+3. Pick **WhatsApp**, **Text**, **Email** or **Copy link**. The message is
+   sent from your own phone
+
+They open the link and tap **I'll do it**, **It's done** or **I can't do it**.
+You see their answer on the task straight away. If they then create a free
+account from the link, the task moves to their board, and if neither of you
+is paired yet, you're paired automatically.
+
+Good to know:
+- Works for personal, one-time tasks. Repeating and already-shared tasks
+  can't be sent by link yet
+- Anyone with the link can see the task's title, notes and due date
+- Links last 30 days. Tap **Turn off link** to stop one early
+
+---
+
+### 9. Managing Your Account
 
 **Settings Screen**:
 - **Profile**: View your email and display name
@@ -247,7 +270,7 @@ Don't clutter shared views with personal items. Keep work tasks, personal goals,
 ## FAQs
 
 **Q: Can I pair with multiple partners?**  
-A: Not currently. DuoTask supports 1-to-1 pairing only.
+A: Not currently. EvenHalf supports 1-to-1 pairing only.
 
 **Q: Can I undo completing a task?**  
 A: Not yet, but this feature is planned. For now, you can create a new task.
@@ -255,7 +278,7 @@ A: Not yet, but this feature is planned. For now, you can create a new task.
 **Q: What happens if I delete my account?**  
 A: All your tasks are deleted, and your partner is automatically unpaired.
 
-**Q: Can I use DuoTask offline?**  
+**Q: Can I use EvenHalf offline?**  
 A: Not yet. Offline mode is planned for future releases.
 
 **Q: Is there a mobile app?**  
@@ -270,14 +293,14 @@ A: Export feature coming soon. For now, you can manually copy task details.
 
 **Issues or Questions?**
 - Check the browser console (F12) for error messages
-- Email: support@duotask.namasteneedham.com
+- Email: support@evenhalf.app
 - Report bugs: Create an issue on GitHub (if available)
 
 ---
 
 ## Updates
 
-DuoTask is actively being developed. New features coming soon:
+EvenHalf is actively being developed. New features coming soon:
 - 📱 Mobile apps (iOS & Android)
 - 🔔 Push notifications
 - 💬 In-app messaging
@@ -289,7 +312,7 @@ DuoTask is actively being developed. New features coming soon:
 
 **Version**: 1.0.0  
 **Last Updated**: December 23, 2025  
-**Website**: https://duotask.namasteneedham.com
+**Website**: https://evenhalf.app
 
 ---
 
@@ -297,7 +320,7 @@ DuoTask is actively being developed. New features coming soon:
 
 ```
 ┌─────────────────────────────────────┐
-│         DUOTASK QUICK START         │
+│         EVENHALF QUICK START         │
 ├─────────────────────────────────────┤
 │ 1. Sign Up / Sign In                │
 │    → Email or Google                │

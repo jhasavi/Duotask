@@ -16,9 +16,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SERVICE_KEY, isAuthorized, unauthorized } from '../_shared/auth.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 interface ServiceAccount {
   project_id: string
@@ -96,13 +96,14 @@ async function getAccessToken(account: ServiceAccount): Promise<string> {
 }
 
 serve(async (req) => {
+  if (!isAuthorized(req)) return unauthorized()
   try {
     const { nudge_id } = await req.json()
     if (!nudge_id) {
       return new Response(JSON.stringify({ error: 'nudge_id is required' }), { status: 400 })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
     const { data: nudge, error: nudgeError } = await supabase
       .from('nudges')
@@ -152,7 +153,7 @@ serve(async (req) => {
           message: {
             token: deviceToken.token,
             notification: {
-              title: 'DuoTask',
+              title: 'EvenHalf',
               body: nudge.message,
             },
             data: {

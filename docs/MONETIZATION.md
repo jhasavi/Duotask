@@ -1,4 +1,4 @@
-# Monetization: DuoTask Premium (web) and usage analytics
+# Monetization: EvenHalf Premium (web) and usage analytics
 
 *Written 2026-10-15. Nothing here is live yet: the migrations aren't applied,
 the webhook isn't deployed, and no Stripe product exists.*
@@ -12,7 +12,7 @@ the webhook isn't deployed, and no Stripe product exists.*
 | Usage events, recorded by triggers into private `analytics.events` | `supabase/migrations/20261015000002_usage_events.sql` |
 | Premium state in the app | `lib/services/premium_service.dart`, `lib/models/premium_status.dart` |
 | Gated feature: Streaks & Stats | `lib/screens/stats_screen.dart`, `lib/utils/pair_stats.dart`, `lib/services/stats_service.dart` |
-| Upgrade / Manage subscription | Settings → *DuoTask Premium*; paywall on the stats screen; 🔥 icon in the home app bar |
+| Upgrade / Manage subscription | Settings → *EvenHalf Premium*; paywall on the stats screen; 🔥 icon in the home app bar |
 
 How a purchase flows:
 
@@ -46,8 +46,8 @@ first; repeat in live mode for production.
 
 ### 1. Staging Supabase project
 
-- [ ] Create a project, e.g. `duotask-staging`. The same project can serve as
-      the CI **test** project that PROJECT_STATUS.md asks for.
+- [ ] Create a project, e.g. `evenhalf-staging`. The same project can serve as
+      the CI **test** project that NEXT_ACTIONS.md asks for.
 - [ ] **Before** `db push`, add the Vault secrets in the SQL editor (new
       projects already have the `supabase_vault` extension):
       ```sql
@@ -79,13 +79,13 @@ first; repeat in live mode for production.
 
 ### 2. Stripe product and links (test mode)
 
-- [ ] **Product catalog → Add product**: "DuoTask Premium", with a recurring price
+- [ ] **Product catalog → Add product**: "EvenHalf Premium", with a recurring price
       (for example $2.99/month, and optionally $24/year). The price is your
       call; the code doesn't hardcode it.
 - [ ] **Payment Links → New**: pick the price, then under *After payment*
       choose **Don't show confirmation page → redirect to** your app URL
       (staging URL for test mode,
-      `https://duotask.namasteneedham.com/` for live). Copy the link
+      `https://evenhalf.app/` for live). Copy the link
       (`https://buy.stripe.com/test_…`).
 - [ ] **Settings → Billing → Customer portal**: enable it, allow cancellation,
       and copy the **login link** (`https://billing.stripe.com/p/login/test_…`).
@@ -202,6 +202,28 @@ select date_trunc('week', s.created_at) as cohort,
            and e.created_at >= s.created_at + interval '7 days'
            and e.created_at <  s.created_at + interval '14 days')) / count(*), 1) as w1_retained_pct
 from s group by 1 order by 1 desc;
+```
+
+Paywall funnel, the share of users who saw the paywall and then started
+Premium within 14 days. A `paywall_viewed` is logged once per opening of the
+stats screen by a free user (repeats within a minute are dropped);
+`props->>'can_upgrade' = 'false'` marks views in a build with no Payment Link,
+where the paywall says "coming soon".
+
+```sql
+with v as (
+  select user_id, min(created_at) as first_view
+  from analytics.events
+  where event = 'paywall_viewed' and props->>'can_upgrade' = 'true'
+  group by user_id
+)
+select date_trunc('week', v.first_view) as week,
+       count(*) as viewers,
+       count(*) filter (where exists (select 1 from analytics.events e
+         where e.user_id = v.user_id and e.event = 'premium_started'
+           and e.created_at between v.first_view
+                                and v.first_view + interval '14 days')) as converted_14d
+from v group by 1 order by 1 desc;
 ```
 
 Premium conversions:

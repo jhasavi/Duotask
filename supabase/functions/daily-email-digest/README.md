@@ -10,7 +10,7 @@
 ### 1. Run Database Migration
 Execute the SQL migration in Supabase SQL Editor:
 ```sql
--- Run migrations/v1.2_daily_email.sql
+-- Applied by supabase/migrations/20250625000003_daily_email.sql
 ```
 
 ### 2. Get Resend API Key
@@ -21,7 +21,7 @@ Execute the SQL migration in Supabase SQL Editor:
 
 ### 3. Configure Supabase Secrets
 ```bash
-cd /Users/sanjeevjha/duo/duotask
+cd ~/EvenHalf
 supabase secrets set RESEND_API_KEY=re_your_key_here
 ```
 
@@ -44,7 +44,7 @@ SELECT cron.schedule(
   SELECT
     net.http_post(
       url:='https://YOUR_PROJECT_REF.supabase.co/functions/v1/daily-email-digest',
-      headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb
+      headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_FUNCTION_AUTH_SECRET"}'::jsonb
     ) as request_id;
   $$
 );
@@ -52,13 +52,13 @@ SELECT cron.schedule(
 
 Replace:
 - `YOUR_PROJECT_REF` with your Supabase project reference
-- `YOUR_ANON_KEY` with your Supabase anon key
+- `YOUR_FUNCTION_AUTH_SECRET` with the `FUNCTION_AUTH_SECRET` function secret (the same value is stored in the Vault as `anon_key`)
 
 ### 6. Test the Function
 ```bash
 curl -i --location --request POST \
   'https://YOUR_PROJECT_REF.supabase.co/functions/v1/daily-email-digest' \
-  --header 'Authorization: Bearer YOUR_ANON_KEY' \
+  --header 'Authorization: Bearer YOUR_FUNCTION_AUTH_SECRET' \
   --header 'Content-Type: application/json'
 ```
 
@@ -93,7 +93,7 @@ SELECT cron.alter_job(
 ```
 
 ### Customize Email Template
-Edit `/Users/sanjeevjha/duo/duotask/supabase/functions/daily-email-digest/index.ts`
+Edit `~/EvenHalf/supabase/functions/daily-email-digest/index.ts`
 and redeploy:
 ```bash
 supabase functions deploy daily-email-digest

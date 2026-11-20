@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:duotask/services/pairing_service.dart';
-import 'package:duotask/models/pairing.dart';
+import 'package:evenhalf/services/pairing_service.dart';
+import 'package:evenhalf/models/pairing.dart';
 
 import '../../test_helpers.dart';
 import '../../test_helpers.mocks.dart';

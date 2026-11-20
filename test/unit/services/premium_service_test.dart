@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:duotask/models/premium_status.dart';
-import 'package:duotask/services/premium_service.dart';
+import 'package:evenhalf/models/premium_status.dart';
+import 'package:evenhalf/services/premium_service.dart';
 
 void main() {
   group('PremiumStatus.fromRpc', () {

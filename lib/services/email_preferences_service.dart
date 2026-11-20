@@ -6,6 +6,7 @@ class EmailPreferencesService extends ChangeNotifier {
   final SupabaseClient _supabase;
 
   bool _dailyEmailEnabled = true;
+  bool _lifecycleEmailsEnabled = true;
   String _timezone = 'UTC';
   bool _isLoading = false;
   String? _errorMessage;
@@ -13,6 +14,10 @@ class EmailPreferencesService extends ChangeNotifier {
   EmailPreferencesService(this._supabase);
 
   bool get dailyEmailEnabled => _dailyEmailEnabled;
+
+  /// The onboarding emails in a user's first two weeks (invite your partner,
+  /// tips). Trial-ending notices are billing emails and ignore this.
+  bool get lifecycleEmailsEnabled => _lifecycleEmailsEnabled;
   String get timezone => _timezone;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -39,12 +44,14 @@ class EmailPreferencesService extends ChangeNotifier {
     try {
       final response = await _supabase
           .from('email_preferences')
-          .select('daily_email_enabled, timezone')
+          .select('daily_email_enabled, lifecycle_emails_enabled, timezone')
           .eq('user_id', userId)
           .maybeSingle();
 
       if (response != null) {
         _dailyEmailEnabled = response['daily_email_enabled'] as bool? ?? true;
+        _lifecycleEmailsEnabled =
+            response['lifecycle_emails_enabled'] as bool? ?? true;
         _timezone = response['timezone'] as String? ?? 'UTC';
       } else {
         final defaultTimezone = deviceOffsetTimezone();
@@ -76,10 +83,38 @@ class EmailPreferencesService extends ChangeNotifier {
       await _supabase.from('email_preferences').upsert({
         'user_id': userId,
         'daily_email_enabled': enabled,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       _dailyEmailEnabled = enabled;
+      notifyListeners();
+      return true;
+    } on PostgrestException catch (e) {
+      _errorMessage = 'Failed to update email preferences: ${e.message}';
+      notifyListeners();
+      return false;
+    } on SocketException {
+      _errorMessage = 'No internet connection';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to update email preferences';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> setLifecycleEmailsEnabled(String userId, bool enabled) async {
+    _errorMessage = null;
+
+    try {
+      await _supabase.from('email_preferences').upsert({
+        'user_id': userId,
+        'lifecycle_emails_enabled': enabled,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      _lifecycleEmailsEnabled = enabled;
       notifyListeners();
       return true;
     } on PostgrestException catch (e) {
@@ -104,7 +139,7 @@ class EmailPreferencesService extends ChangeNotifier {
       await _supabase.from('email_preferences').upsert({
         'user_id': userId,
         'timezone': timezone,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       _timezone = timezone;

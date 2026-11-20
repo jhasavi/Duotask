@@ -1,8 +1,8 @@
-# DuoTask - System Architecture
+# EvenHalf - System Architecture
 
 ## Overview
 
-DuoTask is a Flutter-based cross-platform task management application designed for partner collaboration. The system enables two users to pair together, create tasks, assign them, and track completion in real-time.
+EvenHalf is a Flutter-based cross-platform task management application designed for partner collaboration. The system enables two users to pair together, create tasks, assign them, and track completion in real-time.
 
 ## Technology Stack
 
@@ -22,7 +22,7 @@ DuoTask is a Flutter-based cross-platform task management application designed f
 ### Deployment
 - **Web Hosting**: Vercel
 - **Database Hosting**: Supabase Cloud
-- **Domain**: duotask.namasteneedham.com (configured)
+- **Domain**: evenhalf.app (to be registered; see docs/NEXT_ACTIONS.md §0)
 
 ## System Architecture
 
@@ -288,7 +288,7 @@ User Action → Service Method → Supabase API
 - Hosted on: Vercel
 - Build: Flutter web --release
 - Deploy: Direct upload (no Git integration)
-- URL: https://duotask-[hash].vercel.app
+- URL: https://evenhalf-[hash].vercel.app
 
 **Database**:
 - Hosted on: Supabase Cloud

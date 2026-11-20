@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /t/
+Allow: /
+
+Sitemap: https://evenhalf.namasteneedham.com/sitemap.xml

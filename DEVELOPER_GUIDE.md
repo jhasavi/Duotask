@@ -1,4 +1,4 @@
-# DuoTask - Developer Guide
+# EvenHalf - Developer Guide
 
 ## Development Setup
 
@@ -16,7 +16,7 @@
 ```bash
 # Clone repository (if using Git)
 git clone <repository-url>
-cd duotask
+cd EvenHalf
 
 # Install Flutter dependencies
 flutter pub get
@@ -54,7 +54,7 @@ See [SECURITY.md](SECURITY.md).
 ## Project Structure
 
 ```
-duotask/
+evenhalf/
 ├── lib/
 │   ├── main.dart                 # App entry point
 │   ├── config/
@@ -90,7 +90,8 @@ duotask/
 │   ├── unit/                     # Unit tests
 │   └── services/                 # Service tests
 ├── supabase/
-│   └── schema.sql                # Database schema
+│   ├── migrations/               # The only schema source (forward-only)
+│   └── functions/                # Edge functions
 ├── pubspec.yaml                  # Flutter dependencies
 └── vercel.json                   # Vercel configuration
 ```
@@ -164,7 +165,7 @@ migration).
 6. **Update services** if query logic changes
 
 Never embed a credential in a migration. Use Supabase Vault — see
-`migrations/setup_email_cron.sql` for the pattern.
+`supabase/migrations/20250625000005_setup_email_cron.sql` for the pattern.
 
 ### Testing Database Locally
 

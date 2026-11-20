@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../models/premium_status.dart';
 
-/// Tracks whether the signed-in user (or their partner) has DuoTask Premium.
+/// Tracks whether the signed-in user (or their partner) has EvenHalf Premium.
 ///
 /// Premium is bought on the web through a Stripe Payment Link; the
 /// `stripe-webhook` Edge Function records the result in `users.is_premium`,
@@ -13,6 +13,7 @@ import '../models/premium_status.dart';
 /// those columns.
 class PremiumService extends ChangeNotifier {
   final Future<PremiumStatus> Function() _loadStatus;
+  final Future<void> Function(String source, bool canUpgrade)? _logPaywallView;
   final String _paymentLinkUrl;
   final String _customerPortalUrl;
 
@@ -24,7 +25,9 @@ class PremiumService extends ChangeNotifier {
     this._loadStatus, {
     String? paymentLinkUrl,
     String? customerPortalUrl,
-  })  : _paymentLinkUrl = paymentLinkUrl ?? AppConfig.stripePaymentLinkUrl,
+    Future<void> Function(String source, bool canUpgrade)? logPaywallView,
+  })  : _logPaywallView = logPaywallView,
+        _paymentLinkUrl = paymentLinkUrl ?? AppConfig.stripePaymentLinkUrl,
         _customerPortalUrl =
             customerPortalUrl ?? AppConfig.stripeCustomerPortalUrl;
 
@@ -32,6 +35,10 @@ class PremiumService extends ChangeNotifier {
     return PremiumService(
       () async => PremiumStatus.fromRpc(
         await supabase.rpc('get_premium_status'),
+      ),
+      logPaywallView: (source, canUpgrade) => supabase.rpc(
+        'log_paywall_viewed',
+        params: {'p_source': source, 'p_can_upgrade': canUpgrade},
       ),
     );
   }
@@ -61,6 +68,19 @@ class PremiumService extends ChangeNotifier {
     }
   }
 
+  /// Records a `paywall_viewed` usage event (the paywall-views step of the
+  /// funnel in docs/MONETIZATION.md). Never throws: analytics must not break
+  /// the screen that shows the paywall.
+  Future<void> logPaywallViewed(String source) async {
+    final log = _logPaywallView;
+    if (log == null) return;
+    try {
+      await log(source, canUpgrade);
+    } catch (e) {
+      if (kDebugMode) print('Paywall view logging error: $e');
+    }
+  }
+
   /// Call on sign-out so the next account doesn't inherit this one's state.
   void reset() {
     _status = PremiumStatus.free;
@@ -77,7 +97,7 @@ class PremiumService extends ChangeNotifier {
       _customerPortalUrl.isEmpty ? null : Uri.tryParse(_customerPortalUrl);
 
   /// Appends `client_reference_id` to a Stripe Payment Link so the webhook
-  /// can tell which DuoTask account paid. Existing query parameters (e.g. a
+  /// can tell which EvenHalf account paid. Existing query parameters (e.g. a
   /// `prefilled_promo_code`) are kept.
   static Uri? buildCheckoutUri(String paymentLinkUrl,
       {required String userId}) {

@@ -1,14 +1,14 @@
 # Terms of Service
 
-**Last Updated: October 31, 2025**
+**Last Updated: November 17, 2026**
 
 ## 1. Acceptance of Terms
 
-By accessing and using DuoTask ("the App"), you accept and agree to be bound by the terms and provision of this agreement.
+By accessing and using EvenHalf ("the App"), you accept and agree to be bound by the terms and provision of this agreement.
 
 ## 2. Description of Service
 
-DuoTask is a task-sharing application designed for two people to coordinate and manage shared responsibilities. The service includes:
+EvenHalf is a task-sharing application designed for two people to coordinate and manage shared responsibilities. The service includes:
 
 - User account creation and management
 - Task creation, assignment, and tracking
@@ -62,7 +62,7 @@ Your privacy is important to us. Please review our [Privacy Policy](#) for infor
 ## 7. Intellectual Property
 
 ### 7.1 Our Rights
-- DuoTask and its original content, features, and functionality are owned by us
+- EvenHalf and its original content, features, and functionality are owned by us
 - Our trademarks and trade dress may not be used without permission
 
 ### 7.2 Your Content
@@ -108,6 +108,18 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW:
 - Our total liability shall not exceed the amount you paid us (if any)
 - We are not responsible for loss of data, profits, or business opportunities
 
+## 11A. Premium Subscriptions, Cancellation and Refunds
+
+EvenHalf is free to use. Some features ("Premium") require a paid subscription.
+
+- **One subscription covers both partners.** If you or your paired partner has an active subscription, both of you have Premium. If the subscriber cancels or unpairs, Premium ends for the other person at the end of the paid period.
+- **Billing.** Subscriptions renew automatically each month or year at the price shown at checkout until you cancel. Payments are processed by Stripe. Prices may change; we will tell you before a change applies to your next renewal.
+- **Free trial.** If we offer a trial, you will not be charged until it ends, and you can cancel at any time before then at no cost. If you do not cancel, the subscription begins and your payment method is charged.
+- **Cancellation.** You can cancel at any time from Settings > Manage subscription. Cancelling stops future renewals. You keep Premium until the end of the period you already paid for.
+- **Refunds.** Payments are non-refundable once a billing period has started, except where the law requires otherwise. If you were charged by mistake, or you contact us within 14 days of your first payment and have not meaningfully used Premium, email us and we will refund that payment.
+- **Deleting your account does not cancel your subscription.** Cancel first under Manage subscription, then delete your account.
+- **Taxes.** Prices may be subject to sales tax or VAT, shown at checkout where it applies.
+
 ## 12. Indemnification
 
 You agree to indemnify and hold us harmless from any claims, damages, or expenses arising from:
@@ -121,13 +133,15 @@ The app may integrate with third-party services such as:
 - Google OAuth for authentication
 - Firebase for notifications
 - Supabase for data storage
+- Stripe for payment processing (we never see or store your card number)
+- Resend for email delivery
 
 Your use of these services is subject to their respective terms and policies.
 
 ## 14. Dispute Resolution
 
 ### 14.1 Governing Law
-These terms shall be governed by the laws of [Your Jurisdiction]
+These terms shall be governed by the laws of the Commonwealth of Massachusetts, United States, without regard to its conflict-of-laws rules
 
 ### 14.2 Arbitration
 Any disputes shall be resolved through binding arbitration rather than in court
@@ -141,7 +155,7 @@ The service is not intended for children under 13. We do not knowingly collect i
 
 ## 16. International Users
 
-The service is hosted in [Your Country]. By using the service from other locations, you consent to data transfer to [Your Country].
+The service is hosted in the United States. By using the service from other locations, you consent to your data being transferred to and processed in the United States.
 
 ## 17. Changes to Terms
 
@@ -154,8 +168,8 @@ The service is hosted in [Your Country]. By using the service from other locatio
 
 If you have questions about these Terms of Service, please contact us at:
 
-- **Email**: support@duotask.app
-- **Website**: https://duotask.app/support
+- **Email**: support@evenhalf.app
+- **Website**: https://evenhalf.app/terms/
 
 ## 19. Severability
 
@@ -163,12 +177,12 @@ If any provision of these terms is found to be unenforceable, the remaining prov
 
 ## 20. Entire Agreement
 
-These terms constitute the entire agreement between you and DuoTask regarding use of the service.
+These terms constitute the entire agreement between you and EvenHalf regarding use of the service.
 
 ---
 
-**By using DuoTask, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.**
+**By using EvenHalf, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.**
 
 ---
 
-Version 1.0 | Effective October 31, 2025
+Version 1.1 | Effective November 13, 2026

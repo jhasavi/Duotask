@@ -142,17 +142,17 @@ class Task {
         orElse: () => TaskRecurrence.none,
       ),
       recurrenceEndDate: json['recurrence_end_date'] != null
-          ? DateTime.parse(json['recurrence_end_date'] as String)
+          ? DateTime.parse(json['recurrence_end_date'] as String).toLocal()
           : null,
       dueDate: json['due_date'] != null
-          ? DateTime.parse(json['due_date'] as String)
+          ? DateTime.parse(json['due_date'] as String).toLocal()
           : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.parse(json['updated_at'] as String).toLocal()
           : null,
       completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'] as String)
+          ? DateTime.parse(json['completed_at'] as String).toLocal()
           : null,
       isPersonal: json['is_personal'] as bool? ?? false,
       visibility: visibility,
@@ -174,11 +174,11 @@ class Task {
       'status': status.name,
       'priority': priority.name,
       'recurrence': recurrence.name,
-      'recurrence_end_date': recurrenceEndDate?.toIso8601String(),
-      'due_date': dueDate?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-      'completed_at': completedAt?.toIso8601String(),
+      'recurrence_end_date': recurrenceEndDate?.toUtc().toIso8601String(),
+      'due_date': dueDate?.toUtc().toIso8601String(),
+      'created_at': createdAt.toUtc().toIso8601String(),
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
+      'completed_at': completedAt?.toUtc().toIso8601String(),
       'is_personal': isPersonal, // Deprecated: kept for backward compatibility
       'visibility': visibility.name,
       'pair_id': pairId,

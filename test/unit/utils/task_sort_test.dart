@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:duotask/models/task.dart';
-import 'package:duotask/utils/task_sort.dart';
+import 'package:evenhalf/models/task.dart';
+import 'package:evenhalf/utils/task_sort.dart';
 
 void main() {
   group('sortTasksForDisplay', () {

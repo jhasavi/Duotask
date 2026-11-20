@@ -13,9 +13,9 @@
 // Run with: flutter test --tags integration
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:duotask/services/pairing_service.dart';
-import 'package:duotask/services/task_service.dart';
-import 'package:duotask/models/task.dart';
+import 'package:evenhalf/services/pairing_service.dart';
+import 'package:evenhalf/services/task_service.dart';
+import 'package:evenhalf/models/task.dart';
 
 import '../support/integration_env.dart';
 
@@ -25,6 +25,7 @@ void main() {
 
   late SupabaseClient admin;
   final createdUserIds = <String>[];
+  final emails = <String, String>{};
 
   /// Creates a confirmed disposable user and returns its id.
   Future<String> createUser(String label) async {
@@ -39,6 +40,7 @@ void main() {
     );
     final id = created.user!.id;
     createdUserIds.add(id);
+    emails[id] = created.user!.email!;
 
     // A DB trigger normally creates the profile row; make sure one exists
     // either way so the pairing queries have something to join against.
@@ -54,6 +56,22 @@ void main() {
     );
 
     return id;
+  }
+
+  /// A client signed in as [userId], so RLS applies exactly as it does in
+  /// the app. Running users through `admin` bypassed RLS and hid a pairing
+  /// bug where the joiner could not update the pending row.
+  Future<SupabaseClient> clientFor(String userId) async {
+    final client = SupabaseClient(
+      env!.url,
+      env.anonKey,
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
+    );
+    await client.auth.signInWithPassword(
+      email: emails[userId]!,
+      password: 'TestPassword123!',
+    );
+    return client;
   }
 
   setUpAll(() {
@@ -84,8 +102,8 @@ void main() {
       final userA = await createUser('a');
       final userB = await createUser('b');
 
-      final serviceA = PairingService(admin);
-      final serviceB = PairingService(admin);
+      final serviceA = PairingService(await clientFor(userA));
+      final serviceB = PairingService(await clientFor(userB));
 
       // A generates a code.
       final code = await serviceA.createPairingCode(userA);
@@ -127,15 +145,17 @@ void main() {
       final userB = await createUser('b');
       final userC = await createUser('c');
 
-      final serviceA = PairingService(admin);
+      final serviceA = PairingService(await clientFor(userA));
       final code = await serviceA.createPairingCode(userA);
       expect(code, isNotNull);
 
       expect(
-          await PairingService(admin).acceptPairingCode(userB, code!), isTrue);
+          await PairingService(await clientFor(userB))
+              .acceptPairingCode(userB, code!),
+          isTrue);
 
       // C tries the same code after B consumed it.
-      final serviceC = PairingService(admin);
+      final serviceC = PairingService(await clientFor(userC));
       final reused = await serviceC.acceptPairingCode(userC, code);
       expect(
         reused,
@@ -148,13 +168,65 @@ void main() {
   );
 
   test(
+    'someone already paired cannot join a second code',
+    () async {
+      final userA = await createUser('a');
+      final userB = await createUser('b');
+      final userC = await createUser('c');
+
+      final serviceB = PairingService(await clientFor(userB));
+      final aCode =
+          await PairingService(await clientFor(userA)).createPairingCode(userA);
+      expect(await serviceB.acceptPairingCode(userB, aCode!), isTrue);
+
+      // B, now paired with A, types C's code.
+      final cCode =
+          await PairingService(await clientFor(userC)).createPairingCode(userC);
+      expect(await serviceB.acceptPairingCode(userB, cCode!), isFalse);
+      expect(serviceB.errorMessage, PairingService.alreadyPairedError);
+
+      final active = await admin
+          .from('pairings')
+          .select('id')
+          .eq('status', 'active')
+          .or('requester_id.eq.$userB,recipient_id.eq.$userB');
+      expect(active, hasLength(1), reason: 'B must have exactly one pairing');
+    },
+    tags: ['integration'],
+    skip: skip,
+  );
+
+  test(
+    'a code stops working once its owner has paired with someone else',
+    () async {
+      final userA = await createUser('a');
+      final userB = await createUser('b');
+      final userC = await createUser('c');
+
+      final serviceA = PairingService(await clientFor(userA));
+      final aCode = await serviceA.createPairingCode(userA);
+
+      // A pairs with C by joining C's code; A's own code is still pending.
+      final cCode =
+          await PairingService(await clientFor(userC)).createPairingCode(userC);
+      expect(await serviceA.acceptPairingCode(userA, cCode!), isTrue);
+
+      final serviceB = PairingService(await clientFor(userB));
+      expect(await serviceB.acceptPairingCode(userB, aCode!), isFalse);
+      expect(serviceB.errorMessage, PairingService.inviterPairedError);
+    },
+    tags: ['integration'],
+    skip: skip,
+  );
+
+  test(
     'unpairing clears the partner for both users',
     () async {
       final userA = await createUser('a');
       final userB = await createUser('b');
 
-      final serviceA = PairingService(admin);
-      final serviceB = PairingService(admin);
+      final serviceA = PairingService(await clientFor(userA));
+      final serviceB = PairingService(await clientFor(userB));
 
       final code = await serviceA.createPairingCode(userA);
       expect(await serviceB.acceptPairingCode(userB, code!), isTrue);
@@ -181,18 +253,19 @@ void main() {
       final userA = await createUser('a');
       final userB = await createUser('b');
 
-      final serviceA = PairingService(admin);
-      final serviceB = PairingService(admin);
+      final serviceA = PairingService(await clientFor(userA));
+      final serviceB = PairingService(await clientFor(userB));
       final code = await serviceA.createPairingCode(userA);
       expect(await serviceB.acceptPairingCode(userB, code!), isTrue);
       await serviceA.checkPairingStatus(userA);
 
-      final tasksA = TaskService(admin);
+      final tasksA = TaskService(await clientFor(userA));
       final created = await tasksA.createTask(
         title: 'Shared groceries',
         userId: userA,
         assignedToId: userB,
         visibility: TaskVisibility.group,
+        pairId: serviceA.currentPairing!.id,
       );
       expect(
         created,
@@ -200,7 +273,7 @@ void main() {
         reason: 'createTask failed: ${tasksA.errorMessage}',
       );
 
-      final tasksB = TaskService(admin);
+      final tasksB = TaskService(await clientFor(userB));
       await tasksB.loadTasks(userB);
 
       expect(

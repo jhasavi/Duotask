@@ -6,6 +6,7 @@ import '../services/task_service.dart';
 import '../services/auth_service.dart';
 import '../config/theme.dart';
 import '../utils/haptic_helper.dart';
+import '../widgets/send_task_sheet.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final Task task;
@@ -203,6 +204,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget build(BuildContext context) {
     final authService = context.read<AuthService>();
     final isOwner = _task.createdById == authService.currentUser?.id;
+    final canSend = canSendByLink(_task, authService.currentUser?.id);
 
     return Scaffold(
       appBar: AppBar(
@@ -232,7 +234,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // Send to someone without the app
+            if (canSend) ...[
+              OutlinedButton.icon(
+                key: const Key('send_task_button'),
+                onPressed: () => showSendTaskSheet(context, _task),
+                icon: const Icon(Icons.send_outlined),
+                label: const Text('Send to someone'),
+              ),
+              TaskShareStatusTile(task: _task),
+            ],
+            const SizedBox(height: 16),
 
             // Title
             TextField(

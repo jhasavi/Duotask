@@ -10,7 +10,7 @@ import '../services/stats_service.dart';
 import '../utils/pair_stats.dart';
 import '../widgets/premium_widgets.dart';
 
-/// Completion streaks and partner stats — the first DuoTask Premium feature.
+/// Completion streaks and partner stats — the first EvenHalf Premium feature.
 /// Free users see what it offers and an upgrade button instead.
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -21,6 +21,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   Future<PairStats>? _stats;
+  bool _paywallViewLogged = false;
 
   @override
   void initState() {
@@ -35,6 +36,12 @@ class _StatsScreenState extends State<StatsScreen> {
     setState(() {
       _stats = premium.isPremium ? _loadStats() : null;
     });
+    // Once per screen open, and only once status has loaded, so a paying
+    // user's first frame (before status arrives) doesn't count as a view.
+    if (premium.hasLoaded && !premium.isPremium && !_paywallViewLogged) {
+      _paywallViewLogged = true;
+      premium.logPaywallViewed('stats');
+    }
   }
 
   Future<PairStats> _loadStats() async {
@@ -298,7 +305,7 @@ class _Paywall extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Part of DuoTask Premium. One subscription covers both of you.',
+          'Part of EvenHalf Premium. One subscription covers both of you.',
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),

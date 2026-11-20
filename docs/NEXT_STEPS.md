@@ -1,91 +1,9 @@
-# DuoTask: next steps and monetization plan
+# EvenHalf: monetization and growth plan
 
-*Written 2026-10-15. One ordered list to pick up from any machine. Detailed
-runbooks are linked rather than repeated.*
+*Strategy only. What to do **next** lives in [NEXT_ACTIONS.md](NEXT_ACTIONS.md);
+this page is the longer plan that follows it. Last reviewed 2026-11-17.*
 
-## Where things stand
-
-- **Live:** web app at `https://duotask.namasteneedham.com`, Flutter + Supabase.
-  No revenue yet.
-- **Built, not live:** Premium tier via Stripe (one subscription covers both
-  partners), the Streaks & Stats premium screen, and the `analytics.events`
-  usage table. See [MONETIZATION.md](MONETIZATION.md).
-- **Not on GitHub `main`:** commits `338dac9` through `ec815ce` (RPC
-  hardening, credential checklist, Premium, two baseline-migration fixes).
-  They're on the `macmini-sync` branch so the Mac mini can pick them up.
-  **Pushing `main` deploys to production** (`deploy.yml` runs
-  `supabase db push`), so don't push `main` until Phase 0 is done.
-- **CI deploys have never succeeded.** All runs fail at the secrets preflight,
-  so production's schema has only ever been changed by hand.
-
-## 🔴 Production is probably broken for some features right now
-
-`supabase migration list` against production (2026-10-15) shows that the
-remote history records **none** of the 13 local migrations. It does record
-three migrations with no local file: `20250828152200`, `…152300`, `…152400`.
-
-A read-only schema dump of production's `public` schema showed:
-
-| Migration | In production? |
-|---|---|
-| `00000000000000` baseline (users, tasks, pairings) | Yes (applied by hand) |
-| `20250625000001`–`04` (pairing, nudges, email preferences) | Yes, by table presence |
-| `20250625000005` daily email cron | Unknown: check `select * from cron.job;` |
-| `20260828000001` email timezone column | **No** |
-| `20260828000002` hourly email cron | Unknown: same check |
-| `20260828000003` task tags and recurrence | **No** (`tags` column missing) |
-| `20260917000001` device tokens and nudge push | **No** |
-| `20261014000001` RPC hardening | No (expected; not pushed) |
-| `20261015000001`/`02` Premium and analytics | No (expected; not pushed) |
-
-The web bundle deployed on 2026-09-16 was built from code that uses tags,
-recurrence and timezone, so **those features likely fail for live users.**
-Check this first: create a task with a tag on the live site and look for an
-error.
-
-## Phase 0: Make production safe and consistent (do first, about a day)
-
-1. **Rotate the leaked credentials.** Resend, Discord, Vercel and Supabase JWT
-   keys were public and are still in git history. Follow
-   [CREDENTIAL_ROTATION.md](CREDENTIAL_ROTATION.md) in order. Payments must
-   not go live while the old `service_role` key works.
-2. **Reconcile production's migration history.** Don't push `main` until
-   this is done.
-   ```bash
-   supabase link --project-ref xqhlnuvpogiolzkucupt
-   supabase migration list
-   ```
-   - Fetch the three remote-only migrations into local files so the history
-     matches: `supabase migration fetch` (review what it writes before
-     committing).
-   - In the SQL editor, run `select jobname, schedule from cron.job;`. If
-     `daily-email-digest` exists, `20250625000005` is in production; if its
-     schedule is `0 * * * *`, so is `20260828000002`.
-   - Mark only what's really in production as applied, for example:
-     ```bash
-     supabase migration repair --status applied 00000000000000 20250625000001 20250625000002 20250625000003 20250625000004
-     ```
-     Add `20250625000005` and `20260828000002` only if the cron check
-     confirms them.
-   - The baseline now refuses to run on a database that already has
-     `public.users`, so a missed repair fails loudly instead of reverting
-     the schema.
-3. **Make sure the Vault secrets `project_url` and `anon_key` exist in
-   production** (needed by the cron migrations; see
-   [MONETIZATION.md §1](MONETIZATION.md)). Use the *new* anon key from step 1.
-4. **Add the six missing GitHub Actions secrets** (`SUPABASE_ACCESS_TOKEN`,
-   `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`, `VERCEL_TOKEN`,
-   `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). See
-   [RELEASE.md](RELEASE.md#one-time-setup).
-5. **Create a staging Supabase project** (it doubles as the CI test project),
-   run `supabase db push` there and confirm all 13 migrations apply. This was
-   verified on a local Postgres on 2026-10-15; staging confirms it on real
-   Supabase.
-6. **Push `main`**, then watch the *Apply database migrations* step. It
-   should apply `20260828000001` onwards, which also fixes tags, recurrence
-   and timezone in production. Confirm the smoke test passes.
-
-## Phase 1: Turn on Premium on the web (about 1–2 days once Phase 0 is done)
+## Phase 1: Turn on Premium on the web (after everything in [NEXT_ACTIONS.md](NEXT_ACTIONS.md) is done)
 
 Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 
@@ -109,12 +27,39 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 6. Add **Vercel Web Analytics** (one script tag in `web/index.html`) so you
    can see visitors and paywall views, not just database writes.
 
+## Competition and positioning (checked 2026-11-17)
+
+The "shared chores for couples" category is crowded and mostly iOS-only:
+another app with our old name (iPhone, with the matching `.app` domain; that's why we
+renamed, see [NEXT_ACTIONS.md §0](NEXT_ACTIONS.md#0-rename-to-evenhalf-blocks-marketing-not-the-merge)),
+*Chores Together* (points and rewards), *Chore Wars* (XP),
+*Pairwork* (hourly value of housework), *Chores* (recurring tasks),
+*DuoMode* (Android habits), and Cupla (couples calendar). Most of them compete
+on gamification.
+
+Lead with what they don't do:
+
+1. **Your partner doesn't need to install anything.** Send a task over
+   WhatsApp or text and they answer from a link. Nobody else has this, and it
+   removes the biggest problem with any two-person app: getting the second
+   person to sign up.
+2. **Works on any phone, today.** Web and PWA, so mixed iPhone/Android
+   couples work from day one.
+3. **Fairness and mental load, not points** (bet #2 below). Gamified apps
+   wear off; "the app that ends the 'I do everything' fight" doesn't.
+
+Every landing page, store listing and post should open with #1.
+
+**Brand line:** *EvenHalf: your better half, evened out.* Short form for
+store listings: "Shared to-do list for couples. No app needed for your
+partner."
+
 ## Monetization strategy (recommendations)
 
 ### Model: freemium, one subscription per couple
 
 - Keep **everything needed to share tasks free**: pairing, shared and
-  personal tasks, claiming, nudges, recurrence. DuoTask only works if
+  personal tasks, claiming, nudges, recurrence. EvenHalf only works if
   *both* people use it, so the free tier is the acquisition channel. Gating
   core sharing would kill the invite loop.
 - Charge for **depth and convenience**, bought once for the pair. The code
@@ -195,17 +140,84 @@ Everything is in [MONETIZATION.md](MONETIZATION.md) §2–§5. Summary:
 | Paywall views → trial → paid | Pricing and paywall copy |
 | Monthly churn of paying pairs | Whether Premium keeps delivering value |
 
-All but paywall views come from `analytics.events`. Add a `paywall_viewed`
-event or use Vercel Analytics for that one.
+All of these come from `analytics.events`; paywall views are the
+`paywall_viewed` event (added 2026-11-13, see
+[MONETIZATION.md](MONETIZATION.md#measuring-usage)).
+
+## Bigger growth bets (start only after NEXT_ACTIONS.md is done)
+
+*Added 2026-10-16.* Three larger ideas beyond the plan above, in priority
+order. None should start before NEXT_ACTIONS.md is done: production is probably
+broken for tags, recurrence and timezone, and revenue is still $0. Build #1
+before any price test, because pricing doesn't matter until pairs form.
+
+### 1. Partner without an install (fixes the pairing bottleneck) ✅ built
+
+**Built 2026-10-16 as "Send to someone" share links; see
+[SHARE_LINKS.md](SHARE_LINKS.md).** It ships with the next push of `main`.
+
+Any personal task can go out as a link from the sender's own phone
+(WhatsApp, text, email, copy). The recipient answers on a lightweight page
+with no account. "Get EvenHalf" then signs them up and pairs the two of you
+automatically.
+
+It differs from the idea as first written in two ways:
+- **No Twilio.** The sender's phone sends the message, so there are no SMS
+  costs or carrier registration, and the message comes from someone the
+  recipient trusts.
+- **No edge function.** Token-checked RPCs serve the page.
+
+Measure the funnel query in SHARE_LINKS.md, plus signups paired within 7
+days.
+
+### 2. Fairness and invisible work as the Premium story
+
+Couples rarely fight about tasks; they fight about fairness and the mental
+load of remembering everything. Make that the reason to pay:
+
+- **Who owns what:** each partner owns a whole area (kids' school, car,
+  bills), including noticing and planning, not just doing.
+- **Weekly balance report:** who did what, the effort involved, and who
+  carried the planning. Extends `lib/utils/pair_stats.dart`.
+- **10-minute weekly check-in** that rebalances the coming week.
+
+Positioning: *"the app that ends the 'I do everything' fight."* It also
+opens a B2B2C channel: couples therapists and premarital counselors who
+recommend it to clients, later with a simple counselor view. Use our own
+wording; "Fair Play" is someone else's brand.
+
+**Wild card that fits here:** an AI brain dump. Type, say or photograph
+something messy (a school flyer, a landlord letter), and Claude turns it
+into tasks, splits them by who usually does what, and suggests due dates.
+Treat it as a Premium feature, not the headline.
+
+### 3. Earn from tasks, not only subscriptions
+
+Household tasks show buying intent: groceries, "fix the faucet", "book a
+sitter", moving. Most free users will never subscribe; this earns from them
+anyway.
+
+- **"Outsource it"** on matching tasks, linking to Instacart, TaskRabbit,
+  Thumbtack, Care.com and similar through their affiliate or referral
+  programs. Check each program's terms before launch.
+- **Life-event packs:** moving, new baby and wedding planning task sets,
+  $4.99 each or included in Premium, with relevant affiliate links (movers,
+  insurance, registries).
+- **Gifting:** sell packs and a year of Premium as wedding and baby-shower
+  gifts. That brings in new couples at their most motivated moment.
+
+Measure clicks and affiliate revenue per active pair, and gift purchases
+that lead to a new pair.
 
 ## Phase 2 onwards: suggested sequence
 
 | When | Work |
 |---|---|
-| Week 1 | Phase 0 (security, migration reconciliation, CI green) |
+| Week 1 | [NEXT_ACTIONS.md](NEXT_ACTIONS.md) (security, staging, merge) |
 | Week 2 | Phase 1 (Premium live on web), Web Analytics, invite-link polish |
-| Weeks 3–4 | Reminders (Firebase push and email) as Premium; referral reward; landing page |
-| Month 2 | Advanced recurrence and templates; shared lists; lifecycle emails |
+| Weeks 3–4 | Watch the share-link funnel (bet #1, built); reminders (Firebase push and email) as Premium; referral reward; landing page |
+| Month 2 | Fairness features and balance report as the Premium story (bet #2); advanced recurrence and templates; lifecycle emails |
+| Month 2–3 | "Outsource it" affiliate links, life-event packs and gifting (bet #3); shared lists |
 | Month 2–3 | Android release (Play Store) with RevenueCat; then iOS |
 | Month 3+ | Review metrics: price test, attachments, calendar sync; family plan only if users ask |
 
@@ -213,27 +225,11 @@ event or use Vercel Analytics for that one.
 
 - Stop committing `build/web` once one CI deploy is green.
 - Run the 5 integration tests against the staging project in CI.
-- Explicit timezone picker in Settings (the device offset is captured
-  silently today, and half-hour offsets fall back to UTC).
+- Detect the device's real IANA timezone on first load (needs a plugin such
+  as `flutter_timezone`). The Settings picker exists now, but new accounts
+  still start on a whole-hour `Etc/GMT` guess, and half-hour offsets (India,
+  Nepal) start on UTC until the user picks a zone.
 - Update the Supabase CLI (installed 2.39.2, current 2.121.0) and set
   `[db] major_version = 17` in `supabase/config.toml` to match production.
 - Offline mode (queue changes, sync later), from
   [UNIMPLEMENTED_FEATURES.md](../UNIMPLEMENTED_FEATURES.md).
-
-## Picking this up on the Mac mini
-
-```bash
-cd DuoTask
-git fetch origin
-git checkout main
-git merge --ff-only origin/macmini-sync
-```
-
-That brings local `main` up to date **without** pushing `main` to GitHub,
-so nothing deploys. Start at Phase 0, step 1. Two other things to know:
-
-- `supabase/migrations/` changes are the riskiest part. Always run
-  `supabase migration list` before any push to `main`.
-- The schema dump of production from 2026-10-15 wasn't saved in the repo.
-  Regenerate it with `supabase db dump --linked -s public -f /tmp/prod.sql`
-  (needs Docker running).

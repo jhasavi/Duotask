@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../models/pair_invite.dart';
 import '../models/pairing.dart';
 import '../models/user.dart';
 
@@ -15,6 +16,11 @@ class PairingService extends ChangeNotifier {
   RealtimeChannel? _pairingChannel;
 
   PairingService(this._supabase);
+
+  static const alreadyPairedError =
+      "You're already paired. Unpair first to pair with someone else.";
+  static const inviterPairedError =
+      "That code's owner is already paired with someone else.";
 
   Pairing? get currentPairing => _currentPairing;
   AppUser? get partner => _partner;
@@ -88,8 +94,8 @@ class PairingService extends ChangeNotifier {
         'recipient_id': partnerId,
         'pairing_code': pairingCode,
         'status': PairingStatus.active.name,
-        'created_at': DateTime.now().toIso8601String(),
-        'accepted_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'accepted_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       await _supabase.from('pairings').insert(pairingData);
@@ -247,7 +253,7 @@ class PairingService extends ChangeNotifier {
         'requester_id': userId,
         'pairing_code': pairingCode,
         'status': PairingStatus.pending.name,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       await _supabase.from('pairings').insert(pairingData);
@@ -284,40 +290,36 @@ class PairingService extends ChangeNotifier {
     try {
       if (kDebugMode) print('Accepting pairing code: $pairingCode');
 
-      // Find the pairing request
-      final response = await _supabase
-          .from('pairings')
-          .select()
-          .eq('pairing_code', pairingCode.toUpperCase())
-          .eq('status', PairingStatus.pending.name)
-          .maybeSingle();
-
-      if (kDebugMode) print('Pairing response: $response');
-
-      if (response == null) {
-        _setError('Invalid or expired pairing code');
-        if (kDebugMode) print('No pairing found with code: $pairingCode');
-        _setLoading(false);
-        return false;
+      // The joiner can't update a pending row under RLS (recipient_id is
+      // still NULL), so the join runs server-side in accept_pairing.
+      try {
+        await _supabase.rpc('accept_pairing', params: {
+          'p_code': pairingCode.trim().toUpperCase(),
+          'p_user_id': userId,
+        });
+      } on PostgrestException catch (e) {
+        if (e.message.contains('invalid_code')) {
+          _setError('Invalid or expired pairing code');
+          _setLoading(false);
+          return false;
+        }
+        if (e.message.contains('own_code')) {
+          _setError('Cannot pair with yourself');
+          _setLoading(false);
+          return false;
+        }
+        if (e.message.contains('already_paired')) {
+          _setError(alreadyPairedError);
+          _setLoading(false);
+          return false;
+        }
+        if (e.message.contains('inviter_paired')) {
+          _setError(inviterPairedError);
+          _setLoading(false);
+          return false;
+        }
+        rethrow;
       }
-
-      final pairing = Pairing.fromJson(response);
-
-      // Can't pair with yourself
-      if (pairing.requesterId == userId) {
-        _setError('Cannot pair with yourself');
-        _setLoading(false);
-        return false;
-      }
-
-      if (kDebugMode) print('Updating pairing to active...');
-
-      // Update pairing to active
-      await _supabase.from('pairings').update({
-        'recipient_id': userId,
-        'status': PairingStatus.active.name,
-        'accepted_at': DateTime.now().toIso8601String(),
-      }).eq('id', pairing.id);
 
       if (kDebugMode) print('Pairing updated successfully');
 
@@ -344,6 +346,102 @@ class PairingService extends ChangeNotifier {
     }
   }
 
+  // --- Invite links ---------------------------------------------------------
+
+  /// The inviter's first name for an invite [code] ('' if they have none),
+  /// or null when the code isn't valid or the request fails.
+  Future<String?> invitePreview(String code) async {
+    try {
+      final name =
+          await _supabase.rpc('pair_invite_preview', params: {'p_code': code});
+      return name is String ? name : null;
+    } catch (e) {
+      if (kDebugMode) print('Invite preview error: $e');
+      return null;
+    }
+  }
+
+  /// Records a `pair_invite_sent` usage event. Never throws.
+  Future<void> logInviteSent(String channel) async {
+    try {
+      await _supabase
+          .rpc('log_pair_invite_sent', params: {'p_channel': channel});
+    } catch (e) {
+      if (kDebugMode) print('Invite sent logging error: $e');
+    }
+  }
+
+  /// If the user opened a partner's invite link before signing in, pairs
+  /// them now. Returns null when there was nothing to do, or when it
+  /// couldn't tell (offline), in which case the code is kept for next launch.
+  Future<PairInviteOutcome?> claimPendingInvite(String userId) async {
+    final code = await PairInvite.pending();
+    if (code == null) return null;
+
+    await checkPairingStatus(userId);
+    if (errorMessage != null) return null;
+
+    if (isPaired) {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "You're already paired, so the invite link wasn't used.",
+      );
+    }
+
+    if (await acceptPairingCode(userId, code)) {
+      await PairInvite.clear();
+      final name = partner?.displayName?.trim();
+      return PairInviteOutcome(
+        paired: true,
+        message: (name == null || name.isEmpty)
+            ? "You're paired! Tasks you share now show up for both of you."
+            : "You're paired with $name! Tasks you share now show up for "
+                'both of you.',
+      );
+    }
+
+    final error = errorMessage ?? '';
+    if (error == 'Cannot pair with yourself') {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "That's your own invite link. Send it to your partner.",
+      );
+    }
+    if (error == alreadyPairedError) {
+      // Paired between the status check and the join (another device?).
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "You're already paired, so the invite link wasn't used.",
+      );
+    }
+    if (error == inviterPairedError) {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: 'Whoever sent that invite has paired with someone else.',
+      );
+    }
+    if (error == 'Invalid or expired pairing code') {
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: 'That invite link has expired. Ask for a new one.',
+      );
+    }
+    if (error.startsWith('Failed to accept pairing:')) {
+      // The server refused for some other reason; retrying won't help.
+      await PairInvite.clear();
+      return const PairInviteOutcome(
+        paired: false,
+        message: "Couldn't pair from that invite link. Ask for a new one.",
+      );
+    }
+    return null; // Probably offline: keep the code and try next launch.
+  }
+
   Future<bool> unpair(String userId) async {
     _setLoading(true);
     _clearError();
@@ -367,7 +465,7 @@ class PairingService extends ChangeNotifier {
         final pairing = Pairing.fromJson(pairingData);
         await _supabase.from('pairings').update({
           'status': PairingStatus.cancelled.name,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         }).eq('id', pairing.id);
 
         // Clear pairing info from both users

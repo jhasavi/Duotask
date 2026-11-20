@@ -49,12 +49,12 @@ class Pairing {
         (e) => e.name == json['status'],
         orElse: () => PairingStatus.pending,
       ),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
       acceptedAt: json['accepted_at'] != null
-          ? DateTime.parse(json['accepted_at'] as String)
+          ? DateTime.parse(json['accepted_at'] as String).toLocal()
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.parse(json['updated_at'] as String).toLocal()
           : null,
     );
   }
@@ -66,9 +66,9 @@ class Pairing {
       'recipient_id': recipientId,
       'pairing_code': pairingCode,
       'status': status.name,
-      'created_at': createdAt.toIso8601String(),
-      'accepted_at': acceptedAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      'created_at': createdAt.toUtc().toIso8601String(),
+      'accepted_at': acceptedAt?.toUtc().toIso8601String(),
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
   }
 

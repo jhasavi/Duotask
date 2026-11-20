@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "duotask" "\0"
+            VALUE "FileDescription", "evenhalf" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "duotask" "\0"
+            VALUE "InternalName", "evenhalf" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "duotask.exe" "\0"
-            VALUE "ProductName", "duotask" "\0"
+            VALUE "OriginalFilename", "evenhalf.exe" "\0"
+            VALUE "ProductName", "evenhalf" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

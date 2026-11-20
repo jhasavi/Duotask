@@ -1,9 +1,68 @@
 # Changelog
 
-All notable changes to DuoTask will be documented in this file.
+All notable changes to EvenHalf (formerly DuoTask) will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased] - 2026-11-16 — Launch readiness
+
+Not deployed. Branch `feat/launch-readiness` (PR 11).
+
+### Changed
+- **Renamed DuoTask to EvenHalf** (2026-11-17). Another app called DuoTask in
+  the same niche owns `duotask.app`. All user-facing text, emails, web pages,
+  the PWA manifest, the Dart package (`evenhalf`) and the mobile bundle id
+  (`com.namasteneedham.evenhalf`) are renamed. Legal contacts are
+  `support@` / `privacy@evenhalf.app`. See docs/NEXT_ACTIONS.md §0.
+- The landing page leads with "your partner doesn't need to install
+  anything".
+- Daily digest email links use `APP_URL` instead of a stale Vercel preview URL.
+
+### Added (rename)
+- Public `/privacy/` and `/terms/` pages, generated from `assets/docs/*.md`
+  by `scripts/build_legal_pages.py`, linked from the landing page footer.
+
+### Added
+- **Account deletion** (`delete_my_account` RPC, Settings > Delete Account),
+  with a throttled password check; blocked while a subscription is active.
+- **Invite-your-partner links** that pair on sign-up; pairing is refused if
+  the invitee is already paired.
+- **Lifecycle emails** (invite your partner, tips, trial ending) via the
+  `lifecycle-emails` edge function; opt-out under "Tips and reminders".
+  See [docs/LIFECYCLE_EMAILS.md](docs/LIFECYCLE_EMAILS.md).
+- **Timezone picker** in Settings for the daily email digest.
+- Landing page, refund/cancellation terms, `paywall_viewed` event.
+
+### Changed
+- iOS UIScene migration (Flutter 3.41); Firebase init is skipped while the
+  config is still the placeholder, which previously crashed iOS at launch.
+
+## [Unreleased] - 2026-10-16 — Send a task to someone without the app
+
+Not deployed. See [docs/SHARE_LINKS.md](docs/SHARE_LINKS.md).
+
+### Added
+- **Share links.** On a personal task, **Send to someone** creates a link that
+  the sender shares by WhatsApp, text, email or copy, from their own phone.
+  The recipient answers on `/t/<token>` with no account (I'll do it / It's
+  done / I can't do it), and the sender sees it live. **Get DuoTask** signs
+  them up, moves the task to their board, and pairs the two people when
+  neither is paired yet.
+  - New `task_shares` table and five RPCs
+  - New page `web/t/index.html` (plain HTML, no Flutter)
+  - Share-funnel analytics events (`share_created` … `share_claimed`)
+- Integration tests for share links, and instructions for running the
+  integration suite against a local `supabase start` stack.
+
+### Fixed
+- **Sign-up failed on a fresh Supabase project.** `create_user_profile()`
+  resolved `users` to `auth.users`; its `search_path` is now pinned.
+- **Bubble taps failed on a fresh project.** The baseline lacked
+  `tasks.claimed_at`, which `cycle_task_status` uses.
+- **`cycle_task_status` let any signed-in user act on an unassigned task.**
+  The 20261014 permission check evaluated to NULL rather than FALSE, so it
+  never raised. It was never deployed; it's fixed before it ships.
 
 ## [Unreleased] - 2026-10-15 — Premium (web) and usage analytics
 
