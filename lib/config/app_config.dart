@@ -79,7 +79,7 @@ class AppConfig {
   // Where share links point (`<url>/t/<token>`). On the web it's the origin
   // the app is served from, so staging links point at staging; native builds
   // use PUBLIC_APP_URL or the production domain.
-  static const _defaultPublicAppUrl = 'https://duotask.namasteneedham.com';
+  static const _defaultPublicAppUrl = 'https://evenhalf.namasteneedham.com';
 
   static String get publicAppUrl {
     if (kIsWeb && Uri.base.hasAuthority) return Uri.base.origin;

@@ -437,9 +437,9 @@ class _PairingScreenState extends State<PairingScreen> {
         ),
         subtitle: Text(partner.email),
         trailing: FilledButton.icon(
-          onPressed: () => _repairWithUser(partner.id),
+          onPressed: () => _inviteAgain(partner.displayName ?? 'your partner'),
           icon: const Icon(Icons.link, size: 18),
-          label: const Text('Re-pair'),
+          label: const Text('Invite again'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
@@ -448,34 +448,22 @@ class _PairingScreenState extends State<PairingScreen> {
     );
   }
 
-  Future<void> _repairWithUser(String partnerId) async {
-    final authService = context.read<AuthService>();
-    final pairingService = context.read<PairingService>();
+  /// Pairing needs both people's consent, so re-pairing means sending the
+  /// past partner an invite code for them to accept, not linking directly.
+  Future<void> _inviteAgain(String partnerName) async {
     final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-
-    final userId = authService.currentUser?.id;
-    if (userId == null) return;
-
-    await HapticHelper.mediumImpact();
-
-    final success = await pairingService.repairWithUser(userId, partnerId);
-    if (!mounted) return;
-
-    if (success) {
-      await HapticHelper.success();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Successfully re-paired!')),
-      );
-      navigator.pop();
-    } else {
-      await HapticHelper.error();
-      if (pairingService.errorMessage != null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(pairingService.errorMessage!)),
-        );
-      }
+    if (_myPairingCode == null) {
+      await _generatePairingCode();
+      if (!mounted || _myPairingCode == null) return;
     }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Send $partnerName your invite link or code '
+          '($_myPairingCode). You\'ll be paired again once they accept.',
+        ),
+      ),
+    );
   }
 
   Widget _buildShareCodeCard() {

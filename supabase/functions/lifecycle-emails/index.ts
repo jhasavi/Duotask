@@ -11,7 +11,7 @@
 //          EMAIL_FROM  e.g. 'EvenHalf <hello@yourdomain.com>' on a domain
 //                      verified in Resend. Resend's shared test sender only
 //                      delivers to the Resend account owner.
-//          APP_URL     defaults to https://duotask.namasteneedham.com
+//          APP_URL     defaults to https://evenhalf.namasteneedham.com
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -21,7 +21,7 @@ import { type LifecycleEmailRow, renderLifecycleEmail } from './templates.ts'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'EvenHalf <onboarding@resend.dev>'
-const APP_URL = Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com'
+const APP_URL = Deno.env.get('APP_URL') || 'https://evenhalf.namasteneedham.com'
 // Overridable so a test can point it at a stub.
 const RESEND_URL = Deno.env.get('RESEND_URL') || 'https://api.resend.com/emails'
 

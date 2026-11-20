@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /t/
 Allow: /
 
-Sitemap: https://duotask.namasteneedham.com/sitemap.xml
+Sitemap: https://evenhalf.namasteneedham.com/sitemap.xml

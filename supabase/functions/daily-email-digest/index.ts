@@ -11,7 +11,7 @@ import { SERVICE_KEY, isAuthorized, unauthorized } from '../_shared/auth.ts'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 // Same variable the lifecycle-emails function uses for links back to the app.
-const APP_URL = (Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com').replace(/\/$/, '')
+const APP_URL = (Deno.env.get('APP_URL') || 'https://evenhalf.namasteneedham.com').replace(/\/$/, '')
 
 interface EmailData {
   user_email: string
