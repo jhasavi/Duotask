@@ -33,6 +33,11 @@ require() {
 }
 
 require SUPABASE_URL
+# The new publishable key (sb_publishable_...) replaces the legacy anon key.
+# supabase_flutter takes either as its "anon key", so one define serves both.
+if [[ -n "${SUPABASE_PUBLISHABLE_KEY:-}" ]]; then
+  SUPABASE_ANON_KEY="$SUPABASE_PUBLISHABLE_KEY"
+fi
 require SUPABASE_ANON_KEY
 
 APP_VERSION="${APP_VERSION:-$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)}"

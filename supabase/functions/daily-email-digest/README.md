@@ -44,7 +44,7 @@ SELECT cron.schedule(
   SELECT
     net.http_post(
       url:='https://YOUR_PROJECT_REF.supabase.co/functions/v1/daily-email-digest',
-      headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb
+      headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_FUNCTION_AUTH_SECRET"}'::jsonb
     ) as request_id;
   $$
 );
@@ -52,13 +52,13 @@ SELECT cron.schedule(
 
 Replace:
 - `YOUR_PROJECT_REF` with your Supabase project reference
-- `YOUR_ANON_KEY` with your Supabase anon key
+- `YOUR_FUNCTION_AUTH_SECRET` with the `FUNCTION_AUTH_SECRET` function secret (the same value is stored in the Vault as `anon_key`)
 
 ### 6. Test the Function
 ```bash
 curl -i --location --request POST \
   'https://YOUR_PROJECT_REF.supabase.co/functions/v1/daily-email-digest' \
-  --header 'Authorization: Bearer YOUR_ANON_KEY' \
+  --header 'Authorization: Bearer YOUR_FUNCTION_AUTH_SECRET' \
   --header 'Content-Type: application/json'
 ```
 

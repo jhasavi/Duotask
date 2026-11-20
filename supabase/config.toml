@@ -21,3 +21,14 @@ port = 54323
 # the Stripe-Signature header instead.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# The cron jobs and the nudge trigger authenticate with FUNCTION_AUTH_SECRET
+# (checked in _shared/auth.ts) because the new sb_ API keys are not JWTs.
+[functions.daily-email-digest]
+verify_jwt = false
+
+[functions.lifecycle-emails]
+verify_jwt = false
+
+[functions.send-nudge-push]
+verify_jwt = false

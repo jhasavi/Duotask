@@ -1,15 +1,15 @@
 // Supabase Edge Function: daily-email-digest
 // Deploy with: supabase functions deploy daily-email-digest
 // Invoke with: curl -i --location --request POST 'https://<project-ref>.supabase.co/functions/v1/daily-email-digest' \
-//   --header 'Authorization: Bearer <anon-key>' \
+//   --header 'Authorization: Bearer <FUNCTION_AUTH_SECRET>' \
 //   --header 'Content-Type: application/json'
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SERVICE_KEY, isAuthorized, unauthorized } from '../_shared/auth.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 // Same variable the lifecycle-emails function uses for links back to the app.
 const APP_URL = (Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com').replace(/\/$/, '')
 
@@ -180,9 +180,10 @@ function localDateAndHour(instant: Date, timeZone: string): { date: string; hour
 }
 
 serve(async (req) => {
+  if (!isAuthorized(req)) return unauthorized()
   try {
     // Initialize Supabase client
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
     // Get all users with email enabled, along with their preferred local send time
     const { data: preferences, error: prefsError } = await supabase

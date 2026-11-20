@@ -7,6 +7,7 @@
 //
 // Deploy:  supabase functions deploy lifecycle-emails
 // Secrets: RESEND_API_KEY (required)
+//          FUNCTION_AUTH_SECRET, SB_SECRET_KEY (see ../_shared/auth.ts)
 //          EMAIL_FROM  e.g. 'EvenHalf <hello@yourdomain.com>' on a domain
 //                      verified in Resend. Resend's shared test sender only
 //                      delivers to the Resend account owner.
@@ -14,10 +15,10 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SERVICE_KEY, isAuthorized, unauthorized } from '../_shared/auth.ts'
 import { type LifecycleEmailRow, renderLifecycleEmail } from './templates.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'EvenHalf <onboarding@resend.dev>'
 const APP_URL = Deno.env.get('APP_URL') || 'https://duotask.namasteneedham.com'
@@ -30,11 +31,12 @@ const json = (body: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json' },
   })
 
-serve(async () => {
+serve(async (req) => {
+  if (!isAuthorized(req)) return unauthorized()
   // Claim nothing we can't send, or the claims would sit as failures.
   if (!RESEND_API_KEY) return json({ error: 'RESEND_API_KEY is not set' }, 500)
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data, error } = await supabase.rpc('claim_lifecycle_emails', { p_limit: 100 })
   if (error) {
     console.error('claim_lifecycle_emails failed:', error)
