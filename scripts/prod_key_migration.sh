@@ -58,8 +58,10 @@ case "${1:-}" in
     [[ -s "$SECRET_FILE" ]] || { echo "run the 'secrets' stage first" >&2; exit 1; }
     need SUPABASE_URL
     # Upsert both secrets the cron migrations require (create if missing).
-    sql="select case when exists (select 1 from vault.secrets where name = 'anon_key') then vault.update_secret((select id from vault.secrets where name = 'anon_key'), '$(cat "$SECRET_FILE")') else vault.create_secret('$(cat "$SECRET_FILE")', 'anon_key') end;
-select case when exists (select 1 from vault.secrets where name = 'project_url') then vault.update_secret((select id from vault.secrets where name = 'project_url'), '${SUPABASE_URL%/}') else vault.create_secret('${SUPABASE_URL%/}', 'project_url') end;
+    # A DO block, because update_secret returns void and create_secret a uuid.
+    up() { printf "do \$\$ begin if exists (select 1 from vault.secrets where name = '%s') then perform vault.update_secret((select id from vault.secrets where name = '%s'), '%s'); else perform vault.create_secret('%s', '%s'); end if; end \$\$;\n" "$1" "$1" "$2" "$2" "$1"; }
+    sql="$(up anon_key "$(cat "$SECRET_FILE")")
+$(up project_url "${SUPABASE_URL%/}")
 select name from vault.secrets order by 1;"
     printf '%s\n' "$sql" | pbcopy
     echo "SQL copied to clipboard. Paste it in Supabase > SQL Editor and run it, then clear the clipboard."
