@@ -56,7 +56,11 @@ case "${1:-}" in
   vault)
     confirm
     [[ -s "$SECRET_FILE" ]] || { echo "run the 'secrets' stage first" >&2; exit 1; }
-    sql="select vault.update_secret((select id from vault.secrets where name = 'anon_key'), '$(cat "$SECRET_FILE")');"
+    need SUPABASE_URL
+    # Upsert both secrets the cron migrations require (create if missing).
+    sql="select case when exists (select 1 from vault.secrets where name = 'anon_key') then vault.update_secret((select id from vault.secrets where name = 'anon_key'), '$(cat "$SECRET_FILE")') else vault.create_secret('$(cat "$SECRET_FILE")', 'anon_key') end;
+select case when exists (select 1 from vault.secrets where name = 'project_url') then vault.update_secret((select id from vault.secrets where name = 'project_url'), '${SUPABASE_URL%/}') else vault.create_secret('${SUPABASE_URL%/}', 'project_url') end;
+select name from vault.secrets order by 1;"
     printf '%s\n' "$sql" | pbcopy
     echo "SQL copied to clipboard. Paste it in Supabase > SQL Editor and run it, then clear the clipboard."
     ;;
